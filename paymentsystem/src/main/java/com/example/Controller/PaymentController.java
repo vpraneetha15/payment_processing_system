@@ -6,8 +6,8 @@ import java.util.List;
 import org.springframework.web.bind.annotation.*;
 
 
-import com.example.paymentsystem.model.Payment;
-import com.example.paymentsystem.service.PaymentService;
+import com.example.model.Payment;
+import com.example.service.PaymentService;
 
 
 

@@ -7,8 +7,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.example.paymentsystem.model.Payment;
-import com.example.paymentsystem.repository.PaymentRepository;
+import com.example.Model.Payment;
+import com.example.repository.PaymentRepository;
 
 
 
