@@ -1,4 +1,4 @@
-package com.example.paymentsystem.repository;
+package com.example.repository;
 
 
 import com.example.paymentsystem.model.Payment;
