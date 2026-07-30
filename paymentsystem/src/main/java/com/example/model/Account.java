@@ -1,34 +1,36 @@
 package com.example.model;
 
-
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 
-
-@Entity
-@Table(name="accounts")
 public class Account {
 
 
-    @Id
-    @Column(name = "account_number", length = 30)
     private String accountNumber;
 
 
-    @Column(name = "account_name", nullable = false, length = 100)
     private String accountName;
 
 
-    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal balance;
 
 
-    @Column(nullable = false, length = 3)
     private String currency;
 
 
-    @Column(nullable = false)
-    private boolean active = true;
+    private boolean active;
+
+
+    public Account() {}
+
+
+    public Account(String accountNumber, String accountName, BigDecimal balance,
+                   String currency, boolean active) {
+        this.accountNumber = accountNumber;
+        this.accountName = accountName;
+        this.balance = balance;
+        this.currency = currency;
+        this.active = active;
+    }
 
 
     public String getAccountNumber() {
