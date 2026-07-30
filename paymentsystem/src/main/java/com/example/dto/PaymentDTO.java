@@ -1,43 +1,24 @@
-package com.example.model;
+package com.example.dto;
 
-import java.time.LocalDateTime;
+public class PaymentDTO {
 
-public class Payment {
-
-    private String id;
     private double amount;
     private String currency;
     private String sourceAccount;
     private String destinationAccount;
-    private String status;
-    private LocalDateTime createdAt;
 
-    public Payment() {
+    public PaymentDTO() {
     }
 
-    public Payment(String id,
-            double amount,
+    public PaymentDTO(double amount,
             String currency,
             String sourceAccount,
-            String destinationAccount,
-            String status,
-            LocalDateTime createdAt) {
+            String destinationAccount) {
 
-        this.id = id;
         this.amount = amount;
         this.currency = currency;
         this.sourceAccount = sourceAccount;
         this.destinationAccount = destinationAccount;
-        this.status = status;
-        this.createdAt = createdAt;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public double getAmount() {
@@ -71,21 +52,4 @@ public class Payment {
     public void setDestinationAccount(String destinationAccount) {
         this.destinationAccount = destinationAccount;
     }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
 }

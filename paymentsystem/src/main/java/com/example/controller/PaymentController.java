@@ -3,22 +3,25 @@ package com.example.controller;
 
 import java.util.List;
 
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 
 import com.example.model.Payment;
 import com.example.service.PaymentService;
 
+import jakarta.validation.Valid;
+
 
 
 @RestController
 @RequestMapping("/payments")
-@CrossOrigin("*")
+@Validated
 public class PaymentController {
 
 
 
-private final PaymentService service;
+private PaymentService service;
 
 
 
@@ -31,10 +34,12 @@ this.service=service;
 
 
 @PostMapping
-public Payment createPayment(
-@RequestBody Payment payment){
+public String save(
+@Valid @RequestBody Payment payment){
 
-return service.createPayment(payment);
+service.save(payment);
+
+return "Payment Saved";
 
 }
 
@@ -42,9 +47,9 @@ return service.createPayment(payment);
 
 
 @GetMapping
-public List<Payment> getPayments(){
+public List<Payment> getPayments() {
 
-return service.getPayments();
+return service.findAll();
 
 }
 
@@ -52,10 +57,27 @@ return service.getPayments();
 
 
 @GetMapping("/{id}")
-public Payment getPayment(
-@PathVariable Long id){
+public Payment getPayment(@PathVariable String id) {
 
-return service.getPayment(id);
+return service.findById(id);
+
+}
+
+@PutMapping
+public String update(@Valid @RequestBody Payment payment) {
+
+service.update(payment);
+
+return "Updated Successfully";
+
+}
+
+@DeleteMapping("/{id}")
+public String delete(@PathVariable String id) {
+
+service.delete(id);
+
+return "Deleted Successfully";
 
 }
 
