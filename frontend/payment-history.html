@@ -136,7 +136,7 @@
             border-radius: var(--radius);
             padding: 12px;
             display: grid;
-            grid-template-columns: 1fr 220px auto auto auto;
+            grid-template-columns: 1fr 220px auto auto;
             gap: 10px;
             align-items: center;
             box-shadow: 0 6px 14px rgba(17, 34, 58, 0.06);
@@ -236,7 +236,11 @@
             100% { background: transparent; }
         }
 
+        .detail-row { background: #fcfeff; }
+        .detail-cell { padding: 0; }
+
         .detail-box {
+            border-top: 1px solid #dce9f7;
             padding: 14px;
             display: grid;
             gap: 12px;
@@ -467,72 +471,6 @@
             text-align: center;
         }
 
-        body.modal-open {
-            overflow: hidden;
-        }
-
-        body.modal-open .page {
-            filter: blur(3px);
-        }
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(11, 31, 53, 0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 16px;
-        }
-
-        .modal-overlay.open {
-            display: flex;
-        }
-
-        .modal-box {
-            width: min(980px, 100%);
-            max-height: 90vh;
-            overflow: auto;
-            border-radius: 16px;
-            border: 1px solid #d7e5f5;
-            background: #fafdff;
-            box-shadow: 0 28px 60px rgba(8, 24, 44, 0.28);
-        }
-
-        .modal-head {
-            position: sticky;
-            top: 0;
-            z-index: 2;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 14px;
-            border-bottom: 1px solid #dce9f7;
-            background: #fff;
-        }
-
-        .modal-title {
-            margin: 0;
-            font-size: 0.92rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #486684;
-        }
-
-        .modal-close {
-            border: 1px solid #c9dbf0;
-            background: #eef6ff;
-            color: #1f456c;
-            border-radius: 8px;
-            width: 34px;
-            height: 34px;
-            font-size: 1.2rem;
-            line-height: 1;
-            cursor: pointer;
-        }
-
         @media (max-width: 1180px) {
             .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .toolbar { grid-template-columns: 1fr 1fr auto auto; }
@@ -552,7 +490,7 @@
     <main class="page">
         <section class="hero">
             <h1>Payment History</h1>
-            <p>All transaction history in one table. Click any transaction row to open full details in a popup.</p>
+            <p>All transaction history in one table. Click any row to expand full details under that same row.</p>
             <div class="hero-meta">
                 <span class="live-dot"></span>
                 <span>Real-time status monitor enabled (auto-refresh every 15 seconds)</span>
@@ -583,6 +521,7 @@
                     <thead>
                         <tr>
                             <th>Payment ID</th>
+                            <th>Account Number</th>
                             <th>Latest Status</th>
                             <th>Events</th>
                             <th>Started At</th>
@@ -597,18 +536,21 @@
         </section>
     </main>
 
-    <div id="detailModal" class="modal-overlay" aria-hidden="true">
-        <section class="modal-box" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
-            <header class="modal-head">
-                <h2 id="detailModalTitle" class="modal-title">Payment Details</h2>
-                <button id="detailModalClose" class="modal-close" type="button" aria-label="Close details">&times;</button>
-            </header>
-            <div id="detailModalContent"></div>
-        </section>
-    </div>
-
     <script>
-        const HISTORY_ENDPOINT = "http://localhost:8080/payment-history";
+        const HISTORY_PATH = "/payment-history";
+        const HISTORY_ENDPOINT_CANDIDATES = (() => {
+            const set = new Set();
+
+            // Preferred explicit backend
+            set.add("http://localhost:8080" + HISTORY_PATH);
+
+            // If page is served over http(s), try same-origin too.
+            if (window.location.protocol !== "file:") {
+                set.add(window.location.origin + HISTORY_PATH);
+            }
+
+            return Array.from(set);
+        })();
         const REALTIME_INTERVAL_MS = 15000;
 
         const statusCardsEl = document.getElementById("statusCards");
@@ -617,26 +559,11 @@
         const refreshBtn = document.getElementById("refreshBtn");
         const exportBtn = document.getElementById("exportBtn");
         const historyTableBody = document.getElementById("historyTableBody");
-        const detailModal = document.getElementById("detailModal");
-        const detailModalTitle = document.getElementById("detailModalTitle");
-        const detailModalContent = document.getElementById("detailModalContent");
-        const detailModalClose = document.getElementById("detailModalClose");
 
         let allPayments = [];
         let filteredPayments = [];
-        let activeModalPaymentId = null;
+        let expandedPaymentId = null;
         let lastSignatureByPayment = {};
-
-        const fallbackData = [
-            { id: "evt-01", paymentId: "11111111-1111-1111-1111-111111111111", status: "CREATED", createdAt: "2026-07-31T09:00:00", triggeredBy: "SYSTEM", note: "Request accepted" },
-            { id: "evt-02", paymentId: "11111111-1111-1111-1111-111111111111", status: "PROCESSING", createdAt: "2026-07-31T09:01:14", triggeredBy: "WORKER-1", note: "Risk checks completed" },
-            { id: "evt-03", paymentId: "11111111-1111-1111-1111-111111111111", status: "COMPLETED", createdAt: "2026-07-31T09:03:22", triggeredBy: "SYSTEM", note: "Transferred successfully" },
-            { id: "evt-04", paymentId: "22222222-2222-2222-2222-222222222222", status: "CREATED", createdAt: "2026-07-31T10:10:00", triggeredBy: "SYSTEM", note: "Request accepted" },
-            { id: "evt-05", paymentId: "22222222-2222-2222-2222-222222222222", status: "PROCESSING", createdAt: "2026-07-31T10:12:10", triggeredBy: "WORKER-2", note: "Waiting on bank gateway" },
-            { id: "evt-06", paymentId: "22222222-2222-2222-2222-222222222222", status: "FAILED", createdAt: "2026-07-31T10:15:40", triggeredBy: "SYSTEM", note: "Error: Gateway timeout after 3 retries" },
-            { id: "evt-07", paymentId: "33333333-3333-3333-3333-333333333333", status: "CREATED", createdAt: "2026-07-31T11:05:11", triggeredBy: "SYSTEM", note: "Request accepted" },
-            { id: "evt-08", paymentId: "33333333-3333-3333-3333-333333333333", status: "PENDING", createdAt: "2026-07-31T11:06:08", triggeredBy: "BANK-WEBHOOK", note: "Awaiting external confirmation" }
-        ];
 
         function parseTime(value) {
             if (!value) {
@@ -700,6 +627,7 @@
             return (rawEvents || []).map((item, index) => ({
                 id: item.id || "evt-" + index,
                 paymentId: item.paymentId || item.payment_id || "UNKNOWN",
+                accountNumber: item.accountNumber || item.account_number || "-",
                 status: (item.status || "UNKNOWN").toUpperCase(),
                 triggeredBy: item.triggeredBy || item.triggered_by || "SYSTEM",
                 note: item.note || item.message || item.errorMessage || "",
@@ -748,6 +676,7 @@
 
                 result.push({
                     paymentId,
+                    accountNumber: first ? (first.accountNumber || "-") : "-",
                     latestStatus: last ? last.status : "UNKNOWN",
                     startedAt: first ? first.timestamp : null,
                     updatedAt: last ? last.timestamp : null,
@@ -786,17 +715,36 @@
             }
         }
 
+        function normalizeStatus(status) {
+            return String(status || "")
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, "_");
+        }
+
+        function isCompletedStatus(status) {
+            const s = normalizeStatus(status);
+            return ["completed", "success", "succeeded", "successful", "done", "settled"].includes(s);
+        }
+
+        function isFailedStatus(status) {
+            const s = normalizeStatus(status);
+            return ["failed", "error", "cancelled", "canceled", "rejected", "declined"].includes(s);
+        }
+
+        function isProcessingStatus(status) {
+            const s = normalizeStatus(status);
+            if (!s) {
+                return false;
+            }
+            return !isCompletedStatus(s) && !isFailedStatus(s);
+        }
+
         function renderCards(payments) {
             const total = payments.length;
-            const completed = payments.filter((p) => (p.latestStatus || "").toLowerCase() === "completed").length;
-            const processing = payments.filter((p) => {
-                const s = (p.latestStatus || "").toLowerCase();
-                return s === "processing" || s === "pending";
-            }).length;
-            const failed = payments.filter((p) => {
-                const s = (p.latestStatus || "").toLowerCase();
-                return s === "failed" || s === "error" || s === "cancelled";
-            }).length;
+            const completed = payments.filter((p) => isCompletedStatus(p.latestStatus)).length;
+            const processing = payments.filter((p) => isProcessingStatus(p.latestStatus)).length;
+            const failed = payments.filter((p) => isFailedStatus(p.latestStatus)).length;
             const avgMs = payments.length
                 ? Math.floor(payments.reduce((acc, p) => acc + (p.processingMs || 0), 0) / payments.length)
                 : 0;
@@ -843,6 +791,7 @@
                 + "<section class='detail-box'>"
                 + "<section class='detail-grid'>"
                 + "<article class='kv'><div class='k'>Payment ID</div><div class='v id'>" + payment.paymentId + "</div></article>"
+                + "<article class='kv'><div class='k'>Account Number</div><div class='v id'>" + (payment.accountNumber || "-") + "</div></article>"
                 + "<article class='kv'><div class='k'>Latest Status</div><div class='v'><span class='status-chip " + statusClass(payment.latestStatus) + "'>" + payment.latestStatus + "</span></div></article>"
                 + "<article class='kv'><div class='k'>Started At</div><div class='v'>" + formatDate(payment.startedAt) + "</div></article>"
                 + "<article class='kv'><div class='k'>Last Updated</div><div class='v'>" + formatDate(payment.updatedAt) + "</div></article>"
@@ -856,60 +805,42 @@
 
         function renderTable(payments) {
             if (!payments.length) {
-                historyTableBody.innerHTML = "<tr><td colspan='7' class='empty'>No records for current filter.</td></tr>";
+                historyTableBody.innerHTML = "<tr><td colspan='8' class='empty'>No records for current filter.</td></tr>";
                 return;
+            }
+
+            if (expandedPaymentId && !payments.some((p) => p.paymentId === expandedPaymentId)) {
+                expandedPaymentId = null;
             }
 
             const rows = [];
             for (const p of payments) {
-                const selected = p.paymentId === activeModalPaymentId;
+                const selected = p.paymentId === expandedPaymentId;
                 const summaryClass = "summary-row" + (selected ? " selected" : "") + (p.justUpdated ? " updated" : "");
                 rows.push(
                     "<tr class='" + summaryClass + "' data-id='" + p.paymentId + "'>"
                     + "<td class='id'>" + p.paymentId + "</td>"
+                    + "<td class='id'>" + (p.accountNumber || "-") + "</td>"
                     + "<td><span class='status-chip " + statusClass(p.latestStatus) + "'>" + p.latestStatus + "</span></td>"
                     + "<td>" + p.eventsCount + "</td>"
                     + "<td>" + formatDate(p.startedAt) + "</td>"
                     + "<td>" + formatDate(p.updatedAt) + "</td>"
                     + "<td>" + (p.processingMs == null ? "N/A" : durationText(p.processingMs).replace("Spent ", "")) + "</td>"
-                    + "<td><button type='button' class='action-btn' data-open='" + p.paymentId + "'>View</button></td>"
+                    + "<td><button type='button' class='action-btn' data-open='" + p.paymentId + "'>" + (selected ? "Hide" : "View") + "</button></td>"
                     + "</tr>"
                 );
+
+                if (selected) {
+                    rows.push(
+                        "<tr class='detail-row' data-detail-id='" + p.paymentId + "'>"
+                        + "<td class='detail-cell' colspan='8'>" + detailHtml(p) + "</td>"
+                        + "</tr>"
+                    );
+                }
             }
 
             historyTableBody.innerHTML = rows.join("");
             bindRowActions();
-        }
-
-        function findPaymentById(paymentId) {
-            const inFiltered = filteredPayments.find((p) => p.paymentId === paymentId);
-            if (inFiltered) {
-                return inFiltered;
-            }
-            return allPayments.find((p) => p.paymentId === paymentId) || null;
-        }
-
-        function openDetailModal(paymentId) {
-            const payment = findPaymentById(paymentId);
-            if (!payment) {
-                return;
-            }
-
-            activeModalPaymentId = payment.paymentId;
-            detailModalTitle.textContent = "Payment Details: " + payment.paymentId;
-            detailModalContent.innerHTML = detailHtml(payment);
-            detailModal.classList.add("open");
-            detailModal.setAttribute("aria-hidden", "false");
-            document.body.classList.add("modal-open");
-            renderTable(filteredPayments);
-        }
-
-        function closeDetailModal() {
-            detailModal.classList.remove("open");
-            detailModal.setAttribute("aria-hidden", "true");
-            document.body.classList.remove("modal-open");
-            activeModalPaymentId = null;
-            renderTable(filteredPayments);
         }
 
         function bindRowActions() {
@@ -922,7 +853,14 @@
                     if (target instanceof HTMLElement && target.closest("button[data-open]")) {
                         event.preventDefault();
                     }
-                    openDetailModal(paymentId);
+
+                    if (expandedPaymentId === paymentId) {
+                        expandedPaymentId = null;
+                    } else {
+                        expandedPaymentId = paymentId;
+                    }
+
+                    renderTable(filteredPayments);
                 });
             });
         }
@@ -934,6 +872,7 @@
             filteredPayments = allPayments.filter((p) => {
                 const searchHit = term === ""
                     || p.paymentId.toLowerCase().includes(term)
+                    || (p.accountNumber || "").toLowerCase().includes(term)
                     || p.latestStatus.toLowerCase().includes(term)
                     || p.events.some((ev) => {
                         const note = (ev.note || "").toLowerCase();
@@ -959,6 +898,7 @@
 
             const header = [
                 "payment_id",
+                "account_number",
                 "latest_status",
                 "events",
                 "started_at",
@@ -972,6 +912,7 @@
                 const reason = p.failedEvent ? p.failedEvent.note : "";
                 return [
                     p.paymentId,
+                    p.accountNumber || "",
                     p.latestStatus,
                     p.eventsCount,
                     p.startedAt || "",
@@ -998,19 +939,38 @@
 
         async function loadHistory(isRealtimeTick) {
             if (!isRealtimeTick) {
-                historyTableBody.innerHTML = "<tr><td colspan='7' class='loading'>Loading payment history...</td></tr>";
+                historyTableBody.innerHTML = "<tr><td colspan='8' class='loading'>Loading payment history...</td></tr>";
             }
 
             let rawData = [];
             try {
-                const response = await fetch(HISTORY_ENDPOINT);
-                if (!response.ok) {
-                    throw new Error("API " + response.status);
+                let response = null;
+                let lastError = null;
+
+                for (const endpoint of HISTORY_ENDPOINT_CANDIDATES) {
+                    try {
+                        response = await fetch(endpoint);
+                        if (response.ok) {
+                            break;
+                        }
+                        lastError = new Error("API " + response.status + " at " + endpoint);
+                    } catch (error) {
+                        lastError = error;
+                    }
                 }
+
+                if (!response || !response.ok) {
+                    throw lastError || new Error("No reachable payment-history endpoint");
+                }
+
                 rawData = await response.json();
             } catch (error) {
-                console.warn("Using fallback data:", error.message);
-                rawData = fallbackData;
+                console.error("Failed to load payment history from backend:", error.message);
+                historyTableBody.innerHTML = "<tr><td colspan='8' class='empty'>Unable to fetch data from backend. Check if Spring Boot API is running and reachable.</td></tr>";
+                statusCardsEl.innerHTML = "";
+                allPayments = [];
+                filteredPayments = [];
+                return;
             }
 
             const events = normalizeEvents(rawData);
@@ -1023,33 +983,12 @@
             lastSignatureByPayment = nextSig;
             allPayments = nextPayments;
             applyFilters();
-
-            if (activeModalPaymentId) {
-                const activePayment = findPaymentById(activeModalPaymentId);
-                if (activePayment) {
-                    detailModalTitle.textContent = "Payment Details: " + activePayment.paymentId;
-                    detailModalContent.innerHTML = detailHtml(activePayment);
-                } else {
-                    closeDetailModal();
-                }
-            }
         }
 
         searchInput.addEventListener("input", applyFilters);
         statusFilter.addEventListener("change", applyFilters);
         refreshBtn.addEventListener("click", () => loadHistory(false));
         exportBtn.addEventListener("click", exportCsv);
-        detailModalClose.addEventListener("click", closeDetailModal);
-        detailModal.addEventListener("click", (event) => {
-            if (event.target === detailModal) {
-                closeDetailModal();
-            }
-        });
-        document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape" && detailModal.classList.contains("open")) {
-                closeDetailModal();
-            }
-        });
 
         loadHistory(false);
         setInterval(() => {
