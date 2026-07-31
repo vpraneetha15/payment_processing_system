@@ -4,15 +4,434 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --surface: #ffffff;
+            --ink: #13233a;
+            --muted: #5f6f85;
+            --brand: #0f6fff;
+            --brand-deep: #0046b8;
+            --accent: #00c2a8;
+            --line: #dbe4f0;
+            --glow-a: rgba(15, 111, 255, 0.18);
+            --glow-b: rgba(0, 194, 168, 0.18);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Manrope", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 15% 15%, var(--glow-a), transparent 40%),
+                radial-gradient(circle at 85% 10%, var(--glow-b), transparent 32%),
+                linear-gradient(135deg, #f7fbff 0%, #eef3fb 52%, #f7fbff 100%);
+            min-height: 100vh;
+        }
+
+        .page {
+            width: min(1120px, 92vw);
+            margin: 0 auto;
+            padding: 28px 0 48px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 42px;
+        }
+
+        .brand {
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            text-decoration: none;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.92rem;
+            padding: 11px 18px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+            color: #ffffff;
+            box-shadow: 0 12px 25px rgba(15, 111, 255, 0.28);
+        }
+
+        .btn-secondary {
+            background: #ffffff;
+            color: var(--ink);
+            border-color: var(--line);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .hero {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            padding: clamp(24px, 5vw, 44px);
+            box-shadow: 0 18px 40px rgba(18, 40, 70, 0.08);
+            margin-bottom: 28px;
+        }
+
+        .hero p {
+            color: var(--muted);
+            line-height: 1.65;
+            max-width: 58ch;
+            margin-bottom: 24px;
+        }
+
+        .kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--brand-deep);
+            background: rgba(15, 111, 255, 0.08);
+            border: 1px solid rgba(15, 111, 255, 0.2);
+            border-radius: 999px;
+            padding: 7px 12px;
+            margin-bottom: 14px;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: clamp(1.7rem, 3.6vw, 2.8rem);
+            line-height: 1.12;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .hero-link {
+            text-decoration: none;
+            color: var(--brand-deep);
+            font-weight: 700;
+            background: #eef4ff;
+            border-radius: 999px;
+            padding: 9px 14px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: 0 10px 24px rgba(18, 40, 70, 0.06);
+        }
+
+        .card h2 {
+            margin: 0 0 10px;
+            font-size: 1.05rem;
+        }
+
+        .card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.55;
+            font-size: 0.94rem;
+        }
+
+        .history-panel {
+            margin-top: 16px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: 0 10px 24px rgba(18, 40, 70, 0.06);
+        }
+
+        .panel-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .panel-head h2 {
+            margin: 0;
+            font-size: 1.08rem;
+        }
+
+        .panel-link {
+            text-decoration: none;
+            font-weight: 700;
+            color: var(--brand-deep);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 640px;
+            background: #ffffff;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line);
+            font-size: 0.92rem;
+        }
+
+        th {
+            background: #f6f9ff;
+            font-size: 0.84rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #385070;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 3px 9px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            background: #eef4ff;
+            color: #224676;
+        }
+
+        .status.created {
+            background: #e8f3ff;
+            color: #114f94;
+        }
+
+        .status.success,
+        .status.completed {
+            background: #e8fbf5;
+            color: #076e52;
+        }
+
+        .status.failed {
+            background: #ffecee;
+            color: #a12626;
+        }
+
+        .panel-meta {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 0.86rem;
+        }
+
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Dashboard</h1>
-    <nav>
-        <ul>
-            <li><a href="payment-history.html">Payment History</a></li>
-            <li><a href="create-payment.html">Create Payment</a></li>
-            <li><a href="create-user.html">Create User</a></li>
-        </ul>
-    </nav>
+    <main class="page">
+        <header class="topbar">
+            <div class="brand">Payment Processing System</div>
+            <div class="actions">
+                <a class="btn btn-secondary" href="create-user.html">Create User</a>
+                <a class="btn btn-primary" href="create-payment.html">Create Payment</a>
+            </div>
+        </header>
+
+        <section class="hero">
+            <div class="kicker">Fast. Traceable. Reliable.</div>
+            <h1>Control Payments With Clarity and Speed</h1>
+            <p>
+                Launch payments, track their journey, and keep account activity visible from one place.
+                This dashboard is designed as your command center for everyday transaction operations.
+            </p>
+            <div class="hero-links">
+                <a class="hero-link" href="payment-history.html">View Payment History</a>
+                <a class="hero-link" href="create-payment.html">Start a New Payment</a>
+                <a class="hero-link" href="create-user.html">Register a New User</a>
+            </div>
+        </section>
+
+        <section class="grid" aria-label="Dashboard highlights">
+            <article class="card">
+                <h2>Payment Lifecycle</h2>
+                <p>
+                    See statuses as they move from creation to completion and quickly investigate failed transactions.
+                </p>
+            </article>
+            <article class="card">
+                <h2>Account Operations</h2>
+                <p>
+                    Add users and accounts rapidly, then route payments through the right source and destination setup.
+                </p>
+            </article>
+            <article class="card">
+                <h2>Audit Readiness</h2>
+                <p>
+                    Keep a clear history trail for every payment event to simplify reviews and compliance checks.
+                </p>
+            </article>
+        </section>
+
+        <section class="history-panel" aria-label="Recent payment activity">
+            <div class="panel-head">
+                <h2>Latest 5 Payment History</h2>
+                <a class="panel-link" href="payment-history.html">View All</a>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Payment ID</th>
+                            <th>Status</th>
+                            <th>Created At</th>
+                            <th>Triggered By</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-history-body">
+                        <tr>
+                            <td colspan="5">Loading latest payment history...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="panel-meta" id="history-meta">Source: /payment-history/latest?limit=5</div>
+        </section>
+    </main>
+
+    <script>
+        (async function loadLatestPaymentHistory() {
+            var body = document.getElementById("recent-history-body");
+            var meta = document.getElementById("history-meta");
+
+            function escapeHtml(value) {
+                if (value === null || value === undefined) {
+                    return "-";
+                }
+                return String(value)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/\"/g, "&quot;")
+                    .replace(/'/g, "&#39;");
+            }
+
+            function statusClass(status) {
+                var text = String(status || "").toLowerCase();
+                if (text.indexOf("success") !== -1 || text.indexOf("complete") !== -1) {
+                    return "success";
+                }
+                if (text.indexOf("fail") !== -1) {
+                    return "failed";
+                }
+                if (text.indexOf("create") !== -1) {
+                    return "created";
+                }
+                return "";
+            }
+
+            function formatDate(value) {
+                if (!value) {
+                    return "-";
+                }
+                var date = new Date(value);
+                if (isNaN(date.getTime())) {
+                    return escapeHtml(value);
+                }
+                return date.toLocaleString();
+            }
+
+            try {
+                var response = await fetch("http://localhost:8080/payment-history/latest?limit=5");
+
+                if (!response.ok) {
+                    throw new Error("Request failed with status " + response.status);
+                }
+
+                var rows = await response.json();
+
+                if (!Array.isArray(rows) || rows.length === 0) {
+                    body.innerHTML = "<tr><td colspan=\"5\">No payment history records found.</td></tr>";
+                    meta.textContent = "No recent records available.";
+                    return;
+                }
+
+                body.innerHTML = rows.map(function (item) {
+                    var status = escapeHtml(item.status);
+                    var badge = "<span class=\"status " + statusClass(item.status) + "\">" + status + "</span>";
+                    return "<tr>" +
+                        "<td>" + escapeHtml(item.paymentId) + "</td>" +
+                        "<td>" + badge + "</td>" +
+                        "<td>" + formatDate(item.createdAt) + "</td>" +
+                        "<td>" + escapeHtml(item.triggeredBy) + "</td>" +
+                        "<td>" + escapeHtml(item.note) + "</td>" +
+                        "</tr>";
+                }).join("");
+
+                meta.textContent = "Showing latest " + rows.length + " records.";
+            } catch (error) {
+                body.innerHTML = "<tr><td colspan=\"5\">Could not load payment history right now.</td></tr>";
+                meta.textContent = "Error: " + error.message;
+            }
+        })();
+    </script>
 </body>
 </html>

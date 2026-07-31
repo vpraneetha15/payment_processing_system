@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.model.PaymentHistory;
@@ -36,6 +37,13 @@ public class PaymentHistoryController {
 	public List<PaymentHistory> getPaymentHistory() {
 
 		return service.findAll();
+	}
+
+	@GetMapping("/latest")
+	public List<PaymentHistory> getLatestHistory(
+			@RequestParam(defaultValue = "5") int limit) {
+
+		return service.findLatest(limit);
 	}
 
 	@GetMapping("/{id}")
