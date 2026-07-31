@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 
 import com.example.model.Payment;
@@ -17,6 +18,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/payments")
 @Validated
+@CrossOrigin(origins = "*")
 public class PaymentController {
 
 

@@ -24,6 +24,10 @@ public class PaymentHistoryService {
         return repository.findAll();
     }
 
+    public List<PaymentHistory> findLatest(int limit) {
+        return repository.findLatest(limit);
+    }
+
     public PaymentHistory findById(String id) {
         return repository.findById(id);
     }

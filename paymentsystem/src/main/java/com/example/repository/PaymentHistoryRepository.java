@@ -3,6 +3,7 @@ import java.util.List;
 
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Repository;
 
 import com.example.model.PaymentHistory;
@@ -33,6 +34,27 @@ public class PaymentHistoryRepository {
 
         return jdbcTemplate.query(sql,
                 new BeanPropertyRowMapper<>(PaymentHistory.class));
+    }
+
+    public List<PaymentHistory> findLatest(int limit) {
+
+        int safeLimit = Math.max(1, Math.min(limit, 50));
+        String mapperSql = "select * from payment_history order by created_at desc limit " + safeLimit;
+
+        try {
+            return jdbcTemplate.query(mapperSql,
+                    new BeanPropertyRowMapper<>(PaymentHistory.class));
+        } catch (BadSqlGrammarException ex) {
+            try {
+                String fallbackSql = "select * from payment_history order by `timestamp` desc limit " + safeLimit;
+                return jdbcTemplate.query(fallbackSql,
+                        new BeanPropertyRowMapper<>(PaymentHistory.class));
+            } catch (BadSqlGrammarException ex2) {
+                String finalFallbackSql = "select * from payment_history order by id desc limit " + safeLimit;
+                return jdbcTemplate.query(finalFallbackSql,
+                        new BeanPropertyRowMapper<>(PaymentHistory.class));
+            }
+        }
     }
 
     public PaymentHistory findById(String id) {
