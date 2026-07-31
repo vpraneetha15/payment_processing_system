@@ -2,6 +2,8 @@ package com.example.model;
 
 import java.time.LocalDateTime;
 
+import org.jspecify.annotations.Nullable;
+
 public class PaymentHistory {
 
 
@@ -94,6 +96,12 @@ public class PaymentHistory {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+
+    public @Nullable Object getCreatedAt() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getCreatedAt'");
     }
 
 }
