@@ -131,7 +131,18 @@
                 radial-gradient(circle at 85% 10%, var(--glow-b), transparent 32%),
                 linear-gradient(135deg, var(--bg-stop-a) 0%, var(--bg-stop-b) 52%, var(--bg-stop-a) 100%);
             min-height: 100vh;
-            transition: background 0.35s ease, color 0.25s ease;
+            transition: background 0.55s cubic-bezier(0.22, 0.61, 0.36, 1), color 0.35s ease;
+        }
+
+        body.theme-switching,
+        body.theme-switching * {
+            transition:
+                background-color 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
+                color 0.35s ease,
+                border-color 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
+                box-shadow 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
+                fill 0.35s ease,
+                stroke 0.35s ease !important;
         }
 
         .page {
@@ -178,7 +189,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.25s ease, color 0.25s ease;
+            transition: transform 0.2s ease, box-shadow 0.25s ease, background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
         }
 
         .theme-trigger:hover {
@@ -204,7 +215,7 @@
             opacity: 0;
             transform: translateY(-8px) scale(0.98);
             pointer-events: none;
-            transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.25s ease, border-color 0.25s ease;
+            transition: opacity 0.22s ease, transform 0.22s ease, background-color 0.35s ease, border-color 0.35s ease;
             z-index: 20;
         }
 
@@ -270,7 +281,7 @@
         .hero-link,
         .kicker,
         .btn-secondary {
-            transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+            transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
         }
 
         .btn:hover {
@@ -281,16 +292,36 @@
             background: var(--surface);
             border: 1px solid var(--line);
             border-radius: 24px;
-            padding: clamp(24px, 5vw, 44px);
+            padding: clamp(24px, 5vw, 40px);
             box-shadow: var(--hero-shadow);
             margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 100% 0%, rgba(15, 111, 255, 0.14), transparent 32%),
+                linear-gradient(135deg, rgba(15, 111, 255, 0.04), transparent 52%);
+            pointer-events: none;
+        }
+
+        .hero-shell {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+            gap: 24px;
+            align-items: stretch;
         }
 
         .hero p {
             color: var(--muted);
             line-height: 1.65;
-            max-width: 58ch;
-            margin-bottom: 24px;
+            max-width: 60ch;
+            margin: 0 0 22px;
         }
 
         .kicker {
@@ -309,6 +340,112 @@
             margin-bottom: 14px;
         }
 
+        .hero h1 {
+            margin: 0 0 12px;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            max-width: 12ch;
+        }
+
+        .hero-summary {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .hero-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.58);
+            color: var(--ink);
+            font-size: 0.84rem;
+            font-weight: 700;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-pill strong {
+            color: var(--brand-deep);
+        }
+
+        .hero-brief {
+            position: relative;
+            background: linear-gradient(180deg, rgba(10, 35, 58, 0.98), rgba(18, 53, 84, 0.94));
+            color: #f3f8ff;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 22px 36px rgba(10, 31, 58, 0.22);
+        }
+
+        .hero-brief::after {
+            content: "";
+            position: absolute;
+            right: 16px;
+            top: 16px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 194, 168, 0.42), transparent 70%);
+            opacity: 0.75;
+        }
+
+        .brief-label {
+            position: relative;
+            z-index: 1;
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(226, 237, 255, 0.74);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .brief-title {
+            position: relative;
+            z-index: 1;
+            margin: 0 0 12px;
+            font-size: 1.25rem;
+            line-height: 1.2;
+        }
+
+        .brief-copy {
+            position: relative;
+            z-index: 1;
+            margin: 0 0 16px;
+            color: rgba(232, 241, 255, 0.82);
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .brief-list {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            gap: 10px;
+        }
+
+        .brief-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(214, 229, 255, 0.15);
+            font-size: 0.88rem;
+        }
+
+        .brief-item span:first-child {
+            color: rgba(226, 237, 255, 0.7);
+        }
+
+        .brief-item strong {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
         h1 {
             margin: 0 0 12px;
             font-size: clamp(1.7rem, 3.6vw, 2.8rem);
@@ -320,6 +457,87 @@
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .kpi-card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 14px;
+            box-shadow: var(--card-shadow);
+            min-height: 96px;
+        }
+
+        .kpi-label {
+            color: var(--muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            line-height: 1.15;
+        }
+
+        .kpi-value.success {
+            color: #0a8e67;
+        }
+
+        .kpi-value.pending {
+            color: #b46b00;
+        }
+
+        .kpi-value.failed {
+            color: #c23a3a;
+        }
+
+        .kpi-note {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        .currency-display {
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .currency-display label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            font-weight: 700;
+        }
+
+        .currency-display select {
+            border: 1px solid var(--line);
+            background: var(--surface);
+            color: var(--ink);
+            border-radius: 10px;
+            padding: 6px 10px;
+            font: inherit;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .fx-note {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 0.76rem;
         }
 
         .hero-link {
@@ -453,6 +671,14 @@
         }
 
         @media (max-width: 900px) {
+            .hero-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
             .grid {
                 grid-template-columns: 1fr;
             }
@@ -465,6 +691,12 @@
             .actions {
                 width: 100%;
                 justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -494,40 +726,86 @@
             </div>
         </header>
 
-        <section class="hero">
-            <div class="kicker">Fast. Traceable. Reliable.</div>
-            <h1>Control Payments With Clarity and Speed</h1>
-            <p>
-                Launch payments, track their journey, and keep account activity visible from one place.
-                This dashboard is designed as your command center for everyday transaction operations.
-            </p>
-            <div class="hero-links">
-                <a class="hero-link" href="payment-history.html">View Payment History</a>
-                <a class="hero-link" href="create-payment.html">Start a New Payment</a>
-                <a class="hero-link" href="create-user.html">Register a New User</a>
+        <section class="hero" aria-label="Executive overview">
+            <div class="hero-shell">
+                <div>
+                    <div class="kicker">Executive Operations Overview</div>
+                    <h1>Monitor Payment Flow With Confidence</h1>
+                    <p>
+                        Use this dashboard as the operational front page for payment execution, status visibility,
+                        and audit readiness. It is designed to present payment outcomes clearly for review,
+                        demo, and management discussion.
+                    </p>
+                    <div class="hero-summary">
+                        <div class="hero-pill"><strong>Scope</strong> End-to-end payment tracking</div>
+                        <div class="hero-pill"><strong>Focus</strong> Status monitoring and audit trail</div>
+                        <div class="hero-pill"><strong>Audience</strong> Training and stakeholder demo</div>
+                    </div>
+                </div>
+
+                <aside class="hero-brief" aria-label="Operational briefing">
+                    <div class="brief-label">Operational Briefing</div>
+                    <h2 class="brief-title">Current dashboard focus is execution visibility and traceability.</h2>
+                    <p class="brief-copy">
+                        Review headline payment status counts, then inspect recent history entries to understand
+                        how transactions are progressing through the system.
+                    </p>
+                    <div class="brief-list">
+                        <div class="brief-item">
+                            <span>Primary objective</span>
+                            <strong>Payment lifecycle clarity</strong>
+                        </div>
+                        <div class="brief-item">
+                            <span>Secondary objective</span>
+                            <strong>Demonstrable audit trail</strong>
+                        </div>
+                        <div class="brief-item">
+                            <span>Recommended use</span>
+                            <strong>Executive walkthrough</strong>
+                        </div>
+                    </div>
+                </aside>
             </div>
         </section>
 
-        <section class="grid" aria-label="Dashboard highlights">
-            <article class="card">
-                <h2>Payment Lifecycle</h2>
-                <p>
-                    See statuses as they move from creation to completion and quickly investigate failed transactions.
-                </p>
+        <section class="kpi-grid" aria-label="Payments overview">
+            <article class="kpi-card">
+                <div class="kpi-label">Total Payments</div>
+                <div class="kpi-value" id="kpi-total-payments">--</div>
+                <div class="kpi-note">All payment records</div>
             </article>
-            <article class="card">
-                <h2>Account Operations</h2>
-                <p>
-                    Add users and accounts rapidly, then route payments through the right source and destination setup.
-                </p>
+            <article class="kpi-card">
+                <div class="kpi-label">Total Amount</div>
+                <div class="kpi-value" id="kpi-total-amount">--</div>
+                <div class="currency-display">
+                    <label for="display-currency">Display</label>
+                    <select id="display-currency" aria-label="Display currency">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                    </select>
+                </div>
+                <div class="kpi-note" id="kpi-currency-note">Across available currencies</div>
+                <div class="fx-note" id="kpi-fx-note">Waiting for live FX rate...</div>
             </article>
-            <article class="card">
-                <h2>Audit Readiness</h2>
-                <p>
-                    Keep a clear history trail for every payment event to simplify reviews and compliance checks.
-                </p>
+            <article class="kpi-card">
+                <div class="kpi-label">Succeeded</div>
+                <div class="kpi-value success" id="kpi-succeeded">--</div>
+                <div class="kpi-note">Completed or success status</div>
+            </article>
+            <article class="kpi-card">
+                <div class="kpi-label">Pending</div>
+                <div class="kpi-value pending" id="kpi-pending">--</div>
+                <div class="kpi-note">Created or processing status</div>
+            </article>
+            <article class="kpi-card">
+                <div class="kpi-label">Failed</div>
+                <div class="kpi-value failed" id="kpi-failed">--</div>
+                <div class="kpi-note">Failed or rejected status</div>
             </article>
         </section>
+
+
 
         <section class="history-panel" aria-label="Recent payment activity">
             <div class="panel-head">
@@ -559,6 +837,7 @@
     <script>
         (function setupThemeMode() {
             var root = document.documentElement;
+            var body = document.body;
             var storageKey = "dashboard-theme-mode";
             var buttons = Array.from(document.querySelectorAll(".theme-btn"));
             var menu = document.getElementById("theme-menu");
@@ -575,6 +854,8 @@
             }
 
             function applyMode(mode) {
+                body.classList.add("theme-switching");
+
                 if (mode === "light" || mode === "dark") {
                     root.setAttribute("data-theme", mode);
                 } else {
@@ -586,6 +867,11 @@
                     button.classList.toggle("is-active", active);
                     button.setAttribute("aria-pressed", active ? "true" : "false");
                 });
+
+                window.clearTimeout(applyMode._timer);
+                applyMode._timer = window.setTimeout(function () {
+                    body.classList.remove("theme-switching");
+                }, 500);
             }
 
             var saved = localStorage.getItem(storageKey);
@@ -620,6 +906,222 @@
                     closeMenu();
                 }
             });
+        })();
+
+        (async function loadPaymentSummaryKpis() {
+            var totalPaymentsEl = document.getElementById("kpi-total-payments");
+            var totalAmountEl = document.getElementById("kpi-total-amount");
+            var succeededEl = document.getElementById("kpi-succeeded");
+            var pendingEl = document.getElementById("kpi-pending");
+            var failedEl = document.getElementById("kpi-failed");
+            var currencyNoteEl = document.getElementById("kpi-currency-note");
+            var fxNoteEl = document.getElementById("kpi-fx-note");
+            var displayCurrencyEl = document.getElementById("display-currency");
+            var baseUrl = "http://localhost:8080";
+            var localStorageKey = "dashboard-display-currency";
+
+            var amountByCurrency = {};
+
+            function formatNumber(value) {
+                return new Intl.NumberFormat(undefined, {
+                    maximumFractionDigits: 2
+                }).format(value);
+            }
+
+            function normalizeCurrency(value) {
+                return String(value || "").trim().toUpperCase();
+            }
+
+            function formatMoney(value, currency) {
+                try {
+                    return new Intl.NumberFormat(undefined, {
+                        style: "currency",
+                        currency: currency,
+                        maximumFractionDigits: 2
+                    }).format(value);
+                } catch (error) {
+                    return formatNumber(value) + " " + currency;
+                }
+            }
+
+            function setDefaultDisplayCurrency() {
+                var saved = normalizeCurrency(localStorage.getItem(localStorageKey));
+                if (saved) {
+                    displayCurrencyEl.value = saved;
+                }
+            }
+
+            function ensureDisplayCurrencyOption(currency) {
+                var target = normalizeCurrency(currency);
+                if (!target) {
+                    return;
+                }
+                var hasOption = Array.from(displayCurrencyEl.options).some(function (opt) {
+                    return normalizeCurrency(opt.value) === target;
+                });
+                if (!hasOption) {
+                    var option = document.createElement("option");
+                    option.value = target;
+                    option.textContent = target;
+                    displayCurrencyEl.appendChild(option);
+                }
+            }
+
+            async function convertToDisplayCurrency(targetCurrency) {
+                var target = normalizeCurrency(targetCurrency);
+                if (!target || Object.keys(amountByCurrency).length === 0) {
+                    totalAmountEl.textContent = "--";
+                    fxNoteEl.textContent = "No amount data available.";
+                    return;
+                }
+
+                ensureDisplayCurrencyOption(target);
+
+                var entries = Object.entries(amountByCurrency);
+                var totalConverted = 0;
+                var liveRateUsed = false;
+                var hadAnyFallback = false;
+
+                async function convertUsingFrankfurter(sourceCurrency, targetCurrency, sourceAmount) {
+                    var url = "https://api.frankfurter.app/latest?amount="
+                        + encodeURIComponent(sourceAmount)
+                        + "&from=" + encodeURIComponent(sourceCurrency)
+                        + "&to=" + encodeURIComponent(targetCurrency);
+                    var response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error("Frankfurter status " + response.status);
+                    }
+                    var data = await response.json();
+                    var converted = data && data.rates ? Number(data.rates[targetCurrency]) : NaN;
+                    if (isNaN(converted)) {
+                        throw new Error("Frankfurter missing rate");
+                    }
+                    return converted;
+                }
+
+                async function convertUsingOpenErApi(sourceCurrency, targetCurrency, sourceAmount) {
+                    var url = "https://open.er-api.com/v6/latest/" + encodeURIComponent(sourceCurrency);
+                    var response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error("OpenERAPI status " + response.status);
+                    }
+                    var data = await response.json();
+                    var rate = data && data.rates ? Number(data.rates[targetCurrency]) : NaN;
+                    if (isNaN(rate)) {
+                        throw new Error("OpenERAPI missing rate");
+                    }
+                    return sourceAmount * rate;
+                }
+
+                for (var i = 0; i < entries.length; i += 1) {
+                    var sourceCurrency = normalizeCurrency(entries[i][0]);
+                    var sourceAmount = Number(entries[i][1] || 0);
+
+                    if (!sourceCurrency || isNaN(sourceAmount)) {
+                        continue;
+                    }
+
+                    if (sourceCurrency === target) {
+                        totalConverted += sourceAmount;
+                        continue;
+                    }
+
+                    try {
+                        var convertedAmount;
+                        try {
+                            convertedAmount = await convertUsingFrankfurter(sourceCurrency, target, sourceAmount);
+                        } catch (primaryError) {
+                            convertedAmount = await convertUsingOpenErApi(sourceCurrency, target, sourceAmount);
+                            hadAnyFallback = true;
+                        }
+
+                        totalConverted += convertedAmount;
+                        liveRateUsed = true;
+                    } catch (error) {
+                        fxNoteEl.textContent = "Live FX unavailable for some currencies; showing partial converted value.";
+                    }
+                }
+
+                totalAmountEl.textContent = formatMoney(totalConverted, target);
+
+                if (liveRateUsed) {
+                    if (hadAnyFallback) {
+                        fxNoteEl.textContent = "Live FX applied (fallback used for unsupported pairs). Display currency: " + target;
+                    } else {
+                        fxNoteEl.textContent = "Live FX applied. Display currency: " + target;
+                    }
+                } else if (!fxNoteEl.textContent || fxNoteEl.textContent === "Waiting for live FX rate...") {
+                    fxNoteEl.textContent = "No conversion needed. Display currency: " + target;
+                }
+            }
+
+            async function loadAmountByCurrency() {
+                var response = await fetch(baseUrl + "/payments/amount-by-currency");
+
+                if (!response.ok) {
+                    throw new Error("Request failed with status " + response.status);
+                }
+
+                var rows = await response.json();
+                amountByCurrency = {};
+
+                if (Array.isArray(rows)) {
+                    rows.forEach(function (row) {
+                        var currency = normalizeCurrency(row.currency);
+                        var amount = Number(row.amount || 0);
+                        if (!currency || isNaN(amount)) {
+                            return;
+                        }
+                        amountByCurrency[currency] = amount;
+                        ensureDisplayCurrencyOption(currency);
+                    });
+                }
+            }
+
+            try {
+                setDefaultDisplayCurrency();
+
+                var response = await fetch(baseUrl + "/payments/summary");
+
+                if (!response.ok) {
+                    throw new Error("Request failed with status " + response.status);
+                }
+
+                var summary = await response.json();
+
+                totalPaymentsEl.textContent = formatNumber(summary.totalPayments || 0);
+                totalAmountEl.textContent = formatNumber(summary.totalAmount || 0);
+                succeededEl.textContent = formatNumber(summary.successCount || 0);
+                pendingEl.textContent = formatNumber(summary.pendingCount || 0);
+                failedEl.textContent = formatNumber(summary.failedCount || 0);
+
+                if (!summary.currencies) {
+                    currencyNoteEl.textContent = "Currency not available.";
+                } else {
+                    currencyNoteEl.textContent = "Currencies: " + summary.currencies;
+                    summary.currencies.split(",").forEach(function (currency) {
+                        ensureDisplayCurrencyOption(currency);
+                    });
+                }
+
+                await loadAmountByCurrency();
+                await convertToDisplayCurrency(displayCurrencyEl.value);
+
+                displayCurrencyEl.addEventListener("change", async function () {
+                    var selected = normalizeCurrency(displayCurrencyEl.value);
+                    localStorage.setItem(localStorageKey, selected);
+                    fxNoteEl.textContent = "Updating conversion...";
+                    await convertToDisplayCurrency(selected);
+                });
+            } catch (error) {
+                totalPaymentsEl.textContent = "--";
+                totalAmountEl.textContent = "--";
+                succeededEl.textContent = "--";
+                pendingEl.textContent = "--";
+                failedEl.textContent = "--";
+                currencyNoteEl.textContent = "Could not load payment summary.";
+                fxNoteEl.textContent = "FX conversion unavailable.";
+            }
         })();
 
         (async function loadLatestPaymentHistory() {
