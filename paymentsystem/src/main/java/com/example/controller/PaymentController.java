@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
 
+import com.example.dto.CurrencyAmountDTO;
+import com.example.dto.PaymentSummaryDTO;
 import com.example.model.Payment;
 import com.example.service.PaymentService;
 
@@ -60,6 +62,20 @@ return service.findAll();
 
 }
 
+
+@GetMapping("/summary")
+public PaymentSummaryDTO getPaymentSummary(){
+
+return service.getSummary();
+
+}
+
+
+@GetMapping("/amount-by-currency")
+public List<CurrencyAmountDTO> getAmountByCurrency(){
+
+return service.getAmountByCurrency();
+}
 
 
 
