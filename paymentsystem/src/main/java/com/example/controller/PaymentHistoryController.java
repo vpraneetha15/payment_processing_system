@@ -1,5 +1,5 @@
 package com.example.controller;
-
+import org.springframework.web.bind.annotation.CrossOrigin;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +15,7 @@ import com.example.service.PaymentHistoryService;
 
 @RestController
 @RequestMapping("/payment-history")
+@CrossOrigin(origins = "*")
 public class PaymentHistoryController {
 
 	private PaymentHistoryService service;

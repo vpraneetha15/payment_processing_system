@@ -1,7 +1,7 @@
 package com.example.controller;
 
 import java.util.List;
-
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +16,7 @@ import com.example.service.AccountService;
 
 @RestController
 @RequestMapping("/accounts")
+@CrossOrigin(origins = "*")
 public class AccountController {
 
 	private AccountService service;
