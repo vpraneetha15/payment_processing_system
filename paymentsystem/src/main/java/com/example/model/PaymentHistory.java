@@ -2,8 +2,6 @@ package com.example.model;
 
 import java.time.LocalDateTime;
 
-import org.jspecify.annotations.Nullable;
-
 public class PaymentHistory {
 
 
@@ -16,7 +14,7 @@ public class PaymentHistory {
     private String status;
 
 
-    private LocalDateTime timestamp;
+    private LocalDateTime createdAt;
 
 
     private String triggeredBy;
@@ -33,7 +31,7 @@ public class PaymentHistory {
         this.id = id;
         this.paymentId = paymentId;
         this.status = status;
-        this.timestamp = timestamp;
+        this.createdAt = timestamp;
         this.triggeredBy = triggeredBy;
         this.note = note;
     }
@@ -70,12 +68,22 @@ public class PaymentHistory {
 
 
     public LocalDateTime getTimestamp() {
-        return timestamp;
+        return createdAt;
     }
 
 
     public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
+        this.createdAt = timestamp;
+    }
+
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
 
@@ -98,10 +106,5 @@ public class PaymentHistory {
         this.note = note;
     }
 
-
-    public @Nullable Object getCreatedAt() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getCreatedAt'");
-    }
 
 }
