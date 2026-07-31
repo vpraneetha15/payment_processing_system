@@ -3,7 +3,9 @@ package com.example.controller;
 
 import java.util.List;
 
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 
 import com.example.model.Payment;
@@ -13,7 +15,8 @@ import com.example.service.PaymentService;
 
 @RestController
 @RequestMapping("/payments")
-@CrossOrigin("*")
+@Validated
+@CrossOrigin(origins = "*")
 public class PaymentController {
 
 
