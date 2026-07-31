@@ -136,7 +136,7 @@
             border-radius: var(--radius);
             padding: 12px;
             display: grid;
-            grid-template-columns: 1fr 220px auto auto;
+            grid-template-columns: 1fr 220px auto auto auto;
             gap: 10px;
             align-items: center;
             box-shadow: 0 6px 14px rgba(17, 34, 58, 0.06);
@@ -236,11 +236,7 @@
             100% { background: transparent; }
         }
 
-        .detail-row { background: #fcfeff; }
-        .detail-cell { padding: 0; }
-
         .detail-box {
-            border-top: 1px solid #dce9f7;
             padding: 14px;
             display: grid;
             gap: 12px;
@@ -471,6 +467,72 @@
             text-align: center;
         }
 
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        body.modal-open .page {
+            filter: blur(3px);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 31, 53, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            width: min(980px, 100%);
+            max-height: 90vh;
+            overflow: auto;
+            border-radius: 16px;
+            border: 1px solid #d7e5f5;
+            background: #fafdff;
+            box-shadow: 0 28px 60px rgba(8, 24, 44, 0.28);
+        }
+
+        .modal-head {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-bottom: 1px solid #dce9f7;
+            background: #fff;
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 0.92rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #486684;
+        }
+
+        .modal-close {
+            border: 1px solid #c9dbf0;
+            background: #eef6ff;
+            color: #1f456c;
+            border-radius: 8px;
+            width: 34px;
+            height: 34px;
+            font-size: 1.2rem;
+            line-height: 1;
+            cursor: pointer;
+        }
+
         @media (max-width: 1180px) {
             .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .toolbar { grid-template-columns: 1fr 1fr auto auto; }
@@ -490,7 +552,7 @@
     <main class="page">
         <section class="hero">
             <h1>Payment History</h1>
-            <p>All transaction history in one table. Click any row to expand full details under that same row.</p>
+            <p>All transaction history in one table. Click any transaction row to open full details in a popup.</p>
             <div class="hero-meta">
                 <span class="live-dot"></span>
                 <span>Real-time status monitor enabled (auto-refresh every 15 seconds)</span>
@@ -535,6 +597,16 @@
         </section>
     </main>
 
+    <div id="detailModal" class="modal-overlay" aria-hidden="true">
+        <section class="modal-box" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
+            <header class="modal-head">
+                <h2 id="detailModalTitle" class="modal-title">Payment Details</h2>
+                <button id="detailModalClose" class="modal-close" type="button" aria-label="Close details">&times;</button>
+            </header>
+            <div id="detailModalContent"></div>
+        </section>
+    </div>
+
     <script>
         const HISTORY_ENDPOINT = "http://localhost:8080/payment-history";
         const REALTIME_INTERVAL_MS = 15000;
@@ -545,10 +617,14 @@
         const refreshBtn = document.getElementById("refreshBtn");
         const exportBtn = document.getElementById("exportBtn");
         const historyTableBody = document.getElementById("historyTableBody");
+        const detailModal = document.getElementById("detailModal");
+        const detailModalTitle = document.getElementById("detailModalTitle");
+        const detailModalContent = document.getElementById("detailModalContent");
+        const detailModalClose = document.getElementById("detailModalClose");
 
         let allPayments = [];
         let filteredPayments = [];
-        let expandedPaymentId = null;
+        let activeModalPaymentId = null;
         let lastSignatureByPayment = {};
 
         const fallbackData = [
@@ -644,22 +720,25 @@
             const result = [];
             for (const [paymentId, timeline] of map.entries()) {
                 timeline.sort((a, b) => {
-                    const ta = parseTime(a.timestamp)?.getTime() || 0;
-                    const tb = parseTime(b.timestamp)?.getTime() || 0;
+                    const parsedA = parseTime(a.timestamp);
+                    const parsedB = parseTime(b.timestamp);
+                    const ta = parsedA ? parsedA.getTime() : 0;
+                    const tb = parsedB ? parsedB.getTime() : 0;
                     return ta - tb;
                 });
 
                 for (let i = 0; i < timeline.length; i++) {
                     const currentTs = parseTime(timeline[i].timestamp);
-                    const nextTs = parseTime(timeline[i + 1]?.timestamp);
+                    const nextEvent = timeline[i + 1] || null;
+                    const nextTs = nextEvent ? parseTime(nextEvent.timestamp) : null;
                     timeline[i].durationMs = currentTs && nextTs ? nextTs.getTime() - currentTs.getTime() : null;
-                    timeline[i].nextStatus = timeline[i + 1]?.status || null;
+                    timeline[i].nextStatus = nextEvent ? nextEvent.status : null;
                 }
 
                 const first = timeline[0];
                 const last = timeline[timeline.length - 1];
-                const firstTime = parseTime(first?.timestamp);
-                const lastTime = parseTime(last?.timestamp);
+                const firstTime = first ? parseTime(first.timestamp) : null;
+                const lastTime = last ? parseTime(last.timestamp) : null;
                 const totalMs = firstTime && lastTime ? lastTime.getTime() - firstTime.getTime() : null;
 
                 const failedEvent = [...timeline].reverse().find((ev) => {
@@ -669,9 +748,9 @@
 
                 result.push({
                     paymentId,
-                    latestStatus: last?.status || "UNKNOWN",
-                    startedAt: first?.timestamp || null,
-                    updatedAt: last?.timestamp || null,
+                    latestStatus: last ? last.status : "UNKNOWN",
+                    startedAt: first ? first.timestamp : null,
+                    updatedAt: last ? last.timestamp : null,
                     eventsCount: timeline.length,
                     processingMs: totalMs,
                     failedEvent,
@@ -681,8 +760,10 @@
             }
 
             result.sort((a, b) => {
-                const ta = parseTime(a.updatedAt)?.getTime() || 0;
-                const tb = parseTime(b.updatedAt)?.getTime() || 0;
+                const parsedA = parseTime(a.updatedAt);
+                const parsedB = parseTime(b.updatedAt);
+                const ta = parsedA ? parsedA.getTime() : 0;
+                const tb = parsedB ? parsedB.getTime() : 0;
                 return tb - ta;
             });
 
@@ -779,13 +860,9 @@
                 return;
             }
 
-            if (expandedPaymentId && !payments.some((p) => p.paymentId === expandedPaymentId)) {
-                expandedPaymentId = null;
-            }
-
             const rows = [];
             for (const p of payments) {
-                const selected = p.paymentId === expandedPaymentId;
+                const selected = p.paymentId === activeModalPaymentId;
                 const summaryClass = "summary-row" + (selected ? " selected" : "") + (p.justUpdated ? " updated" : "");
                 rows.push(
                     "<tr class='" + summaryClass + "' data-id='" + p.paymentId + "'>"
@@ -795,21 +872,44 @@
                     + "<td>" + formatDate(p.startedAt) + "</td>"
                     + "<td>" + formatDate(p.updatedAt) + "</td>"
                     + "<td>" + (p.processingMs == null ? "N/A" : durationText(p.processingMs).replace("Spent ", "")) + "</td>"
-                    + "<td><button type='button' class='action-btn' data-open='" + p.paymentId + "'>" + (selected ? "Hide" : "View") + "</button></td>"
+                    + "<td><button type='button' class='action-btn' data-open='" + p.paymentId + "'>View</button></td>"
                     + "</tr>"
                 );
-
-                if (selected) {
-                    rows.push(
-                        "<tr class='detail-row' data-detail-id='" + p.paymentId + "'>"
-                        + "<td class='detail-cell' colspan='7'>" + detailHtml(p) + "</td>"
-                        + "</tr>"
-                    );
-                }
             }
 
             historyTableBody.innerHTML = rows.join("");
             bindRowActions();
+        }
+
+        function findPaymentById(paymentId) {
+            const inFiltered = filteredPayments.find((p) => p.paymentId === paymentId);
+            if (inFiltered) {
+                return inFiltered;
+            }
+            return allPayments.find((p) => p.paymentId === paymentId) || null;
+        }
+
+        function openDetailModal(paymentId) {
+            const payment = findPaymentById(paymentId);
+            if (!payment) {
+                return;
+            }
+
+            activeModalPaymentId = payment.paymentId;
+            detailModalTitle.textContent = "Payment Details: " + payment.paymentId;
+            detailModalContent.innerHTML = detailHtml(payment);
+            detailModal.classList.add("open");
+            detailModal.setAttribute("aria-hidden", "false");
+            document.body.classList.add("modal-open");
+            renderTable(filteredPayments);
+        }
+
+        function closeDetailModal() {
+            detailModal.classList.remove("open");
+            detailModal.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("modal-open");
+            activeModalPaymentId = null;
+            renderTable(filteredPayments);
         }
 
         function bindRowActions() {
@@ -822,14 +922,7 @@
                     if (target instanceof HTMLElement && target.closest("button[data-open]")) {
                         event.preventDefault();
                     }
-
-                    if (expandedPaymentId === paymentId) {
-                        expandedPaymentId = null;
-                    } else {
-                        expandedPaymentId = paymentId;
-                    }
-
-                    renderTable(filteredPayments);
+                    openDetailModal(paymentId);
                 });
             });
         }
@@ -876,7 +969,7 @@
 
             const rows = filteredPayments.map((p) => {
                 const sec = p.processingMs == null ? "" : Math.floor(p.processingMs / 1000);
-                const reason = p.failedEvent?.note || "";
+                const reason = p.failedEvent ? p.failedEvent.note : "";
                 return [
                     p.paymentId,
                     p.latestStatus,
@@ -930,12 +1023,33 @@
             lastSignatureByPayment = nextSig;
             allPayments = nextPayments;
             applyFilters();
+
+            if (activeModalPaymentId) {
+                const activePayment = findPaymentById(activeModalPaymentId);
+                if (activePayment) {
+                    detailModalTitle.textContent = "Payment Details: " + activePayment.paymentId;
+                    detailModalContent.innerHTML = detailHtml(activePayment);
+                } else {
+                    closeDetailModal();
+                }
+            }
         }
 
         searchInput.addEventListener("input", applyFilters);
         statusFilter.addEventListener("change", applyFilters);
         refreshBtn.addEventListener("click", () => loadHistory(false));
         exportBtn.addEventListener("click", exportCsv);
+        detailModalClose.addEventListener("click", closeDetailModal);
+        detailModal.addEventListener("click", (event) => {
+            if (event.target === detailModal) {
+                closeDetailModal();
+            }
+        });
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && detailModal.classList.contains("open")) {
+                closeDetailModal();
+            }
+        });
 
         loadHistory(false);
         setInterval(() => {
