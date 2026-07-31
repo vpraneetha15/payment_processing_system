@@ -3,9 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create User</title>
+    <title>Payments Console | Create User</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="create-user.css">
 </head>
 <body>
-    <h1>Create User</h1>
+    <div class="bg-shape bg-shape-left" aria-hidden="true"></div>
+    <div class="bg-shape bg-shape-right" aria-hidden="true"></div>
+
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-dot"></span>
+            <div>
+                <p class="brand-kicker">Payments Processing System</p>
+                <h1>Create User</h1>
+            </div>
+        </div>
+        <nav class="top-links" aria-label="Primary">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="create-payment.html">Create Payment</a>
+            <a href="payment-history.html">Payment History</a>
+        </nav>
+    </header>
+
+    <main class="layout">
+        <section class="card card-form" aria-labelledby="form-title">
+            <h2 id="form-title">User Onboarding Form</h2>
+            <p class="subtext">Add frontend users for the payments console. This is local frontend data now and can be wired to your API later.</p>
+
+            <form id="createUserForm" novalidate>
+                <div class="grid">
+                    <label>
+                        Full Name
+                        <input type="text" id="fullName" name="fullName" placeholder="e.g., Alex Morgan" maxlength="80" required>
+                        <small class="error" id="fullNameError"></small>
+                    </label>
+
+                    <label>
+                        Work Email
+                        <input type="email" id="email" name="email" placeholder="name@company.com" maxlength="120" required>
+                        <small class="error" id="emailError"></small>
+                    </label>
+
+                    <label>
+                        Employee ID
+                        <input type="text" id="employeeId" name="employeeId" placeholder="e.g., EMP1024" maxlength="24" required>
+                        <small class="error" id="employeeIdError"></small>
+                    </label>
+
+                    <label>
+                        Role
+                        <select id="role" name="role" required>
+                            <option value="">Select role</option>
+                            <option value="PAYMENT_ANALYST">Payment Analyst</option>
+                            <option value="OPERATIONS_ADMIN">Operations Admin</option>
+                            <option value="SUPERVISOR">Supervisor</option>
+                            <option value="AUDITOR">Auditor</option>
+                        </select>
+                        <small class="error" id="roleError"></small>
+                    </label>
+
+                    <label>
+                        Team
+                        <input type="text" id="team" name="team" placeholder="e.g., Settlements" maxlength="50" required>
+                        <small class="error" id="teamError"></small>
+                    </label>
+
+                    <label>
+                        Preferred Currency
+                        <select id="preferredCurrency" name="preferredCurrency" required>
+                            <option value="">Select currency</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="INR">INR</option>
+                        </select>
+                        <small class="error" id="preferredCurrencyError"></small>
+                    </label>
+
+                    <label class="grid-span-2">
+                        Notes (Optional)
+                        <textarea id="notes" name="notes" rows="4" maxlength="240" placeholder="Add context for access setup, shift timing, or responsibilities."></textarea>
+                    </label>
+                </div>
+
+                <div class="switches">
+                    <label class="switch-row">
+                        <input type="checkbox" id="isActive" name="isActive" checked>
+                        <span>Active user</span>
+                    </label>
+                    <label class="switch-row">
+                        <input type="checkbox" id="wantsAlerts" name="wantsAlerts" checked>
+                        <span>Receive payment failure alerts</span>
+                    </label>
+                </div>
+
+                <label class="terms-row">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <span>I confirm the details are accurate for system onboarding.</span>
+                </label>
+                <small class="error" id="termsError"></small>
+
+                <div class="actions">
+                    <button type="button" id="clearBtn" class="btn btn-ghost">Clear</button>
+                    <button type="submit" class="btn btn-primary">Create User</button>
+                </div>
+            </form>
+        </section>
+
+        <aside class="side-column">
+            <section class="card">
+                <h2>Live Preview</h2>
+                <div class="preview" id="previewCard">
+                    <p class="preview-name">New User</p>
+                    <p class="preview-line">Role: <span id="previewRole">-</span></p>
+                    <p class="preview-line">Team: <span id="previewTeam">-</span></p>
+                    <p class="preview-line">Currency: <span id="previewCurrency">-</span></p>
+                    <p class="preview-line">Status: <span id="previewStatus">Active</span></p>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-head">
+                    <h2>Recently Added Users</h2>
+                    <button id="clearUsersBtn" class="btn-link" type="button">Clear All</button>
+                </div>
+                <ul id="userList" class="user-list" aria-live="polite"></ul>
+            </section>
+        </aside>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="create-user.js"></script>
 </body>
 </html>
