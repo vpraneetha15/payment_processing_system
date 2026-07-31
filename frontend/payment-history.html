@@ -3,9 +3,1058 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment History</title>
+    <title>Payment History - Banking Table</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f3f8ff;
+            --card: #ffffff;
+            --line: #d8e5f4;
+            --text: #10253b;
+            --muted: #5f748e;
+            --brand: #0d4e83;
+            --success: #147d5f;
+            --danger: #bb1d2e;
+            --pending: #5f3dc4;
+            --shadow: 0 14px 34px rgba(17, 40, 74, 0.09);
+            --radius: 14px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Manrope", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 20% 7%, rgba(13, 78, 131, 0.12) 0%, rgba(13, 78, 131, 0) 36%),
+                radial-gradient(circle at 90% 0%, rgba(20, 125, 95, 0.1) 0%, rgba(20, 125, 95, 0) 33%),
+                var(--bg);
+            min-height: 100vh;
+        }
+
+        .page {
+            width: min(1280px, 94%);
+            margin: 26px auto 36px;
+        }
+
+        .hero {
+            background: linear-gradient(126deg, #0d4e83, #1d7fc4);
+            color: #fff;
+            border-radius: calc(var(--radius) + 6px);
+            padding: 26px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            right: -50px;
+            top: -56px;
+            width: 230px;
+            height: 230px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(1.5rem, 2.7vw, 2.2rem);
+            font-weight: 800;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero p {
+            margin: 8px 0 0;
+            position: relative;
+            z-index: 1;
+            opacity: 0.96;
+        }
+
+        .hero-meta {
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.88rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: #7bf5b3;
+            box-shadow: 0 0 0 0 rgba(123, 245, 179, 0.7);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(123, 245, 179, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(123, 245, 179, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(123, 245, 179, 0); }
+        }
+
+        .cards {
+            margin: 16px 0;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: 0 6px 14px rgba(17, 34, 58, 0.06);
+            padding: 12px;
+        }
+
+        .card .k {
+            font-size: 0.74rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .card .v {
+            margin-top: 4px;
+            font-weight: 800;
+            font-size: 1.24rem;
+        }
+
+        .toolbar {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 1fr 220px auto auto auto;
+            gap: 10px;
+            align-items: center;
+            box-shadow: 0 6px 14px rgba(17, 34, 58, 0.06);
+            margin-bottom: 14px;
+        }
+
+        .search,
+        .select,
+        .btn {
+            min-height: 42px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 0.93rem;
+        }
+
+        .search,
+        .select {
+            border: 1px solid var(--line);
+            padding: 0 10px;
+        }
+
+        .btn {
+            border: none;
+            cursor: pointer;
+            color: #fff;
+            background: var(--brand);
+            padding: 0 14px;
+            font-weight: 700;
+            transition: transform 0.16s ease;
+        }
+
+        .btn.secondary { background: #355b81; }
+        .btn:hover { transform: translateY(-1px); }
+
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .panel h2 {
+            margin: 0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .table-wrap {
+            overflow: auto;
+            max-height: 76vh;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 980px;
+        }
+
+        th,
+        td {
+            padding: 11px 12px;
+            text-align: left;
+            border-bottom: 1px solid #edf2fa;
+            font-size: 0.88rem;
+            vertical-align: top;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #f8fbff;
+            color: #466385;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-size: 0.74rem;
+        }
+
+        .summary-row { cursor: pointer; }
+        .summary-row:hover { background: #f8fbff; }
+
+        .summary-row.selected {
+            background: #ecf5ff;
+            box-shadow: inset 3px 0 0 var(--brand);
+        }
+
+        .summary-row.updated { animation: flash 1.4s ease; }
+
+        @keyframes flash {
+            0% { background: #d9ecff; }
+            100% { background: transparent; }
+        }
+
+        .detail-box {
+            padding: 14px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .kv {
+            border: 1px solid #e5eef9;
+            border-radius: 10px;
+            padding: 8px 10px;
+            background: #fff;
+        }
+
+        .kv .k {
+            font-size: 0.71rem;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .kv .v {
+            margin-top: 3px;
+            font-weight: 700;
+            font-size: 0.86rem;
+        }
+
+        .failed-box {
+            border: 1px solid #ffd5d9;
+            background: #fff4f5;
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        .failed-box h3 {
+            margin: 0 0 6px;
+            color: #982030;
+            font-size: 0.83rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .timeline {
+            margin: 0;
+            padding: 0 0 0 26px;
+            list-style: none;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: "";
+            position: absolute;
+            left: 7px;
+            top: 6px;
+            bottom: 12px;
+            width: 2px;
+            background: linear-gradient(#d2dfef, #b9cbdf);
+        }
+
+        .event {
+            position: relative;
+            padding: 0 0 12px 14px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            position: absolute;
+            left: -1px;
+            top: 5px;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 3px #e7f1ff;
+            background: #4a6281;
+        }
+
+        .dot.created,
+        .dot.initiated { background: #2e6ea9; }
+        .dot.processing,
+        .dot.pending { background: var(--pending); }
+        .dot.completed,
+        .dot.success { background: var(--success); }
+        .dot.failed,
+        .dot.cancelled,
+        .dot.error { background: var(--danger); }
+
+        .event-head {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .event .state {
+            font-weight: 800;
+            font-size: 0.86rem;
+        }
+
+        .event .stamp {
+            color: var(--muted);
+            font-size: 0.79rem;
+        }
+
+        .event .duration {
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            background: #edf4ff;
+            color: #2b4f74;
+            padding: 4px 8px;
+            white-space: nowrap;
+        }
+
+        .meta {
+            margin-top: 6px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            border: 1px solid #d7e5f7;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            padding: 3px 7px;
+            color: #32597f;
+            background: #f3f8ff;
+        }
+
+        .note,
+        .error {
+            margin-top: 7px;
+            border-radius: 9px;
+            padding: 8px 9px;
+            font-size: 0.82rem;
+            line-height: 1.35;
+        }
+
+        .note {
+            border: 1px solid #dae8f8;
+            background: #f8fbff;
+            color: #264667;
+        }
+
+        .error {
+            border: 1px solid #ffd5d9;
+            background: #fff5f6;
+            color: #8e1d26;
+        }
+
+        .transition {
+            margin-top: 6px;
+            display: inline-flex;
+            gap: 7px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #5b7390;
+            align-items: center;
+        }
+
+        .arrow {
+            width: 15px;
+            height: 2px;
+            background: #8ea3bb;
+            position: relative;
+            display: inline-block;
+        }
+
+        .arrow::after {
+            content: "";
+            position: absolute;
+            right: -1px;
+            top: -3px;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+            border-left: 6px solid #8ea3bb;
+        }
+
+        .id {
+            max-width: 240px;
+            word-break: break-all;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.78rem;
+            color: #2b4a70;
+        }
+
+        .status-chip {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 5px 9px;
+            font-size: 0.71rem;
+            font-weight: 800;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .status-created,
+        .status-initiated { background: #2e6ea9; }
+        .status-processing,
+        .status-pending { background: var(--pending); }
+        .status-completed,
+        .status-success { background: var(--success); }
+        .status-failed,
+        .status-cancelled,
+        .status-error { background: var(--danger); }
+        .status-default { background: #4a5f79; }
+
+        .action-btn {
+            border: 1px solid #c6dbf2;
+            background: #eef6ff;
+            color: #23496f;
+            font-weight: 700;
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .loading,
+        .empty {
+            color: var(--muted);
+            padding: 26px;
+            text-align: center;
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        body.modal-open .page {
+            filter: blur(3px);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 31, 53, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            width: min(980px, 100%);
+            max-height: 90vh;
+            overflow: auto;
+            border-radius: 16px;
+            border: 1px solid #d7e5f5;
+            background: #fafdff;
+            box-shadow: 0 28px 60px rgba(8, 24, 44, 0.28);
+        }
+
+        .modal-head {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-bottom: 1px solid #dce9f7;
+            background: #fff;
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 0.92rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #486684;
+        }
+
+        .modal-close {
+            border: 1px solid #c9dbf0;
+            background: #eef6ff;
+            color: #1f456c;
+            border-radius: 8px;
+            width: 34px;
+            height: 34px;
+            font-size: 1.2rem;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        @media (max-width: 1180px) {
+            .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .toolbar { grid-template-columns: 1fr 1fr auto auto; }
+            .toolbar .search { grid-column: 1 / -1; }
+            .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 760px) {
+            .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .toolbar { grid-template-columns: 1fr; }
+            .detail-grid { grid-template-columns: 1fr; }
+            .event-head { grid-template-columns: 1fr; gap: 2px; }
+        }
+    </style>
 </head>
 <body>
-    <h1>Payment History</h1>
+    <main class="page">
+        <section class="hero">
+            <h1>Payment History</h1>
+            <p>All transaction history in one table. Click any transaction row to open full details in a popup.</p>
+            <div class="hero-meta">
+                <span class="live-dot"></span>
+                <span>Real-time status monitor enabled (auto-refresh every 15 seconds)</span>
+            </div>
+        </section>
+
+        <section id="statusCards" class="cards" aria-label="Status cards dashboard"></section>
+
+        <section class="toolbar" aria-label="Search filter and actions">
+            <input id="searchInput" class="search" type="search" placeholder="Search by payment ID, status, note, actor">
+            <select id="statusFilter" class="select" aria-label="Filter by status">
+                <option value="all">All statuses</option>
+                <option value="created">Created</option>
+                <option value="processing">Processing</option>
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="failed">Failed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+            <button id="refreshBtn" class="btn" type="button">Refresh</button>
+            <button id="exportBtn" class="btn secondary" type="button">Export CSV</button>
+        </section>
+
+        <section class="panel">
+            <h2>Payment History Table</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Payment ID</th>
+                            <th>Latest Status</th>
+                            <th>Events</th>
+                            <th>Started At</th>
+                            <th>Last Updated</th>
+                            <th>Processing Time</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <div id="detailModal" class="modal-overlay" aria-hidden="true">
+        <section class="modal-box" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
+            <header class="modal-head">
+                <h2 id="detailModalTitle" class="modal-title">Payment Details</h2>
+                <button id="detailModalClose" class="modal-close" type="button" aria-label="Close details">&times;</button>
+            </header>
+            <div id="detailModalContent"></div>
+        </section>
+    </div>
+
+    <script>
+        const HISTORY_ENDPOINT = "http://localhost:8080/payment-history";
+        const REALTIME_INTERVAL_MS = 15000;
+
+        const statusCardsEl = document.getElementById("statusCards");
+        const searchInput = document.getElementById("searchInput");
+        const statusFilter = document.getElementById("statusFilter");
+        const refreshBtn = document.getElementById("refreshBtn");
+        const exportBtn = document.getElementById("exportBtn");
+        const historyTableBody = document.getElementById("historyTableBody");
+        const detailModal = document.getElementById("detailModal");
+        const detailModalTitle = document.getElementById("detailModalTitle");
+        const detailModalContent = document.getElementById("detailModalContent");
+        const detailModalClose = document.getElementById("detailModalClose");
+
+        let allPayments = [];
+        let filteredPayments = [];
+        let activeModalPaymentId = null;
+        let lastSignatureByPayment = {};
+
+        const fallbackData = [
+            { id: "evt-01", paymentId: "11111111-1111-1111-1111-111111111111", status: "CREATED", createdAt: "2026-07-31T09:00:00", triggeredBy: "SYSTEM", note: "Request accepted" },
+            { id: "evt-02", paymentId: "11111111-1111-1111-1111-111111111111", status: "PROCESSING", createdAt: "2026-07-31T09:01:14", triggeredBy: "WORKER-1", note: "Risk checks completed" },
+            { id: "evt-03", paymentId: "11111111-1111-1111-1111-111111111111", status: "COMPLETED", createdAt: "2026-07-31T09:03:22", triggeredBy: "SYSTEM", note: "Transferred successfully" },
+            { id: "evt-04", paymentId: "22222222-2222-2222-2222-222222222222", status: "CREATED", createdAt: "2026-07-31T10:10:00", triggeredBy: "SYSTEM", note: "Request accepted" },
+            { id: "evt-05", paymentId: "22222222-2222-2222-2222-222222222222", status: "PROCESSING", createdAt: "2026-07-31T10:12:10", triggeredBy: "WORKER-2", note: "Waiting on bank gateway" },
+            { id: "evt-06", paymentId: "22222222-2222-2222-2222-222222222222", status: "FAILED", createdAt: "2026-07-31T10:15:40", triggeredBy: "SYSTEM", note: "Error: Gateway timeout after 3 retries" },
+            { id: "evt-07", paymentId: "33333333-3333-3333-3333-333333333333", status: "CREATED", createdAt: "2026-07-31T11:05:11", triggeredBy: "SYSTEM", note: "Request accepted" },
+            { id: "evt-08", paymentId: "33333333-3333-3333-3333-333333333333", status: "PENDING", createdAt: "2026-07-31T11:06:08", triggeredBy: "BANK-WEBHOOK", note: "Awaiting external confirmation" }
+        ];
+
+        function parseTime(value) {
+            if (!value) {
+                return null;
+            }
+            const d = new Date(value);
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+
+        function formatDate(value) {
+            const d = parseTime(value);
+            if (!d) {
+                return "Unknown";
+            }
+            return new Intl.DateTimeFormat("en-IN", {
+                year: "numeric",
+                month: "short",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            }).format(d);
+        }
+
+        function durationText(ms) {
+            if (ms == null || ms < 0) {
+                return "Current status";
+            }
+            const sec = Math.floor(ms / 1000);
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            const s = sec % 60;
+
+            if (h > 0) {
+                return "Spent " + h + "h " + m + "m " + s + "s";
+            }
+            if (m > 0) {
+                return "Spent " + m + "m " + s + "s";
+            }
+            return "Spent " + s + "s";
+        }
+
+        function statusClass(status) {
+            const s = (status || "").toLowerCase();
+            const known = ["created", "initiated", "processing", "pending", "completed", "success", "failed", "cancelled", "error"];
+            return known.includes(s) ? "status-" + s : "status-default";
+        }
+
+        function dotClass(status) {
+            const s = (status || "").toLowerCase();
+            const known = ["created", "initiated", "processing", "pending", "completed", "success", "failed", "cancelled", "error"];
+            return known.includes(s) ? s : "default";
+        }
+
+        function isErrorText(note, status) {
+            const text = ((note || "") + " " + (status || "")).toLowerCase();
+            return text.includes("error") || text.includes("failed") || text.includes("timeout");
+        }
+
+        function normalizeEvents(rawEvents) {
+            return (rawEvents || []).map((item, index) => ({
+                id: item.id || "evt-" + index,
+                paymentId: item.paymentId || item.payment_id || "UNKNOWN",
+                status: (item.status || "UNKNOWN").toUpperCase(),
+                triggeredBy: item.triggeredBy || item.triggered_by || "SYSTEM",
+                note: item.note || item.message || item.errorMessage || "",
+                timestamp: item.createdAt || item.timestamp || item.eventTime || null
+            }));
+        }
+
+        function groupPayments(events) {
+            const map = new Map();
+
+            for (const e of events) {
+                if (!map.has(e.paymentId)) {
+                    map.set(e.paymentId, []);
+                }
+                map.get(e.paymentId).push(e);
+            }
+
+            const result = [];
+            for (const [paymentId, timeline] of map.entries()) {
+                timeline.sort((a, b) => {
+                    const parsedA = parseTime(a.timestamp);
+                    const parsedB = parseTime(b.timestamp);
+                    const ta = parsedA ? parsedA.getTime() : 0;
+                    const tb = parsedB ? parsedB.getTime() : 0;
+                    return ta - tb;
+                });
+
+                for (let i = 0; i < timeline.length; i++) {
+                    const currentTs = parseTime(timeline[i].timestamp);
+                    const nextEvent = timeline[i + 1] || null;
+                    const nextTs = nextEvent ? parseTime(nextEvent.timestamp) : null;
+                    timeline[i].durationMs = currentTs && nextTs ? nextTs.getTime() - currentTs.getTime() : null;
+                    timeline[i].nextStatus = nextEvent ? nextEvent.status : null;
+                }
+
+                const first = timeline[0];
+                const last = timeline[timeline.length - 1];
+                const firstTime = first ? parseTime(first.timestamp) : null;
+                const lastTime = last ? parseTime(last.timestamp) : null;
+                const totalMs = firstTime && lastTime ? lastTime.getTime() - firstTime.getTime() : null;
+
+                const failedEvent = [...timeline].reverse().find((ev) => {
+                    const st = (ev.status || "").toLowerCase();
+                    return st === "failed" || st === "error" || st === "cancelled" || isErrorText(ev.note, ev.status);
+                }) || null;
+
+                result.push({
+                    paymentId,
+                    latestStatus: last ? last.status : "UNKNOWN",
+                    startedAt: first ? first.timestamp : null,
+                    updatedAt: last ? last.timestamp : null,
+                    eventsCount: timeline.length,
+                    processingMs: totalMs,
+                    failedEvent,
+                    events: timeline,
+                    justUpdated: false
+                });
+            }
+
+            result.sort((a, b) => {
+                const parsedA = parseTime(a.updatedAt);
+                const parsedB = parseTime(b.updatedAt);
+                const ta = parsedA ? parsedA.getTime() : 0;
+                const tb = parsedB ? parsedB.getTime() : 0;
+                return tb - ta;
+            });
+
+            return result;
+        }
+
+        function buildSignatureMap(payments) {
+            const signatures = {};
+            for (const p of payments) {
+                signatures[p.paymentId] = p.latestStatus + "|" + (p.updatedAt || "");
+            }
+            return signatures;
+        }
+
+        function markRealtimeChanges(payments, prev, next) {
+            for (const p of payments) {
+                const oldSig = prev[p.paymentId];
+                const newSig = next[p.paymentId];
+                p.justUpdated = Boolean(oldSig && oldSig !== newSig);
+            }
+        }
+
+        function renderCards(payments) {
+            const total = payments.length;
+            const completed = payments.filter((p) => (p.latestStatus || "").toLowerCase() === "completed").length;
+            const processing = payments.filter((p) => {
+                const s = (p.latestStatus || "").toLowerCase();
+                return s === "processing" || s === "pending";
+            }).length;
+            const failed = payments.filter((p) => {
+                const s = (p.latestStatus || "").toLowerCase();
+                return s === "failed" || s === "error" || s === "cancelled";
+            }).length;
+            const avgMs = payments.length
+                ? Math.floor(payments.reduce((acc, p) => acc + (p.processingMs || 0), 0) / payments.length)
+                : 0;
+
+            statusCardsEl.innerHTML = ""
+                + "<article class='card'><div class='k'>Total Payments</div><div class='v'>" + total + "</div></article>"
+                + "<article class='card'><div class='k'>Completed</div><div class='v'>" + completed + "</div></article>"
+                + "<article class='card'><div class='k'>Processing</div><div class='v'>" + processing + "</div></article>"
+                + "<article class='card'><div class='k'>Failed</div><div class='v'>" + failed + "</div></article>"
+                + "<article class='card'><div class='k'>Avg Processing</div><div class='v'>" + (avgMs ? durationText(avgMs).replace("Spent ", "") : "N/A") + "</div></article>";
+        }
+
+        function detailHtml(payment) {
+            const failedBox = payment.failedEvent
+                ? "<section class='failed-box'><h3>Failed Payment Details</h3>"
+                    + "<div><strong>Status:</strong> " + payment.failedEvent.status + "</div>"
+                    + "<div><strong>Time:</strong> " + formatDate(payment.failedEvent.timestamp) + "</div>"
+                    + "<div><strong>Triggered By:</strong> " + payment.failedEvent.triggeredBy + "</div>"
+                    + "<div><strong>Reason:</strong> " + (payment.failedEvent.note || "No error note provided") + "</div>"
+                    + "</section>"
+                : "";
+
+            const timeline = payment.events.map((ev) => {
+                const noteClass = isErrorText(ev.note, ev.status) ? "error" : "note";
+                const noteBlock = ev.note ? "<div class='" + noteClass + "'>" + ev.note + "</div>" : "";
+                const transition = ev.nextStatus
+                    ? "<div class='transition'>" + ev.status + " <span class='arrow'></span> " + ev.nextStatus + "</div>"
+                    : "";
+
+                return "<li class='event'>"
+                    + "<span class='dot " + dotClass(ev.status) + "'></span>"
+                    + "<div class='event-head'>"
+                    + "<span class='state'>" + ev.status + "</span>"
+                    + "<span class='stamp'>" + formatDate(ev.timestamp) + "</span>"
+                    + "<span class='duration'>" + durationText(ev.durationMs) + "</span>"
+                    + "</div>"
+                    + "<div class='meta'><span class='pill'>Triggered by: " + ev.triggeredBy + "</span></div>"
+                    + noteBlock
+                    + transition
+                    + "</li>";
+            }).join("");
+
+            return ""
+                + "<section class='detail-box'>"
+                + "<section class='detail-grid'>"
+                + "<article class='kv'><div class='k'>Payment ID</div><div class='v id'>" + payment.paymentId + "</div></article>"
+                + "<article class='kv'><div class='k'>Latest Status</div><div class='v'><span class='status-chip " + statusClass(payment.latestStatus) + "'>" + payment.latestStatus + "</span></div></article>"
+                + "<article class='kv'><div class='k'>Started At</div><div class='v'>" + formatDate(payment.startedAt) + "</div></article>"
+                + "<article class='kv'><div class='k'>Last Updated</div><div class='v'>" + formatDate(payment.updatedAt) + "</div></article>"
+                + "<article class='kv'><div class='k'>Total Events</div><div class='v'>" + payment.eventsCount + "</div></article>"
+                + "<article class='kv'><div class='k'>Processing Time</div><div class='v'>" + (payment.processingMs == null ? "N/A" : durationText(payment.processingMs).replace("Spent ", "")) + "</div></article>"
+                + "</section>"
+                + failedBox
+                + "<ol class='timeline'>" + timeline + "</ol>"
+                + "</section>";
+        }
+
+        function renderTable(payments) {
+            if (!payments.length) {
+                historyTableBody.innerHTML = "<tr><td colspan='7' class='empty'>No records for current filter.</td></tr>";
+                return;
+            }
+
+            const rows = [];
+            for (const p of payments) {
+                const selected = p.paymentId === activeModalPaymentId;
+                const summaryClass = "summary-row" + (selected ? " selected" : "") + (p.justUpdated ? " updated" : "");
+                rows.push(
+                    "<tr class='" + summaryClass + "' data-id='" + p.paymentId + "'>"
+                    + "<td class='id'>" + p.paymentId + "</td>"
+                    + "<td><span class='status-chip " + statusClass(p.latestStatus) + "'>" + p.latestStatus + "</span></td>"
+                    + "<td>" + p.eventsCount + "</td>"
+                    + "<td>" + formatDate(p.startedAt) + "</td>"
+                    + "<td>" + formatDate(p.updatedAt) + "</td>"
+                    + "<td>" + (p.processingMs == null ? "N/A" : durationText(p.processingMs).replace("Spent ", "")) + "</td>"
+                    + "<td><button type='button' class='action-btn' data-open='" + p.paymentId + "'>View</button></td>"
+                    + "</tr>"
+                );
+            }
+
+            historyTableBody.innerHTML = rows.join("");
+            bindRowActions();
+        }
+
+        function findPaymentById(paymentId) {
+            const inFiltered = filteredPayments.find((p) => p.paymentId === paymentId);
+            if (inFiltered) {
+                return inFiltered;
+            }
+            return allPayments.find((p) => p.paymentId === paymentId) || null;
+        }
+
+        function openDetailModal(paymentId) {
+            const payment = findPaymentById(paymentId);
+            if (!payment) {
+                return;
+            }
+
+            activeModalPaymentId = payment.paymentId;
+            detailModalTitle.textContent = "Payment Details: " + payment.paymentId;
+            detailModalContent.innerHTML = detailHtml(payment);
+            detailModal.classList.add("open");
+            detailModal.setAttribute("aria-hidden", "false");
+            document.body.classList.add("modal-open");
+            renderTable(filteredPayments);
+        }
+
+        function closeDetailModal() {
+            detailModal.classList.remove("open");
+            detailModal.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("modal-open");
+            activeModalPaymentId = null;
+            renderTable(filteredPayments);
+        }
+
+        function bindRowActions() {
+            const clickableRows = historyTableBody.querySelectorAll(".summary-row");
+            clickableRows.forEach((row) => {
+                row.addEventListener("click", (event) => {
+                    const target = event.target;
+                    const paymentId = row.getAttribute("data-id");
+
+                    if (target instanceof HTMLElement && target.closest("button[data-open]")) {
+                        event.preventDefault();
+                    }
+                    openDetailModal(paymentId);
+                });
+            });
+        }
+
+        function applyFilters() {
+            const term = searchInput.value.trim().toLowerCase();
+            const selectedStatus = statusFilter.value.toLowerCase();
+
+            filteredPayments = allPayments.filter((p) => {
+                const searchHit = term === ""
+                    || p.paymentId.toLowerCase().includes(term)
+                    || p.latestStatus.toLowerCase().includes(term)
+                    || p.events.some((ev) => {
+                        const note = (ev.note || "").toLowerCase();
+                        const actor = (ev.triggeredBy || "").toLowerCase();
+                        return ev.status.toLowerCase().includes(term) || note.includes(term) || actor.includes(term);
+                    });
+
+                const statusHit = selectedStatus === "all"
+                    || p.latestStatus.toLowerCase() === selectedStatus
+                    || p.events.some((ev) => ev.status.toLowerCase() === selectedStatus);
+
+                return searchHit && statusHit;
+            });
+
+            renderCards(filteredPayments);
+            renderTable(filteredPayments);
+        }
+
+        function exportCsv() {
+            if (!filteredPayments.length) {
+                return;
+            }
+
+            const header = [
+                "payment_id",
+                "latest_status",
+                "events",
+                "started_at",
+                "updated_at",
+                "processing_time_seconds",
+                "failed_reason"
+            ];
+
+            const rows = filteredPayments.map((p) => {
+                const sec = p.processingMs == null ? "" : Math.floor(p.processingMs / 1000);
+                const reason = p.failedEvent ? p.failedEvent.note : "";
+                return [
+                    p.paymentId,
+                    p.latestStatus,
+                    p.eventsCount,
+                    p.startedAt || "",
+                    p.updatedAt || "",
+                    sec,
+                    reason.replace(/\"/g, "\"\"")
+                ];
+            });
+
+            const csv = [header, ...rows]
+                .map((row) => row.map((value) => '"' + String(value ?? "") + '"').join(","))
+                .join("\n");
+
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "payment-history-export.csv";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        async function loadHistory(isRealtimeTick) {
+            if (!isRealtimeTick) {
+                historyTableBody.innerHTML = "<tr><td colspan='7' class='loading'>Loading payment history...</td></tr>";
+            }
+
+            let rawData = [];
+            try {
+                const response = await fetch(HISTORY_ENDPOINT);
+                if (!response.ok) {
+                    throw new Error("API " + response.status);
+                }
+                rawData = await response.json();
+            } catch (error) {
+                console.warn("Using fallback data:", error.message);
+                rawData = fallbackData;
+            }
+
+            const events = normalizeEvents(rawData);
+            const nextPayments = groupPayments(events);
+
+            const prevSig = lastSignatureByPayment;
+            const nextSig = buildSignatureMap(nextPayments);
+            markRealtimeChanges(nextPayments, prevSig, nextSig);
+
+            lastSignatureByPayment = nextSig;
+            allPayments = nextPayments;
+            applyFilters();
+
+            if (activeModalPaymentId) {
+                const activePayment = findPaymentById(activeModalPaymentId);
+                if (activePayment) {
+                    detailModalTitle.textContent = "Payment Details: " + activePayment.paymentId;
+                    detailModalContent.innerHTML = detailHtml(activePayment);
+                } else {
+                    closeDetailModal();
+                }
+            }
+        }
+
+        searchInput.addEventListener("input", applyFilters);
+        statusFilter.addEventListener("change", applyFilters);
+        refreshBtn.addEventListener("click", () => loadHistory(false));
+        exportBtn.addEventListener("click", exportCsv);
+        detailModalClose.addEventListener("click", closeDetailModal);
+        detailModal.addEventListener("click", (event) => {
+            if (event.target === detailModal) {
+                closeDetailModal();
+            }
+        });
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && detailModal.classList.contains("open")) {
+                closeDetailModal();
+            }
+        });
+
+        loadHistory(false);
+        setInterval(() => {
+            loadHistory(true);
+        }, REALTIME_INTERVAL_MS);
+    </script>
 </body>
 </html>

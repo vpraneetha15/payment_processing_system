@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import com.example.model.Payment;
 import com.example.service.PaymentService;
 
-import jakarta.validation.Valid;
-
 
 
 @RestController
@@ -26,7 +24,7 @@ public class PaymentController {
 
 
 
-private PaymentService service;
+private final PaymentService service;
 
 
 
@@ -39,8 +37,13 @@ this.service=service;
 
 
 @PostMapping
+<<<<<<< HEAD
 public ResponseEntity<?> save(
 @Valid @RequestBody Payment payment){
+=======
+public String save(
+@RequestBody Payment payment){
+>>>>>>> fad0cf3787d2ee47429c719891e58fb1b95dd7f6
 
 try {
 service.save(payment);
@@ -56,7 +59,7 @@ return ResponseEntity.badRequest().body(
 
 
 @GetMapping
-public List<Payment> getPayments() {
+public List<Payment> getPayments(){
 
 return service.findAll();
 
@@ -66,20 +69,23 @@ return service.findAll();
 
 
 @GetMapping("/{id}")
-public Payment getPayment(@PathVariable String id) {
+public Payment getPayment(
+@PathVariable String id){
 
 return service.findById(id);
 
 }
 
+
 @PutMapping
-public String update(@Valid @RequestBody Payment payment) {
+public String update(@RequestBody Payment payment) {
 
 service.update(payment);
 
 return "Updated Successfully";
 
 }
+
 
 @DeleteMapping("/{id}")
 public String delete(@PathVariable String id) {
