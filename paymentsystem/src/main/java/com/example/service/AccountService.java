@@ -10,29 +10,35 @@ import com.example.repository.AccountRepository;
 @Service
 public class AccountService {
 
-    private final AccountRepository accountRepository;
+	private AccountRepository repository;
 
-    public AccountService(AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
-    }
+	public AccountService(AccountRepository repository) {
+		this.repository = repository;
+	}
 
-    public int save(Account account) {
-        return accountRepository.save(account);
-    }
+	public int save(Account account) {
 
-    public List<Account> findAll() {
-        return accountRepository.findAll();
-    }
+		return repository.save(account);
+	}
 
-    public Account findById(String accountNumber) {
-        return accountRepository.findById(accountNumber);
-    }
+	public List<Account> findAll() {
 
-    public int update(Account account) {
-        return accountRepository.update(account);
-    }
+		return repository.findAll();
+	}
 
-    public int delete(String accountNumber) {
-        return accountRepository.delete(accountNumber);
-    }
+	public Account findById(String accountNumber) {
+
+		return repository.findById(accountNumber);
+	}
+
+	public int update(Account account) {
+
+		return repository.update(account);
+	}
+
+	public int delete(String accountNumber) {
+
+		return repository.delete(accountNumber);
+	}
 }
+
