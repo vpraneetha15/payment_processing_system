@@ -20,9 +20,10 @@ public class PaymentRepository {
     public int save(Payment payment) {
 
         String sql =
-                "insert into payments(amount,currency,source_account,destination_account,status,created_at) values(?,?,?,?,?,?)";
+            "insert into payments(id,amount,currency,source_account,destination_account,status,created_at) values(?,?,?,?,?,?,?)";
 
         return jdbcTemplate.update(sql,
+            payment.getId(),
                 payment.getAmount(),
                 payment.getCurrency(),
                 payment.getSourceAccount(),
