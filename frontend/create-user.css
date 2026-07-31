@@ -146,6 +146,20 @@ h2 {
   color: var(--muted);
 }
 
+.system-values {
+  margin-bottom: 18px;
+  border: 1px solid #cfe0ee;
+  background: linear-gradient(130deg, #f8fcff, #f1f8fd);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.system-values p {
+  margin: 4px 0;
+  color: #1f425c;
+  font-size: 0.94rem;
+}
+
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
