@@ -3,6 +3,9 @@ package com.example.controller;
 
 import java.util.List;
 
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -36,12 +39,16 @@ this.service=service;
 
 
 @PostMapping
-public String save(
+public ResponseEntity<?> save(
 @Valid @RequestBody Payment payment){
 
+try {
 service.save(payment);
-
-return "Payment Saved";
+return ResponseEntity.status(HttpStatus.CREATED).body(payment);
+} catch (DataIntegrityViolationException ex) {
+return ResponseEntity.badRequest().body(
+	"Invalid account details. Ensure source and destination account numbers exist.");
+}
 
 }
 

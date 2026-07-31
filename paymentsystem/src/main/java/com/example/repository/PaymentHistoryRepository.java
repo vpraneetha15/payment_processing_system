@@ -4,6 +4,7 @@ import java.util.List;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Repository;
 
 import com.example.model.PaymentHistory;
@@ -19,13 +20,55 @@ public class PaymentHistoryRepository {
 
     public int save(PaymentHistory paymentHistory) {
 
-        String sql =
-                "insert into payment_history(payment_id,status,created_at) values(?,?,?)";
+        DataAccessException lastException;
 
-        return jdbcTemplate.update(sql,
-                paymentHistory.getPaymentId(),
-                paymentHistory.getStatus(),
-                paymentHistory.getCreatedAt());
+        try {
+            String sql = "insert into payment_history(id,payment_id,status,created_at,triggered_by,note) values(?,?,?,?,?,?)";
+            return jdbcTemplate.update(sql,
+                    paymentHistory.getId(),
+                    paymentHistory.getPaymentId(),
+                    paymentHistory.getStatus(),
+                    paymentHistory.getCreatedAt(),
+                    paymentHistory.getTriggeredBy(),
+                    paymentHistory.getNote());
+        } catch (DataAccessException ex1) {
+            lastException = ex1;
+        }
+
+        try {
+            String sql = "insert into payment_history(id,payment_id,status,`timestamp`,triggered_by,note) values(?,?,?,?,?,?)";
+            return jdbcTemplate.update(sql,
+                    paymentHistory.getId(),
+                    paymentHistory.getPaymentId(),
+                    paymentHistory.getStatus(),
+                    paymentHistory.getCreatedAt(),
+                    paymentHistory.getTriggeredBy(),
+                    paymentHistory.getNote());
+        } catch (DataAccessException ex2) {
+            lastException = ex2;
+        }
+
+        try {
+            String sql = "insert into payment_history(payment_id,status,created_at) values(?,?,?)";
+            return jdbcTemplate.update(sql,
+                    paymentHistory.getPaymentId(),
+                    paymentHistory.getStatus(),
+                    paymentHistory.getCreatedAt());
+        } catch (DataAccessException ex3) {
+            lastException = ex3;
+        }
+
+        try {
+            String sql = "insert into payment_history(payment_id,status,`timestamp`) values(?,?,?)";
+            return jdbcTemplate.update(sql,
+                    paymentHistory.getPaymentId(),
+                    paymentHistory.getStatus(),
+                    paymentHistory.getCreatedAt());
+        } catch (DataAccessException ex4) {
+            lastException = ex4;
+        }
+
+        throw lastException;
     }
 
     public List<PaymentHistory> findAll() {

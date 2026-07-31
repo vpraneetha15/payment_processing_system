@@ -39,10 +39,10 @@
                             id="sourceAccount"
                             name="sourceAccount"
                             type="text"
-                            inputmode="numeric"
+                            inputmode="text"
                             autocomplete="off"
                             maxlength="20"
-                            placeholder="Enter source account number"
+                            placeholder="Enter source account number (e.g. ACC001)"
                             required
                             aria-describedby="sourceAccountHint sourceAccountError">
                         <span id="sourceAccountHint" class="field-hint">Enter the debiting account number.</span>
@@ -55,10 +55,10 @@
                             id="destinationAccount"
                             name="destinationAccount"
                             type="text"
-                            inputmode="numeric"
+                            inputmode="text"
                             autocomplete="off"
                             maxlength="20"
-                            placeholder="Enter destination account number"
+                            placeholder="Enter destination account number (e.g. ACC002)"
                             required
                             aria-describedby="destinationAccountHint destinationAccountError">
                         <span id="destinationAccountHint" class="field-hint">Enter the beneficiary account number.</span>
@@ -141,6 +141,9 @@
     </main>
 
     <script>
+        const API_BASE_URL = window.PAYMENT_API_BASE_URL || "http://localhost:8080";
+        const PAYMENT_API_URL = API_BASE_URL.replace(/\/$/, "") + "/payments";
+
         const form = document.getElementById("create-payment-form");
         const apiError = document.getElementById("api-error");
         const successMessage = document.getElementById("success-message");
@@ -181,8 +184,8 @@
             referenceCount.textContent = fields.reference.value.length + " / 140";
         }
 
-        function sanitizeAccountInput(field) {
-            field.value = field.value.replace(/\D/g, "").slice(0, 20);
+        function normalizeAccountInput(field) {
+            field.value = field.value.replace(/\s+/g, "").toUpperCase().slice(0, 20);
         }
 
         function showApiError(message) {
@@ -286,46 +289,132 @@
                 sourceAccount: fields.sourceAccount.value.trim(),
                 destinationAccount: fields.destinationAccount.value.trim(),
                 amount: Number(fields.amount.value.trim()),
-                currency: fields.currency.value.trim(),
-                reference: fields.reference.value.trim(),
-                idempotencyKey: fields.idempotencyKey.value.trim()
+                currency: fields.currency.value.trim()
             };
         }
 
+        function normalizeDateValue(value) {
+            if (!value) {
+                return 0;
+            }
+
+            const timestamp = Date.parse(value);
+            return Number.isNaN(timestamp) ? 0 : timestamp;
+        }
+
+        async function fetchLatestMatchingPayment(payload) {
+            try {
+                const response = await fetch(PAYMENT_API_URL, {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    return null;
+                }
+
+                const payments = await response.json();
+                if (!Array.isArray(payments) || payments.length === 0) {
+                    return null;
+                }
+
+                const matches = payments.filter((payment) => {
+                    return payment
+                        && payment.sourceAccount === payload.sourceAccount
+                        && payment.destinationAccount === payload.destinationAccount
+                        && Number(payment.amount) === Number(payload.amount)
+                        && payment.currency === payload.currency;
+                });
+
+                if (matches.length === 0) {
+                    return null;
+                }
+
+                matches.sort((a, b) => {
+                    return normalizeDateValue(b.createdAt) - normalizeDateValue(a.createdAt);
+                });
+
+                return matches[0];
+            } catch (error) {
+                return null;
+            }
+        }
+
         async function submitPayment(payload) {
-            const response = await fetch("/api/payments", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Idempotency-Key": payload.idempotencyKey
-                },
-                body: JSON.stringify(payload)
-            });
+            let response;
+            try {
+                response = await fetch(PAYMENT_API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Idempotency-Key": fields.idempotencyKey.value.trim(),
+                        "X-Payment-Reference": fields.reference.value.trim()
+                    },
+                    body: JSON.stringify(payload)
+                });
+            } catch (networkError) {
+                throw new Error(
+                    "Cannot reach backend at " + PAYMENT_API_URL +
+                    ". Start the Spring Boot API and confirm it is listening on port 8080."
+                );
+            }
 
             let responseBody = null;
+            const responseType = response.headers.get("content-type") || "";
 
             try {
-                responseBody = await response.json();
+                if (responseType.includes("application/json")) {
+                    responseBody = await response.json();
+                } else {
+                    responseBody = await response.text();
+                }
             } catch (error) {
                 responseBody = null;
             }
 
             if (!response.ok) {
-                const message = responseBody && responseBody.message
+                const message = responseBody && typeof responseBody === "object" && responseBody.message
                     ? responseBody.message
+                    : typeof responseBody === "string" && responseBody.trim().length > 0
+                        ? responseBody
                     : "Payment creation failed. Please review the request and try again.";
+
+                if (response.status >= 500) {
+                    throw new Error(
+                        "Backend error (" + response.status + "). " +
+                        "Please check the Spring Boot console logs. " +
+                        "Details: " + message
+                    );
+                }
+
                 throw new Error(message);
             }
 
-            return responseBody || {};
+            if (typeof responseBody === "object" && responseBody !== null) {
+                return responseBody;
+            }
+
+            const matchedPayment = await fetchLatestMatchingPayment(payload);
+            if (matchedPayment) {
+                return matchedPayment;
+            }
+
+            return {
+                paymentId: "Not returned by backend",
+                status: typeof responseBody === "string" && responseBody.trim().length > 0
+                    ? responseBody
+                    : "CREATED"
+            };
         }
 
         fields.sourceAccount.addEventListener("input", () => {
-            sanitizeAccountInput(fields.sourceAccount);
+            normalizeAccountInput(fields.sourceAccount);
         });
 
         fields.destinationAccount.addEventListener("input", () => {
-            sanitizeAccountInput(fields.destinationAccount);
+            normalizeAccountInput(fields.destinationAccount);
         });
 
         fields.amount.addEventListener("input", () => {
@@ -372,6 +461,8 @@
                 showSuccess(result.paymentId || result.id, result.status || "CREATED");
                 formStatus.textContent = "Payment request submitted successfully.";
                 form.reset();
+                fields.idempotencyKey.value = generateIdempotencyKey();
+                updateReferenceCount();
             } catch (error) {
                 showApiError(error.message || "Unexpected error while creating payment.");
                 formStatus.textContent = "Submission failed.";
