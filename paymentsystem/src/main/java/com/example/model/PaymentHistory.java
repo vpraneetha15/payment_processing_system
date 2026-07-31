@@ -23,17 +23,21 @@ public class PaymentHistory {
     private String note;
 
 
+    private String accountNumber;
+
+
     public PaymentHistory() {}
 
 
     public PaymentHistory(String id, String paymentId, String status,
-                          LocalDateTime timestamp, String triggeredBy, String note) {
+                          LocalDateTime timestamp, String triggeredBy, String note, String accountNumber) {
         this.id = id;
         this.paymentId = paymentId;
         this.status = status;
         this.createdAt = timestamp;
         this.triggeredBy = triggeredBy;
         this.note = note;
+        this.accountNumber = accountNumber;
     }
 
 
@@ -104,6 +108,16 @@ public class PaymentHistory {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
     }
 
 
