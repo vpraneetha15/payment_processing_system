@@ -111,7 +111,7 @@
             <section class="card">
                 <div class="card-head">
                     <h2>Recently Added Users</h2>
-                    <button id="clearUsersBtn" class="btn-link" type="button">Clear All</button>
+                    <button id="clearUsersBtn" class="btn-link" type="button">Refresh</button>
                 </div>
                 <ul id="userList" class="user-list" aria-live="polite"></ul>
             </section>
@@ -121,261 +121,274 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
         <script>
-                const storageKey = "pps_users";
-                const accountPrefix = "ACC";
-                const accountDigits = 3;
+            const apiBaseUrl = "http://localhost:8080";
+            const accountPrefix = "ACC";
+            const accountDigits = 3;
 
-                const form = document.getElementById("createUserForm");
-                const clearBtn = document.getElementById("clearBtn");
-                const clearUsersBtn = document.getElementById("clearUsersBtn");
-                const userList = document.getElementById("userList");
-                const toast = document.getElementById("toast");
-                const generatedAccountNumberEl = document.getElementById("generatedAccountNumber");
-                const generatedOpeningBalanceEl = document.getElementById("generatedOpeningBalance");
+            const form = document.getElementById("createUserForm");
+            const clearBtn = document.getElementById("clearBtn");
+            const clearUsersBtn = document.getElementById("clearUsersBtn");
+            const userList = document.getElementById("userList");
+            const toast = document.getElementById("toast");
+            const generatedAccountNumberEl = document.getElementById("generatedAccountNumber");
+            const generatedOpeningBalanceEl = document.getElementById("generatedOpeningBalance");
+            const submitBtn = form.querySelector("button[type='submit']");
 
-                let currentGeneratedAccountNumber = "";
+            let currentGeneratedAccountNumber = "";
+            let accountsCache = [];
 
-                const fieldIds = [
-                    "fullName",
-                    "email",
-                    "openingBalance",
-                    "preferredCurrency",
-                    "terms"
-                ];
+            const fieldIds = ["fullName", "email", "openingBalance", "preferredCurrency", "terms"];
 
-                const previewMap = {
-                    fullName: document.getElementById("previewCard").querySelector(".preview-name"),
-                    accountNumber: document.getElementById("previewAccountNumber"),
-                    email: document.getElementById("previewEmail"),
-                    preferredCurrency: document.getElementById("previewCurrency"),
-                    openingBalance: document.getElementById("previewBalance"),
-                    isActive: document.getElementById("previewStatus")
+            const previewMap = {
+                fullName: document.getElementById("previewCard").querySelector(".preview-name"),
+                accountNumber: document.getElementById("previewAccountNumber"),
+                email: document.getElementById("previewEmail"),
+                preferredCurrency: document.getElementById("previewCurrency"),
+                openingBalance: document.getElementById("previewBalance"),
+                isActive: document.getElementById("previewStatus")
+            };
+
+            function showToast(message) {
+                toast.textContent = message;
+                toast.classList.add("show");
+                window.setTimeout(() => {
+                    toast.classList.remove("show");
+                }, 2200);
+            }
+
+            function setError(id, message) {
+                const el = document.getElementById(`${id}Error`);
+                if (el) {
+                    el.textContent = message;
+                }
+            }
+
+            function clearErrors() {
+                fieldIds.forEach((id) => setError(id, ""));
+            }
+
+            function formatBalance(currency, amount) {
+                if (!currency) {
+                    return "-";
+                }
+                return `${currency} ${Number(amount).toFixed(2)}`;
+            }
+
+            function escapeHtml(text) {
+                const map = {
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#039;"
                 };
+                return String(text).replace(/[&<>"']/g, (char) => map[char]);
+            }
 
-                function getUsers() {
-                    try {
-                        const raw = localStorage.getItem(storageKey);
-                        return raw ? JSON.parse(raw) : [];
-                    } catch (_error) {
-                        return [];
-                    }
-                }
-
-                function saveUsers(users) {
-                    localStorage.setItem(storageKey, JSON.stringify(users));
-                }
-
-                function showToast(message) {
-                    toast.textContent = message;
-                    toast.classList.add("show");
-                    window.setTimeout(() => {
-                        toast.classList.remove("show");
-                    }, 1800);
-                }
-
-                function setError(id, message) {
-                    const el = document.getElementById(`${id}Error`);
-                    if (el) {
-                        el.textContent = message;
-                    }
-                }
-
-                function clearErrors() {
-                    fieldIds.forEach((id) => setError(id, ""));
-                }
-
-                function formatBalance(currency, amount) {
-                    if (!currency) {
-                        return "-";
+            function getNextAccountNumber(accounts) {
+                const maxFromAccounts = accounts.reduce((max, account) => {
+                    const value = String(account.accountNumber || "").trim();
+                    const pattern = new RegExp(`^${accountPrefix}(\\d{${accountDigits}})$`);
+                    const match = value.match(pattern);
+                    if (!match) {
+                        return max;
                     }
 
-                    return `${currency} ${Number(amount).toFixed(2)}`;
+                    const numeric = Number(match[1]);
+                    return Number.isNaN(numeric) ? max : Math.max(max, numeric);
+                }, 0);
+
+                const nextNumber = maxFromAccounts + 1;
+                return `${accountPrefix}${String(nextNumber).padStart(accountDigits, "0")}`;
+            }
+
+            function regenerateAccountNumber() {
+                currentGeneratedAccountNumber = getNextAccountNumber(accountsCache);
+                generatedAccountNumberEl.textContent = currentGeneratedAccountNumber;
+            }
+
+            function refreshPreview() {
+                const fullName = document.getElementById("fullName").value.trim();
+                const email = document.getElementById("email").value.trim();
+                const preferredCurrency = document.getElementById("preferredCurrency").value;
+                const balanceInput = document.getElementById("openingBalance").value;
+                const balance = balanceInput === "" ? 0 : Number.parseFloat(balanceInput);
+                const safeBalance = Number.isNaN(balance) ? 0 : balance;
+
+                generatedOpeningBalanceEl.textContent = formatBalance(preferredCurrency, safeBalance);
+                previewMap.fullName.textContent = fullName || "New User";
+                previewMap.accountNumber.textContent = currentGeneratedAccountNumber || "-";
+                previewMap.email.textContent = email || "-";
+                previewMap.preferredCurrency.textContent = preferredCurrency || "-";
+                previewMap.openingBalance.textContent = formatBalance(preferredCurrency, safeBalance);
+                previewMap.isActive.textContent = "Active";
+            }
+
+            function renderUserList() {
+                if (!accountsCache.length) {
+                    userList.innerHTML = "<li>No users/accounts found in database yet.</li>";
+                    return;
                 }
 
-                function getNextAccountNumber(users) {
-                    const maxFromUsers = users.reduce((max, user) => {
-                        const value = String(user.accountNumber || "").trim();
-                        const pattern = new RegExp(`^${accountPrefix}(\\d{${accountDigits}})$`);
-                        const match = value.match(pattern);
-                        if (!match) {
-                            return max;
-                        }
+                const latest = [...accountsCache].reverse().slice(0, 5);
 
-                        const numeric = Number(match[1]);
-                        return Number.isNaN(numeric) ? max : Math.max(max, numeric);
-                    }, 0);
+                userList.innerHTML = latest
+                    .map((account) => {
+                        const badgeClass = account.active ? "badge" : "badge inactive";
+                        const badgeText = account.active ? "Active" : "Inactive";
 
-                    const nextNumber = maxFromUsers + 1;
-                    return `${accountPrefix}${String(nextNumber).padStart(accountDigits, "0")}`;
+                        return `
+                            <li>
+                                <div class="line-1">
+                                    <span>${escapeHtml(account.accountName)} (${escapeHtml(account.accountNumber)})</span>
+                                    <span class="${badgeClass}">${badgeText}</span>
+                                </div>
+                                <div class="line-2">${escapeHtml(account.currency)} ${Number(account.balance).toFixed(2)}</div>
+                            </li>
+                        `;
+                    })
+                    .join("");
+            }
+
+            async function fetchAccounts() {
+                const response = await fetch(`${apiBaseUrl}/accounts`);
+                if (!response.ok) {
+                    throw new Error(`Failed to load accounts (${response.status})`);
                 }
 
-                function regenerateAccountNumber() {
-                    currentGeneratedAccountNumber = getNextAccountNumber(getUsers());
-                    generatedAccountNumberEl.textContent = currentGeneratedAccountNumber;
-                }
-
-                function formToObject() {
-                    const preferredCurrency = document.getElementById("preferredCurrency").value;
-                    const balanceValue = document.getElementById("openingBalance").value;
-                    const parsedBalance = Number.parseFloat(balanceValue || "0");
-
-                    return {
-                        fullName: document.getElementById("fullName").value.trim(),
-                        email: document.getElementById("email").value.trim(),
-                        preferredCurrency,
-                        accountNumber: currentGeneratedAccountNumber,
-                        balance: Number.isNaN(parsedBalance) ? 0 : parsedBalance,
-                        notes: document.getElementById("notes").value.trim(),
-                        isActive: true,
-                        terms: document.getElementById("terms").checked,
-                        createdAt: new Date().toISOString()
-                    };
-                }
-
-                function validate(formData) {
-                    let isValid = true;
-
-                    if (!formData.fullName || formData.fullName.trim().length < 3) {
-                        setError("fullName", "Enter at least 3 characters.");
-                        isValid = false;
-                    }
-
-                    if (!formData.email || !/^\S+@\S+\.\S+$/.test(formData.email)) {
-                        setError("email", "Enter a valid email address.");
-                        isValid = false;
-                    }
-
-                    if (!formData.preferredCurrency) {
-                        setError("preferredCurrency", "Select preferred currency.");
-                        isValid = false;
-                    }
-
-                    if (Number.isNaN(formData.balance) || formData.balance < 0) {
-                        setError("openingBalance", "Enter a valid opening balance (0 or more).");
-                        isValid = false;
-                    }
-
-                    if (!formData.terms) {
-                        setError("terms", "Please confirm details before creating user.");
-                        isValid = false;
-                    }
-
-                    const users = getUsers();
-                    const duplicateEmail = users.find(
-                        (user) => user.email.toLowerCase() === formData.email.toLowerCase()
-                    );
-
-                    if (duplicateEmail) {
-                        setError("email", "Email is already registered.");
-                        isValid = false;
-                    }
-
-                    return isValid;
-                }
-
-                function escapeHtml(text) {
-                    const map = {
-                        "&": "&amp;",
-                        "<": "&lt;",
-                        ">": "&gt;",
-                        '"': "&quot;",
-                        "'": "&#039;"
-                    };
-
-                    return String(text).replace(/[&<>"']/g, (char) => map[char]);
-                }
-
-                function refreshPreview() {
-                    const fullName = document.getElementById("fullName").value.trim();
-                    const email = document.getElementById("email").value.trim();
-                    const preferredCurrency = document.getElementById("preferredCurrency").value;
-                    const balanceInput = document.getElementById("openingBalance").value;
-                    const balance = balanceInput === "" ? 0 : Number.parseFloat(balanceInput);
-
-                    generatedOpeningBalanceEl.textContent = formatBalance(preferredCurrency, Number.isNaN(balance) ? 0 : balance);
-
-                    previewMap.fullName.textContent = fullName || "New User";
-                    previewMap.accountNumber.textContent = currentGeneratedAccountNumber || "-";
-                    previewMap.email.textContent = email || "-";
-                    previewMap.preferredCurrency.textContent = preferredCurrency || "-";
-                    previewMap.openingBalance.textContent = formatBalance(preferredCurrency, Number.isNaN(balance) ? 0 : balance);
-                    previewMap.isActive.textContent = "Active";
-                }
-
-                function renderUserList() {
-                    const users = getUsers();
-
-                    if (!users.length) {
-                        userList.innerHTML = "<li>No users added yet.</li>";
-                        return;
-                    }
-
-                    const latest = [...users].reverse().slice(0, 5);
-
-                    userList.innerHTML = latest
-                        .map((user) => {
-                            const badgeClass = user.isActive ? "badge" : "badge inactive";
-                            const badgeText = user.isActive ? "Active" : "Inactive";
-                            return `
-                                <li>
-                                    <div class="line-1">
-                                        <span>${escapeHtml(user.fullName)} (${escapeHtml(user.accountNumber)})</span>
-                                        <span class="${badgeClass}">${badgeText}</span>
-                                    </div>
-                                    <div class="line-2">${escapeHtml(user.email)} | ${escapeHtml(user.preferredCurrency)} ${Number(user.balance).toFixed(2)}</div>
-                                </li>
-                            `;
-                        })
-                        .join("");
-                }
-
-                function resetForm() {
-                    form.reset();
-                    document.getElementById("isActive").checked = true;
-                    regenerateAccountNumber();
-                    clearErrors();
-                    refreshPreview();
-                }
-
-                form.addEventListener("submit", (event) => {
-                    event.preventDefault();
-                    clearErrors();
-
-                    const payload = formToObject();
-                    if (!validate(payload)) {
-                        showToast("Please fix form errors.");
-                        return;
-                    }
-
-                    const users = getUsers();
-                    users.push(payload);
-                    saveUsers(users);
-
-                    showToast("User created successfully.");
-                    renderUserList();
-                    resetForm();
-                });
-
-                clearBtn.addEventListener("click", () => {
-                    resetForm();
-                    showToast("Form cleared.");
-                });
-
-                clearUsersBtn.addEventListener("click", () => {
-                    localStorage.removeItem(storageKey);
-                    regenerateAccountNumber();
-                    renderUserList();
-                    refreshPreview();
-                    showToast("Saved users removed.");
-                });
-
-                ["input", "change"].forEach((eventName) => {
-                    form.addEventListener(eventName, refreshPreview);
-                });
-
+                const data = await response.json();
+                accountsCache = Array.isArray(data) ? data : [];
                 regenerateAccountNumber();
                 renderUserList();
                 refreshPreview();
+            }
+
+            function formToRequestPayload() {
+                const preferredCurrency = document.getElementById("preferredCurrency").value;
+                const balanceValue = document.getElementById("openingBalance").value;
+                const parsedBalance = Number.parseFloat(balanceValue || "0");
+
+                return {
+                    accountNumber: currentGeneratedAccountNumber,
+                    accountName: document.getElementById("fullName").value.trim(),
+                    balance: Number.isNaN(parsedBalance) ? 0 : parsedBalance,
+                    currency: preferredCurrency,
+                    active: true
+                };
+            }
+
+            function validate(payload) {
+                let isValid = true;
+
+                if (!payload.accountName || payload.accountName.trim().length < 3) {
+                    setError("fullName", "Enter at least 3 characters.");
+                    isValid = false;
+                }
+
+                const email = document.getElementById("email").value.trim();
+                if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+                    setError("email", "Enter a valid email address.");
+                    isValid = false;
+                }
+
+                if (!payload.currency) {
+                    setError("preferredCurrency", "Select preferred currency.");
+                    isValid = false;
+                }
+
+                if (Number.isNaN(payload.balance) || payload.balance < 0) {
+                    setError("openingBalance", "Enter a valid opening balance (0 or more).");
+                    isValid = false;
+                }
+
+                const termsAccepted = document.getElementById("terms").checked;
+                if (!termsAccepted) {
+                    setError("terms", "Please confirm details before creating user.");
+                    isValid = false;
+                }
+
+                return isValid;
+            }
+
+            function resetForm() {
+                form.reset();
+                document.getElementById("isActive").checked = true;
+                clearErrors();
+                refreshPreview();
+            }
+
+            async function createAccount(payload) {
+                const response = await fetch(`${apiBaseUrl}/accounts`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(text || `Create failed (${response.status})`);
+                }
+            }
+
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                clearErrors();
+
+                const payload = formToRequestPayload();
+                if (!validate(payload)) {
+                    showToast("Please fix form errors.");
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Creating...";
+
+                try {
+                    await createAccount(payload);
+                    await fetchAccounts();
+                    resetForm();
+                    showToast("User/account created and saved to database.");
+                } catch (_error) {
+                    await fetchAccounts().catch(() => {});
+                    showToast("Create failed. Check backend/API and try again.");
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Create User";
+                }
+            });
+
+            clearBtn.addEventListener("click", () => {
+                resetForm();
+                showToast("Form cleared.");
+            });
+
+            clearUsersBtn.addEventListener("click", async () => {
+                try {
+                    await fetchAccounts();
+                    showToast("Refreshed from database.");
+                } catch (_error) {
+                    showToast("Could not refresh. Backend may be offline.");
+                }
+            });
+
+            ["input", "change"].forEach((eventName) => {
+                form.addEventListener(eventName, refreshPreview);
+            });
+
+            (async function init() {
+                try {
+                    await fetchAccounts();
+                    showToast("Connected to backend.");
+                } catch (_error) {
+                    accountsCache = [];
+                    regenerateAccountNumber();
+                    renderUserList();
+                    refreshPreview();
+                    showToast("Backend offline. Start paymentsystem on port 8080.");
+                }
+            })();
         </script>
 </body>
 </html>
