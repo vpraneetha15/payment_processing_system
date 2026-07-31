@@ -37,13 +37,8 @@ this.service=service;
 
 
 @PostMapping
-<<<<<<< HEAD
 public ResponseEntity<?> save(
-@Valid @RequestBody Payment payment){
-=======
-public String save(
 @RequestBody Payment payment){
->>>>>>> fad0cf3787d2ee47429c719891e58fb1b95dd7f6
 
 try {
 service.save(payment);
