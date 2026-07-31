@@ -4,8 +4,381 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Payment</title>
+    <link rel="stylesheet" href="create-payment.css">
 </head>
 <body>
-    <h1>Create Payment</h1>
+    <main class="page-shell">
+        <section class="panel" aria-labelledby="create-payment-title">
+            <header class="page-header">
+                <span class="eyebrow">Payment Processing System</span>
+                <h1 id="create-payment-title">Create Payment</h1>
+                <p class="page-intro">Enter the payment details below, validate them on the client, and submit the payment request safely.</p>
+            </header>
+
+            <div id="api-error" class="message error" role="alert" aria-live="polite"></div>
+
+            <section id="success-message" class="message success" aria-live="polite" aria-labelledby="success-title">
+                <h2 id="success-title">Payment Created Successfully</h2>
+                <div class="result-grid">
+                    <div class="result-row">
+                        <span class="result-label">Payment ID</span>
+                        <span id="payment-id" class="result-value">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Status</span>
+                        <span id="payment-status" class="result-value">-</span>
+                    </div>
+                </div>
+            </section>
+
+            <form id="create-payment-form" novalidate>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="sourceAccount">Source Account Number</label>
+                        <input
+                            id="sourceAccount"
+                            name="sourceAccount"
+                            type="text"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            maxlength="20"
+                            placeholder="Enter source account number"
+                            required
+                            aria-describedby="sourceAccountHint sourceAccountError">
+                        <span id="sourceAccountHint" class="field-hint">Enter the debiting account number.</span>
+                        <span id="sourceAccountError" class="field-error" aria-live="polite"></span>
+                    </div>
+
+                    <div class="field">
+                        <label for="destinationAccount">Destination Account Number</label>
+                        <input
+                            id="destinationAccount"
+                            name="destinationAccount"
+                            type="text"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            maxlength="20"
+                            placeholder="Enter destination account number"
+                            required
+                            aria-describedby="destinationAccountHint destinationAccountError">
+                        <span id="destinationAccountHint" class="field-hint">Enter the beneficiary account number.</span>
+                        <span id="destinationAccountError" class="field-error" aria-live="polite"></span>
+                    </div>
+
+                    <div class="field">
+                        <label for="amount">Amount</label>
+                        <input
+                            id="amount"
+                            name="amount"
+                            type="number"
+                            inputmode="decimal"
+                            min="0.01"
+                            step="0.01"
+                            placeholder="0.00"
+                            required
+                            aria-describedby="amountHint amountError">
+                        <span id="amountHint" class="field-hint">Only positive values with up to 2 decimal places are allowed.</span>
+                        <span id="amountError" class="field-error" aria-live="polite"></span>
+                    </div>
+
+                    <div class="field">
+                        <label for="currency">Currency</label>
+                        <select
+                            id="currency"
+                            name="currency"
+                            required
+                            aria-describedby="currencyHint currencyError">
+                            <option value="">Select currency</option>
+                            <option value="GBP">GBP</option>
+                            <option value="EUR">EUR</option>
+                            <option value="INR">INR</option>
+                            <option value="USD">USD</option>
+                        </select>
+                        <span id="currencyHint" class="field-hint">Choose the settlement currency.</span>
+                        <span id="currencyError" class="field-error" aria-live="polite"></span>
+                    </div>
+
+                    <div class="field field-full">
+                        <label for="reference">Payment Reference/Description</label>
+                        <textarea
+                            id="reference"
+                            name="reference"
+                            placeholder="Enter payment reference or description"
+                            required
+                            maxlength="140"
+                            aria-describedby="referenceHint referenceError"></textarea>
+                        <div class="field-meta">
+                            <span id="referenceHint" class="field-hint">Add a clear payment reason or business description.</span>
+                            <span id="referenceCount" class="field-count">0 / 140</span>
+                        </div>
+                        <span id="referenceError" class="field-error" aria-live="polite"></span>
+                    </div>
+
+                    <div class="field field-full">
+                        <div class="label-row">
+                            <label for="idempotencyKey">Idempotency Key</label>
+                            <button id="generate-key-button" class="text-button" type="button">Generate Key</button>
+                        </div>
+                        <input
+                            id="idempotencyKey"
+                            name="idempotencyKey"
+                            type="text"
+                            autocomplete="off"
+                            placeholder="Enter idempotency key"
+                            required
+                            aria-describedby="idempotencyKeyHint idempotencyKeyError">
+                        <span id="idempotencyKeyHint" class="field-hint">Use a unique key so retries do not create duplicate payments.</span>
+                        <span id="idempotencyKeyError" class="field-error" aria-live="polite"></span>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button id="submit-button" class="submit-button" type="submit">Create Payment</button>
+                    <span id="form-status" class="status-text" aria-live="polite"></span>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        const form = document.getElementById("create-payment-form");
+        const apiError = document.getElementById("api-error");
+        const successMessage = document.getElementById("success-message");
+        const paymentIdValue = document.getElementById("payment-id");
+        const paymentStatusValue = document.getElementById("payment-status");
+        const formStatus = document.getElementById("form-status");
+        const submitButton = document.getElementById("submit-button");
+        const generateKeyButton = document.getElementById("generate-key-button");
+        const referenceCount = document.getElementById("referenceCount");
+
+        const fields = {
+            sourceAccount: document.getElementById("sourceAccount"),
+            destinationAccount: document.getElementById("destinationAccount"),
+            amount: document.getElementById("amount"),
+            currency: document.getElementById("currency"),
+            reference: document.getElementById("reference"),
+            idempotencyKey: document.getElementById("idempotencyKey")
+        };
+
+        const errorElements = {
+            sourceAccount: document.getElementById("sourceAccountError"),
+            destinationAccount: document.getElementById("destinationAccountError"),
+            amount: document.getElementById("amountError"),
+            currency: document.getElementById("currencyError"),
+            reference: document.getElementById("referenceError"),
+            idempotencyKey: document.getElementById("idempotencyKeyError")
+        };
+
+        function generateIdempotencyKey() {
+            if (window.crypto && typeof window.crypto.randomUUID === "function") {
+                return window.crypto.randomUUID();
+            }
+
+            return "key-" + Date.now() + "-" + Math.random().toString(16).slice(2, 10);
+        }
+
+        function updateReferenceCount() {
+            referenceCount.textContent = fields.reference.value.length + " / 140";
+        }
+
+        function sanitizeAccountInput(field) {
+            field.value = field.value.replace(/\D/g, "").slice(0, 20);
+        }
+
+        function showApiError(message) {
+            apiError.textContent = message;
+            apiError.classList.add("is-visible");
+        }
+
+        function clearApiError() {
+            apiError.textContent = "";
+            apiError.classList.remove("is-visible");
+        }
+
+        function showSuccess(paymentId, status) {
+            paymentIdValue.textContent = paymentId || "Unavailable";
+            paymentStatusValue.textContent = status || "Created";
+            successMessage.classList.add("is-visible");
+        }
+
+        function clearSuccess() {
+            paymentIdValue.textContent = "-";
+            paymentStatusValue.textContent = "-";
+            successMessage.classList.remove("is-visible");
+        }
+
+        function setFieldError(fieldName, message) {
+            errorElements[fieldName].textContent = message;
+            fields[fieldName].setAttribute("aria-invalid", message ? "true" : "false");
+        }
+
+        function clearFieldErrors() {
+            Object.keys(errorElements).forEach((fieldName) => {
+                errorElements[fieldName].textContent = "";
+                fields[fieldName].setAttribute("aria-invalid", "false");
+            });
+        }
+
+        function validateForm() {
+            clearFieldErrors();
+            clearApiError();
+
+            const sourceAccount = fields.sourceAccount.value.trim();
+            const destinationAccount = fields.destinationAccount.value.trim();
+            const amountText = fields.amount.value.trim();
+            const currency = fields.currency.value.trim();
+            const reference = fields.reference.value.trim();
+            const idempotencyKey = fields.idempotencyKey.value.trim();
+
+            let isValid = true;
+
+            if (!sourceAccount) {
+                setFieldError("sourceAccount", "Source account number is required.");
+                isValid = false;
+            }
+
+            if (!destinationAccount) {
+                setFieldError("destinationAccount", "Destination account number is required.");
+                isValid = false;
+            }
+
+            if (sourceAccount && destinationAccount && sourceAccount === destinationAccount) {
+                setFieldError("destinationAccount", "Source and destination accounts cannot be the same.");
+                isValid = false;
+            }
+
+            if (!amountText) {
+                setFieldError("amount", "Amount is required.");
+                isValid = false;
+            } else {
+                const amountValue = Number(amountText);
+                const validAmountPattern = /^\d+(\.\d{1,2})?$/;
+
+                if (!validAmountPattern.test(amountText)) {
+                    setFieldError("amount", "Amount must use no more than 2 decimal places.");
+                    isValid = false;
+                } else if (!Number.isFinite(amountValue) || amountValue <= 0) {
+                    setFieldError("amount", "Amount must be greater than zero.");
+                    isValid = false;
+                }
+            }
+
+            if (!currency) {
+                setFieldError("currency", "Currency must be selected.");
+                isValid = false;
+            }
+
+            if (!reference) {
+                setFieldError("reference", "Payment reference or description is required.");
+                isValid = false;
+            }
+
+            if (!idempotencyKey) {
+                setFieldError("idempotencyKey", "Idempotency key is required.");
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function buildPayload() {
+            return {
+                sourceAccount: fields.sourceAccount.value.trim(),
+                destinationAccount: fields.destinationAccount.value.trim(),
+                amount: Number(fields.amount.value.trim()),
+                currency: fields.currency.value.trim(),
+                reference: fields.reference.value.trim(),
+                idempotencyKey: fields.idempotencyKey.value.trim()
+            };
+        }
+
+        async function submitPayment(payload) {
+            const response = await fetch("/api/payments", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Idempotency-Key": payload.idempotencyKey
+                },
+                body: JSON.stringify(payload)
+            });
+
+            let responseBody = null;
+
+            try {
+                responseBody = await response.json();
+            } catch (error) {
+                responseBody = null;
+            }
+
+            if (!response.ok) {
+                const message = responseBody && responseBody.message
+                    ? responseBody.message
+                    : "Payment creation failed. Please review the request and try again.";
+                throw new Error(message);
+            }
+
+            return responseBody || {};
+        }
+
+        fields.sourceAccount.addEventListener("input", () => {
+            sanitizeAccountInput(fields.sourceAccount);
+        });
+
+        fields.destinationAccount.addEventListener("input", () => {
+            sanitizeAccountInput(fields.destinationAccount);
+        });
+
+        fields.amount.addEventListener("input", () => {
+            if (fields.amount.value.length > 0) {
+                fields.amount.value = fields.amount.value.replace(/[^\d.]/g, "");
+            }
+        });
+
+        fields.reference.addEventListener("input", () => {
+            updateReferenceCount();
+        });
+
+        Object.keys(fields).forEach((fieldName) => {
+            fields[fieldName].addEventListener("blur", () => {
+                validateForm();
+            });
+        });
+
+        generateKeyButton.addEventListener("click", () => {
+            fields.idempotencyKey.value = generateIdempotencyKey();
+            setFieldError("idempotencyKey", "");
+        });
+
+        fields.idempotencyKey.value = generateIdempotencyKey();
+        updateReferenceCount();
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            clearSuccess();
+            formStatus.textContent = "";
+
+            if (!validateForm()) {
+                showApiError("Please correct the highlighted fields before submitting the payment.");
+                return;
+            }
+
+            const payload = buildPayload();
+
+            submitButton.disabled = true;
+            formStatus.textContent = "Submitting payment...";
+
+            try {
+                const result = await submitPayment(payload);
+                showSuccess(result.paymentId || result.id, result.status || "CREATED");
+                formStatus.textContent = "Payment request submitted successfully.";
+                form.reset();
+            } catch (error) {
+                showApiError(error.message || "Unexpected error while creating payment.");
+                formStatus.textContent = "Submission failed.";
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>
