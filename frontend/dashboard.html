@@ -510,6 +510,49 @@
             flex-wrap: wrap;
         }
 
+        .analytics-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+            background: linear-gradient(135deg, rgba(15, 111, 255, 0.08), rgba(0, 194, 168, 0.08));
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 20px 24px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 18px;
+        }
+
+        .analytics-banner-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 0.78rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--brand-deep);
+            background: var(--hero-chip-bg);
+            border: 1px solid var(--hero-chip-line);
+            border-radius: 999px;
+            padding: 6px 11px;
+            margin-bottom: 10px;
+        }
+
+        .analytics-banner-copy h2 {
+            margin: 0 0 6px;
+            font-size: 1.2rem;
+            letter-spacing: -0.01em;
+        }
+
+        .analytics-banner-copy p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+            max-width: 60ch;
+        }
+
         .kpi-grid {
             display: grid;
             grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -730,6 +773,11 @@
                 grid-template-columns: 1fr;
             }
 
+            .analytics-banner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
             .kpi-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
@@ -860,6 +908,15 @@
                     </div>
                 </aside>
             </div>
+        </section>
+
+        <section class="analytics-banner" aria-label="Analytics entry point">
+            <div class="analytics-banner-copy">
+                <div class="analytics-banner-kicker">Reporting &amp; Insights</div>
+                <h2>Explore the full Payment Intelligence Center</h2>
+                <p>Drill into status trends, currency volume, and a detailed error-code breakdown with interactive filters.</p>
+            </div>
+            <a class="btn btn-primary" href="analytics.html">Open Analytics &rarr;</a>
         </section>
 
         <section class="kpi-grid" aria-label="Payments overview">

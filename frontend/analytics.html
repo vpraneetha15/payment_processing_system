@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Analytics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --surface: #ffffff;
+            --ink: #13233a;
+            --muted: #5f6f85;
+            --brand: #0f6fff;
+            --brand-deep: #0046b8;
+            --accent: #00c2a8;
+            --line: #dbe4f0;
+            --glow-a: rgba(15, 111, 255, 0.18);
+            --glow-b: rgba(0, 194, 168, 0.18);
+            --bg-stop-a: #f7fbff;
+            --bg-stop-b: #eef3fb;
+            --table-head: #f6f9ff;
+            --table-head-ink: #385070;
+            --card-shadow: 0 10px 24px rgba(18, 40, 70, 0.06);
+            --hero-shadow: 0 18px 40px rgba(18, 40, 70, 0.08);
+            --button-primary-shadow: 0 12px 25px rgba(15, 111, 255, 0.28);
+            --theme-pill: #ffffff;
+            --theme-pill-ink: #304763;
+            --theme-pill-active-bg: #163a6c;
+            --theme-pill-active-ink: #ffffff;
+            --chip-bg: #eef4ff;
+            --chip-ink: #16407a;
+            --chip-active-bg: #0f6fff;
+            --chip-active-ink: #ffffff;
+            --danger: #c23a3a;
+            --warning: #b46b00;
+            --success: #0a8e67;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0a1221;
+                --surface: #111d32;
+                --ink: #e5eefc;
+                --muted: #a8bddb;
+                --brand: #4f98ff;
+                --brand-deep: #2d6ed0;
+                --accent: #3ad6be;
+                --line: #2a3a56;
+                --glow-a: rgba(79, 152, 255, 0.2);
+                --glow-b: rgba(58, 214, 190, 0.18);
+                --bg-stop-a: #0d1a2d;
+                --bg-stop-b: #08111f;
+                --table-head: #17253d;
+                --table-head-ink: #bed1eb;
+                --card-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+                --hero-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+                --button-primary-shadow: 0 12px 25px rgba(41, 110, 214, 0.4);
+                --theme-pill: #1a2a42;
+                --theme-pill-ink: #d7e6fd;
+                --theme-pill-active-bg: #5fafff;
+                --theme-pill-active-ink: #081627;
+                --chip-bg: #16273f;
+                --chip-ink: #bfd7fb;
+                --chip-active-bg: #4f98ff;
+                --chip-active-ink: #081627;
+            }
+        }
+
+        :root[data-theme="light"] {
+            --bg: #f4f7fb; --surface: #ffffff; --ink: #13233a; --muted: #5f6f85;
+            --brand: #0f6fff; --brand-deep: #0046b8; --accent: #00c2a8; --line: #dbe4f0;
+            --glow-a: rgba(15, 111, 255, 0.18); --glow-b: rgba(0, 194, 168, 0.18);
+            --bg-stop-a: #f7fbff; --bg-stop-b: #eef3fb; --table-head: #f6f9ff; --table-head-ink: #385070;
+            --card-shadow: 0 10px 24px rgba(18, 40, 70, 0.06); --hero-shadow: 0 18px 40px rgba(18, 40, 70, 0.08);
+            --button-primary-shadow: 0 12px 25px rgba(15, 111, 255, 0.28);
+            --theme-pill: #ffffff; --theme-pill-ink: #304763; --theme-pill-active-bg: #163a6c; --theme-pill-active-ink: #ffffff;
+            --chip-bg: #eef4ff; --chip-ink: #16407a; --chip-active-bg: #0f6fff; --chip-active-ink: #ffffff;
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #0a1221; --surface: #111d32; --ink: #e5eefc; --muted: #a8bddb;
+            --brand: #4f98ff; --brand-deep: #2d6ed0; --accent: #3ad6be; --line: #2a3a56;
+            --glow-a: rgba(79, 152, 255, 0.2); --glow-b: rgba(58, 214, 190, 0.18);
+            --bg-stop-a: #0d1a2d; --bg-stop-b: #08111f; --table-head: #17253d; --table-head-ink: #bed1eb;
+            --card-shadow: 0 10px 24px rgba(0, 0, 0, 0.28); --hero-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+            --button-primary-shadow: 0 12px 25px rgba(41, 110, 214, 0.4);
+            --theme-pill: #1a2a42; --theme-pill-ink: #d7e6fd; --theme-pill-active-bg: #5fafff; --theme-pill-active-ink: #081627;
+            --chip-bg: #16273f; --chip-ink: #bfd7fb; --chip-active-bg: #4f98ff; --chip-active-ink: #081627;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Manrope", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 15% 15%, var(--glow-a), transparent 40%),
+                radial-gradient(circle at 85% 10%, var(--glow-b), transparent 32%),
+                linear-gradient(135deg, var(--bg-stop-a) 0%, var(--bg-stop-b) 52%, var(--bg-stop-a) 100%);
+            min-height: 100vh;
+            transition: background 0.55s cubic-bezier(0.22, 0.61, 0.36, 1), color 0.35s ease;
+        }
+
+        body.theme-switching, body.theme-switching * {
+            transition: background-color 0.45s cubic-bezier(0.22, 0.61, 0.36, 1), color 0.35s ease,
+                border-color 0.45s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+        }
+
+        .page { width: min(1240px, 94vw); margin: 0 auto; padding: 28px 0 60px; }
+
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+
+        .brand { font-size: 1.05rem; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase; }
+        .brand span { color: var(--brand-deep); }
+
+        .actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+
+        .theme-menu { position: relative; }
+        .theme-trigger {
+            width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 50%;
+            background: var(--surface); color: var(--theme-pill-ink); display: inline-flex;
+            align-items: center; justify-content: center; cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.25s ease, background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+        }
+        .theme-trigger:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(10, 27, 48, 0.14); }
+        .theme-trigger svg { width: 20px; height: 20px; }
+        .theme-dropdown {
+            position: absolute; top: calc(100% + 10px); right: 0; min-width: 150px;
+            background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+            box-shadow: 0 18px 32px rgba(8, 24, 44, 0.2); padding: 8px; opacity: 0;
+            transform: translateY(-8px) scale(0.98); pointer-events: none;
+            transition: opacity 0.22s ease, transform 0.22s ease; z-index: 20;
+        }
+        .theme-menu.open .theme-dropdown { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+        .theme-btn {
+            width: 100%; border: 0; border-radius: 10px; background: transparent; color: var(--theme-pill-ink);
+            font: inherit; font-size: 0.84rem; font-weight: 700; padding: 9px 10px; text-align: left; cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .theme-btn.is-active { background: var(--theme-pill-active-bg); color: var(--theme-pill-active-ink); }
+
+        .btn {
+            text-decoration: none; border-radius: 999px; font-weight: 700; font-size: 0.9rem;
+            padding: 10px 16px; transition: transform 0.2s ease, box-shadow 0.2s ease; border: 1px solid transparent;
+            display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+        .btn-primary { background: linear-gradient(135deg, var(--brand), var(--brand-deep)); color: #fff; box-shadow: var(--button-primary-shadow); }
+        .btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--line); }
+        .btn:hover { transform: translateY(-2px); }
+
+        .hero-strip {
+            background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
+            padding: 20px 24px; box-shadow: var(--hero-shadow); margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+        }
+        .hero-strip .kicker {
+            display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.78rem;
+            letter-spacing: 0.04em; text-transform: uppercase; color: var(--brand-deep); background: rgba(15,111,255,0.08);
+            border: 1px solid rgba(15,111,255,0.2); border-radius: 999px; padding: 6px 11px; margin-bottom: 8px;
+        }
+        .hero-strip h1 { margin: 0; font-size: clamp(1.4rem, 2.6vw, 1.9rem); letter-spacing: -0.02em; }
+        .hero-strip p { margin: 6px 0 0; color: var(--muted); font-size: 0.92rem; max-width: 60ch; }
+        .refresh-meta { text-align: right; color: var(--muted); font-size: 0.82rem; }
+        .refresh-meta button { margin-top: 6px; }
+
+        /* Filter bar */
+        .filter-bar {
+            background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+            padding: 18px 20px; box-shadow: var(--card-shadow); margin-bottom: 20px;
+        }
+        .filter-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px;
+        }
+        .filter-group label {
+            display: block; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.04em;
+            color: var(--muted); font-weight: 700; margin-bottom: 8px;
+        }
+        .chip-set { display: flex; flex-wrap: wrap; gap: 6px; }
+        .chip {
+            border: 1px solid var(--line); background: var(--chip-bg); color: var(--chip-ink);
+            border-radius: 999px; padding: 6px 11px; font-size: 0.78rem; font-weight: 700; cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease; user-select: none;
+        }
+        .chip:hover { transform: translateY(-1px); }
+        .chip.is-active { background: var(--chip-active-bg); color: var(--chip-active-ink); border-color: transparent; }
+        .filter-group input[type="date"], .filter-group input[type="number"] {
+            width: 100%; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+            border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 0.85rem;
+        }
+        .range-row { display: flex; gap: 8px; }
+        .filter-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+        .active-chips { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .active-chips .chip { cursor: default; }
+
+        /* Headline strip */
+        .headline-grid {
+            display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px;
+        }
+        .headline-card {
+            background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+            padding: 16px; box-shadow: var(--card-shadow);
+        }
+        .headline-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+        .headline-value { font-size: 1.5rem; font-weight: 800; line-height: 1.15; }
+        .headline-value.success { color: var(--success); }
+        .headline-value.failed { color: var(--danger); }
+        .headline-value.pending { color: var(--warning); }
+
+        /* Insights */
+        .insights-strip {
+            background: linear-gradient(135deg, rgba(15,111,255,0.06), rgba(0,194,168,0.06));
+            border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px; margin-bottom: 20px;
+            display: flex; flex-wrap: wrap; gap: 10px 24px;
+        }
+        .insight-item { display: flex; align-items: center; gap: 8px; font-size: 0.86rem; color: var(--ink); }
+        .insight-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
+
+        /* Charts grid */
+        .charts-grid {
+            display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px;
+        }
+        .chart-card {
+            background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+            padding: 18px; box-shadow: var(--card-shadow);
+        }
+        .chart-card.wide { grid-column: 1 / -1; }
+        .chart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+        .chart-head h2 { margin: 0; font-size: 1.02rem; }
+        .chart-head .chart-toggle {
+            display: flex; gap: 6px; background: var(--bg); border-radius: 999px; padding: 3px; border: 1px solid var(--line);
+        }
+        .chart-toggle button {
+            border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 0.76rem; font-weight: 700;
+            padding: 5px 10px; border-radius: 999px; cursor: pointer;
+        }
+        .chart-toggle button.is-active { background: var(--brand); color: #fff; }
+        .chart-wrap { position: relative; height: 280px; }
+        .chart-empty { color: var(--muted); font-size: 0.86rem; text-align: center; padding: 40px 0; }
+
+        /* Detail table */
+        .table-panel {
+            background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+            padding: 18px; box-shadow: var(--card-shadow);
+        }
+        .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+        .panel-head h2 { margin: 0; font-size: 1.05rem; }
+        .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+        table { width: 100%; border-collapse: collapse; min-width: 760px; background: var(--surface); }
+        th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); font-size: 0.88rem; }
+        th { background: var(--table-head); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--table-head-ink); }
+        tbody tr { cursor: pointer; }
+        tbody tr:hover { background: rgba(15, 111, 255, 0.04); }
+        tbody tr:last-child td { border-bottom: 0; }
+        .status-pill {
+            display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 9px;
+            font-size: 0.74rem; font-weight: 700; background: var(--chip-bg); color: var(--chip-ink);
+        }
+        .status-pill.completed, .status-pill.success { background: #e8fbf5; color: #076e52; }
+        .status-pill.failed { background: #ffecee; color: #a12626; }
+        .status-pill.created { background: #e8f3ff; color: #114f94; }
+        .status-pill.validated, .status-pill.sent { background: #fff4e0; color: #93590a; }
+        .error-tag { font-size: 0.76rem; font-weight: 700; color: var(--danger); }
+        .history-row td { background: var(--bg); }
+        .history-timeline { display: grid; gap: 8px; padding: 6px 0; }
+        .history-event { display: flex; gap: 10px; align-items: flex-start; font-size: 0.84rem; }
+        .history-event .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--brand); margin-top: 5px; flex-shrink: 0; }
+        .history-event .meta { color: var(--muted); font-size: 0.78rem; }
+        .table-meta { margin-top: 10px; color: var(--muted); font-size: 0.84rem; }
+        .empty-row td { color: var(--muted); text-align: center; padding: 24px; }
+
+        @media (max-width: 1000px) {
+            .headline-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 640px) {
+            .headline-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header class="topbar">
+            <div class="brand">Payment Processing System <span>/ Analytics</span></div>
+            <div class="actions">
+                <div class="theme-menu" id="theme-menu">
+                    <button class="theme-trigger" id="theme-trigger" type="button" aria-label="Theme mode" aria-haspopup="true" aria-expanded="false">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M12 3C7.03 3 3 6.85 3 11.6C3 14.2 4.25 16.5 6.2 17.95C6.62 18.27 6.86 18.78 6.85 19.3C6.85 19.41 6.85 19.52 6.85 19.64C6.85 20.95 7.96 22 9.34 22H11.25C12.63 22 13.74 20.95 13.74 19.64V19.5C13.74 18.82 14.11 18.2 14.73 17.86C18.22 15.95 20.22 12.08 19.18 7.93C18.43 4.92 15.47 3 12 3Z" stroke="currentColor" stroke-width="1.5"/>
+                            <circle cx="8.2" cy="11" r="1" fill="currentColor"/>
+                            <circle cx="12" cy="9.6" r="1" fill="currentColor"/>
+                            <circle cx="15.6" cy="11.7" r="1" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <div class="theme-dropdown" id="theme-dropdown" role="menu" aria-label="Theme options">
+                        <button class="theme-btn" type="button" data-theme-mode="light" role="menuitem">Light</button>
+                        <button class="theme-btn" type="button" data-theme-mode="dark" role="menuitem">Dark</button>
+                        <button class="theme-btn" type="button" data-theme-mode="system" role="menuitem">System</button>
+                    </div>
+                </div>
+                <a class="btn btn-secondary" href="dashboard.html">Back to Dashboard</a>
+                <button class="btn btn-primary" id="export-csv-button" type="button">Export CSV</button>
+            </div>
+        </header>
+
+        <section class="hero-strip">
+            <div>
+                <div class="kicker">Payment Intelligence Center</div>
+                <h1>Detailed Analytics &amp; Reporting</h1>
+                <p>Filter, break down, and visualize the full payment lifecycle &mdash; including error code diagnostics and currency volume &mdash; for stakeholder review.</p>
+            </div>
+            <div class="refresh-meta">
+                <div id="last-refreshed">Last refreshed: --</div>
+                <button class="btn btn-secondary" id="refresh-button" type="button">Refresh Now</button>
+            </div>
+        </section>
+
+        <section class="filter-bar" aria-label="Filters">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label>Status</label>
+                    <div class="chip-set" id="status-chips" data-values="CREATED,VALIDATED,SENT,COMPLETED,FAILED"></div>
+                </div>
+                <div class="filter-group">
+                    <label>Currency</label>
+                    <div class="chip-set" id="currency-chips" data-values="USD,EUR,GBP,INR"></div>
+                </div>
+                <div class="filter-group">
+                    <label>Error Code</label>
+                    <div class="chip-set" id="error-code-chips" data-values="VALIDATION_FAILED,INSUFFICIENT_FUNDS,INVALID_ACCOUNT,INVALID_CURRENCY,INVALID_AMOUNT,NETWORK_ERROR,PROCESSING_ERROR"></div>
+                </div>
+                <div class="filter-group">
+                    <label>Date Range</label>
+                    <div class="range-row">
+                        <input type="date" id="filter-from" aria-label="From date">
+                        <input type="date" id="filter-to" aria-label="To date">
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>Amount Range</label>
+                    <div class="range-row">
+                        <input type="number" id="filter-min-amount" placeholder="Min" min="0" step="0.01">
+                        <input type="number" id="filter-max-amount" placeholder="Max" min="0" step="0.01">
+                    </div>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-secondary" id="reset-filters-button" type="button">Reset Filters</button>
+                <button class="btn btn-primary" id="apply-filters-button" type="button">Apply Filters</button>
+            </div>
+            <div class="active-chips" id="active-chips"></div>
+        </section>
+
+        <section class="headline-grid" aria-label="Headline metrics">
+            <article class="headline-card">
+                <div class="headline-label">Total Volume</div>
+                <div class="headline-value" id="headline-total-amount">--</div>
+            </article>
+            <article class="headline-card">
+                <div class="headline-label">Total Payments</div>
+                <div class="headline-value" id="headline-total-count">--</div>
+            </article>
+            <article class="headline-card">
+                <div class="headline-label">Success Rate</div>
+                <div class="headline-value success" id="headline-success-rate">--</div>
+            </article>
+            <article class="headline-card">
+                <div class="headline-label">Failure Rate</div>
+                <div class="headline-value failed" id="headline-failure-rate">--</div>
+            </article>
+            <article class="headline-card">
+                <div class="headline-label">In Flight</div>
+                <div class="headline-value pending" id="headline-inflight">--</div>
+            </article>
+        </section>
+
+        <section class="insights-strip" id="insights-strip" aria-label="Automated insights">
+            <div class="insight-item"><span class="insight-dot"></span><span id="insight-placeholder">Loading insights...</span></div>
+        </section>
+
+        <section class="charts-grid" aria-label="Visualizations">
+            <div class="chart-card">
+                <div class="chart-head">
+                    <h2>Status Distribution</h2>
+                </div>
+                <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-head">
+                    <h2>Error Code Breakdown</h2>
+                </div>
+                <div class="chart-wrap"><canvas id="chart-errors"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-head">
+                    <h2>Money Transferred by Currency</h2>
+                    <div class="chart-toggle" id="currency-toggle">
+                        <button type="button" data-mode="amount" class="is-active">Amount</button>
+                        <button type="button" data-mode="count">Count</button>
+                    </div>
+                </div>
+                <div class="chart-wrap"><canvas id="chart-currency"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-head">
+                    <h2>Volume Trend</h2>
+                    <div class="chart-toggle" id="trend-toggle">
+                        <button type="button" data-mode="count" class="is-active">Count</button>
+                        <button type="button" data-mode="amount">Amount</button>
+                    </div>
+                </div>
+                <div class="chart-wrap"><canvas id="chart-trend"></canvas></div>
+            </div>
+        </section>
+
+        <section class="table-panel" aria-label="Filtered payment detail">
+            <div class="panel-head">
+                <h2>Filtered Payments</h2>
+                <span class="table-meta" id="table-count-meta">Showing 0 payments</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Payment ID</th>
+                            <th>Amount</th>
+                            <th>Currency</th>
+                            <th>Status</th>
+                            <th>Error Code</th>
+                            <th>Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payments-body">
+                        <tr class="empty-row"><td colspan="6">Loading payments...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        var API_BASE_URL = window.PAYMENT_API_BASE_URL || "http://localhost:8080";
+        var ANALYTICS_URL = API_BASE_URL.replace(/\/$/, "") + "/analytics";
+        var HISTORY_URL = API_BASE_URL.replace(/\/$/, "") + "/payment-history";
+
+        var state = {
+            statuses: [],
+            currencies: [],
+            errorCodes: [],
+            from: "",
+            to: "",
+            minAmount: "",
+            maxAmount: ""
+        };
+
+        var charts = {};
+        var allHistory = [];
+        var currentPayments = [];
+        var currencyChartMode = "amount";
+        var trendChartMode = "count";
+
+        /* ---------- Theme ---------- */
+        (function setupThemeMode() {
+            var root = document.documentElement;
+            var body = document.body;
+            var storageKey = "dashboard-theme-mode";
+            var buttons = Array.from(document.querySelectorAll(".theme-btn"));
+            var menu = document.getElementById("theme-menu");
+            var trigger = document.getElementById("theme-trigger");
+
+            function closeMenu() { menu.classList.remove("open"); trigger.setAttribute("aria-expanded", "false"); }
+            function openMenu() { menu.classList.add("open"); trigger.setAttribute("aria-expanded", "true"); }
+
+            function applyMode(mode) {
+                body.classList.add("theme-switching");
+                if (mode === "light" || mode === "dark") {
+                    root.setAttribute("data-theme", mode);
+                } else {
+                    root.removeAttribute("data-theme");
+                }
+                buttons.forEach(function (button) {
+                    var active = button.getAttribute("data-theme-mode") === mode;
+                    button.classList.toggle("is-active", active);
+                });
+                window.clearTimeout(applyMode._timer);
+                applyMode._timer = window.setTimeout(function () { body.classList.remove("theme-switching"); }, 500);
+            }
+
+            var saved = localStorage.getItem(storageKey);
+            applyMode(saved === "light" || saved === "dark" || saved === "system" ? saved : "system");
+
+            buttons.forEach(function (button) {
+                button.addEventListener("click", function () {
+                    var mode = button.getAttribute("data-theme-mode") || "system";
+                    localStorage.setItem(storageKey, mode);
+                    applyMode(mode);
+                    closeMenu();
+                });
+            });
+
+            trigger.addEventListener("click", function () {
+                menu.classList.contains("open") ? closeMenu() : openMenu();
+            });
+            document.addEventListener("click", function (event) {
+                if (!menu.contains(event.target)) closeMenu();
+            });
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") closeMenu();
+            });
+        })();
+
+        /* ---------- Filter chip setup ---------- */
+        function buildChipSet(containerId, stateKey) {
+            var container = document.getElementById(containerId);
+            var values = container.getAttribute("data-values").split(",");
+            values.forEach(function (value) {
+                var chip = document.createElement("button");
+                chip.type = "button";
+                chip.className = "chip";
+                chip.textContent = value;
+                chip.dataset.value = value;
+                chip.addEventListener("click", function () {
+                    var list = state[stateKey];
+                    var idx = list.indexOf(value);
+                    if (idx === -1) {
+                        list.push(value);
+                        chip.classList.add("is-active");
+                    } else {
+                        list.splice(idx, 1);
+                        chip.classList.remove("is-active");
+                    }
+                });
+                container.appendChild(chip);
+            });
+        }
+
+        buildChipSet("status-chips", "statuses");
+        buildChipSet("currency-chips", "currencies");
+        buildChipSet("error-code-chips", "errorCodes");
+
+        function syncChipUI() {
+            ["status-chips", "currency-chips", "error-code-chips"].forEach(function (id) {
+                var key = id === "status-chips" ? "statuses" : id === "currency-chips" ? "currencies" : "errorCodes";
+                Array.from(document.getElementById(id).children).forEach(function (chip) {
+                    chip.classList.toggle("is-active", state[key].indexOf(chip.dataset.value) !== -1);
+                });
+            });
+        }
+
+        function renderActiveChips() {
+            var container = document.getElementById("active-chips");
+            container.innerHTML = "";
+            var pieces = [];
+            if (state.statuses.length) pieces.push("Status: " + state.statuses.join(", "));
+            if (state.currencies.length) pieces.push("Currency: " + state.currencies.join(", "));
+            if (state.errorCodes.length) pieces.push("Error: " + state.errorCodes.join(", "));
+            if (state.from) pieces.push("From: " + state.from);
+            if (state.to) pieces.push("To: " + state.to);
+            if (state.minAmount) pieces.push("Min: " + state.minAmount);
+            if (state.maxAmount) pieces.push("Max: " + state.maxAmount);
+
+            if (pieces.length === 0) {
+                var chip = document.createElement("span");
+                chip.className = "chip";
+                chip.textContent = "No filters applied";
+                container.appendChild(chip);
+                return;
+            }
+
+            pieces.forEach(function (text) {
+                var chip = document.createElement("span");
+                chip.className = "chip is-active";
+                chip.textContent = text;
+                container.appendChild(chip);
+            });
+        }
+
+        document.getElementById("apply-filters-button").addEventListener("click", function () {
+            state.from = document.getElementById("filter-from").value;
+            state.to = document.getElementById("filter-to").value;
+            state.minAmount = document.getElementById("filter-min-amount").value;
+            state.maxAmount = document.getElementById("filter-max-amount").value;
+            renderActiveChips();
+            loadAll();
+        });
+
+        document.getElementById("reset-filters-button").addEventListener("click", function () {
+            state.statuses = [];
+            state.currencies = [];
+            state.errorCodes = [];
+            state.from = "";
+            state.to = "";
+            state.minAmount = "";
+            state.maxAmount = "";
+            document.getElementById("filter-from").value = "";
+            document.getElementById("filter-to").value = "";
+            document.getElementById("filter-min-amount").value = "";
+            document.getElementById("filter-max-amount").value = "";
+            syncChipUI();
+            renderActiveChips();
+            loadAll();
+        });
+
+        document.getElementById("refresh-button").addEventListener("click", loadAll);
+
+        /* ---------- Query building ---------- */
+        function buildQuery(extra) {
+            var params = new URLSearchParams();
+            if (state.statuses.length) params.set("status", state.statuses.join(","));
+            if (state.currencies.length) params.set("currency", state.currencies.join(","));
+            if (state.errorCodes.length) params.set("errorCode", state.errorCodes.join(","));
+            if (state.from) params.set("from", state.from);
+            if (state.to) params.set("to", state.to);
+            if (state.minAmount) params.set("minAmount", state.minAmount);
+            if (state.maxAmount) params.set("maxAmount", state.maxAmount);
+            if (extra) {
+                Object.keys(extra).forEach(function (key) { params.set(key, extra[key]); });
+            }
+            return params.toString();
+        }
+
+        async function fetchJson(url) {
+            try {
+                var response = await fetch(url);
+                if (!response.ok) return null;
+                return await response.json();
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function formatMoney(value) {
+            return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(value || 0);
+        }
+
+        function formatPercent(value) {
+            return (value || 0).toFixed(1) + "%";
+        }
+
+        var chartColors = ["#0f6fff", "#00c2a8", "#f4a340", "#c23a3a", "#7c5cff", "#2d6ed0", "#e05aa0", "#3ad6be", "#b46b00", "#5f6f85"];
+
+        /* ---------- Renderers ---------- */
+        function renderHeadline(overview) {
+            document.getElementById("headline-total-amount").textContent = formatMoney(overview.totalAmount);
+            document.getElementById("headline-total-count").textContent = formatMoney(overview.totalPayments);
+            document.getElementById("headline-success-rate").textContent = formatPercent(overview.successRate);
+            document.getElementById("headline-failure-rate").textContent = formatPercent(overview.failureRate);
+            document.getElementById("headline-inflight").textContent = formatMoney(overview.inFlightCount);
+        }
+
+        function renderStatusChart(data) {
+            var ctx = document.getElementById("chart-status");
+            var labels = data.map(function (d) { return d.status; });
+            var counts = data.map(function (d) { return d.count; });
+
+            if (charts.status) charts.status.destroy();
+            if (!data.length) return;
+
+            charts.status = new Chart(ctx, {
+                type: "doughnut",
+                data: {
+                    labels: labels,
+                    datasets: [{ data: counts, backgroundColor: chartColors, borderWidth: 0 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: "bottom" } }
+                }
+            });
+        }
+
+        function renderErrorChart(data) {
+            var ctx = document.getElementById("chart-errors");
+            var labels = data.map(function (d) { return d.errorCode; });
+            var counts = data.map(function (d) { return d.count; });
+
+            if (charts.errors) charts.errors.destroy();
+            if (!data.length) return;
+
+            charts.errors = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [{ label: "Occurrences", data: counts, backgroundColor: "#c23a3a", borderRadius: 6 }]
+                },
+                options: {
+                    indexAxis: "y", responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
+            });
+        }
+
+        function renderCurrencyChart(data) {
+            var ctx = document.getElementById("chart-currency");
+            var labels = data.map(function (d) { return d.currency; });
+            var values = data.map(function (d) { return currencyChartMode === "amount" ? d.totalAmount : d.count; });
+
+            if (charts.currency) charts.currency.destroy();
+            if (!data.length) return;
+
+            charts.currency = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: currencyChartMode === "amount" ? "Total Amount" : "Payment Count",
+                        data: values,
+                        backgroundColor: chartColors,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function renderTrendChart(data) {
+            var ctx = document.getElementById("chart-trend");
+            var labels = data.map(function (d) { return d.periodLabel; });
+            var values = data.map(function (d) { return trendChartMode === "amount" ? d.totalAmount : d.count; });
+
+            if (charts.trend) charts.trend.destroy();
+            if (!data.length) return;
+
+            charts.trend = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: trendChartMode === "amount" ? "Total Amount" : "Payment Count",
+                        data: values,
+                        borderColor: "#0f6fff",
+                        backgroundColor: "rgba(15,111,255,0.14)",
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        document.getElementById("currency-toggle").addEventListener("click", function (event) {
+            var button = event.target.closest("button");
+            if (!button) return;
+            currencyChartMode = button.dataset.mode;
+            Array.from(this.querySelectorAll("button")).forEach(function (b) { b.classList.toggle("is-active", b === button); });
+            fetchJson(ANALYTICS_URL + "/currency-volume?" + buildQuery()).then(function (data) {
+                if (data) renderCurrencyChart(data);
+            });
+        });
+
+        document.getElementById("trend-toggle").addEventListener("click", function (event) {
+            var button = event.target.closest("button");
+            if (!button) return;
+            trendChartMode = button.dataset.mode;
+            Array.from(this.querySelectorAll("button")).forEach(function (b) { b.classList.toggle("is-active", b === button); });
+            fetchJson(ANALYTICS_URL + "/trend?" + buildQuery()).then(function (data) {
+                if (data) renderTrendChart(data);
+            });
+        });
+
+        function renderInsights(overview, errorCodes, currencyVolume) {
+            var strip = document.getElementById("insights-strip");
+            strip.innerHTML = "";
+            var insights = [];
+
+            if (overview.totalPayments > 0) {
+                insights.push(overview.failureRate.toFixed(1) + "% of payments failed in the selected range.");
+            }
+            if (errorCodes.length) {
+                var top = errorCodes[0];
+                var pctOfFailures = overview.failedCount > 0 ? ((top.count / overview.failedCount) * 100).toFixed(0) : 0;
+                insights.push(top.errorCode + " is the leading failure reason (" + top.count + " occurrences, " + pctOfFailures + "% of failures).");
+            }
+            if (currencyVolume.length) {
+                var topCurrency = currencyVolume.slice().sort(function (a, b) { return b.totalAmount - a.totalAmount; })[0];
+                insights.push(topCurrency.currency + " leads total volume with " + formatMoney(topCurrency.totalAmount) + " across " + topCurrency.count + " payments.");
+            }
+            if (!insights.length) {
+                insights.push("No data available yet for the selected filters.");
+            }
+
+            insights.forEach(function (text) {
+                var item = document.createElement("div");
+                item.className = "insight-item";
+                item.innerHTML = '<span class="insight-dot"></span><span></span>';
+                item.querySelector("span:last-child").textContent = text;
+                strip.appendChild(item);
+            });
+        }
+
+        function statusClass(status) {
+            return String(status || "").toLowerCase();
+        }
+
+        function renderPaymentsTable(payments) {
+            currentPayments = payments;
+            var body = document.getElementById("payments-body");
+            body.innerHTML = "";
+            document.getElementById("table-count-meta").textContent = "Showing " + payments.length + " payments";
+
+            if (!payments.length) {
+                body.innerHTML = '<tr class="empty-row"><td colspan="6">No payments match the current filters.</td></tr>';
+                return;
+            }
+
+            payments.forEach(function (payment) {
+                var row = document.createElement("tr");
+                row.innerHTML =
+                    "<td>" + (payment.id || "-") + "</td>" +
+                    "<td>" + formatMoney(payment.amount) + "</td>" +
+                    "<td>" + (payment.currency || "-") + "</td>" +
+                    '<td><span class="status-pill ' + statusClass(payment.status) + '">' + (payment.status || "-") + "</span></td>" +
+                    '<td><span class="error-tag">' + (payment.errorCode || "&mdash;") + "</span></td>" +
+                    "<td>" + (payment.createdAt ? new Date(payment.createdAt).toLocaleString() : "-") + "</td>";
+
+                row.addEventListener("click", function () {
+                    toggleHistoryRow(row, payment);
+                });
+                body.appendChild(row);
+            });
+        }
+
+        function toggleHistoryRow(row, payment) {
+            var next = row.nextElementSibling;
+            if (next && next.classList.contains("history-row")) {
+                next.remove();
+                return;
+            }
+
+            Array.from(document.querySelectorAll(".history-row")).forEach(function (el) { el.remove(); });
+
+            var historyEntries = allHistory.filter(function (entry) { return entry.paymentId === payment.id; });
+            historyEntries.sort(function (a, b) { return new Date(a.createdAt) - new Date(b.createdAt); });
+
+            var historyRow = document.createElement("tr");
+            historyRow.className = "history-row";
+            var cell = document.createElement("td");
+            cell.colSpan = 6;
+
+            if (!historyEntries.length) {
+                cell.innerHTML = '<div class="history-timeline">No history entries found for this payment.</div>';
+            } else {
+                var timeline = document.createElement("div");
+                timeline.className = "history-timeline";
+                historyEntries.forEach(function (entry) {
+                    var event = document.createElement("div");
+                    event.className = "history-event";
+                    event.innerHTML =
+                        '<span class="dot"></span><div><strong>' + entry.status + "</strong> &mdash; " +
+                        (entry.note || "") +
+                        '<div class="meta">' + (entry.createdAt ? new Date(entry.createdAt).toLocaleString() : "") +
+                        " &middot; triggered by " + (entry.triggeredBy || "SYSTEM") + "</div></div>";
+                    timeline.appendChild(event);
+                });
+                cell.appendChild(timeline);
+            }
+
+            historyRow.appendChild(cell);
+            row.after(historyRow);
+        }
+
+        /* ---------- CSV export ---------- */
+        document.getElementById("export-csv-button").addEventListener("click", function () {
+            if (!currentPayments.length) return;
+            var header = ["Payment ID", "Amount", "Currency", "Status", "Error Code", "Created At"];
+            var rows = currentPayments.map(function (p) {
+                return [p.id, p.amount, p.currency, p.status, p.errorCode || "", p.createdAt].join(",");
+            });
+            var csv = [header.join(",")].concat(rows).join("\n");
+            var blob = new Blob([csv], { type: "text/csv" });
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement("a");
+            link.href = url;
+            link.download = "payment-analytics-export.csv";
+            link.click();
+            URL.revokeObjectURL(url);
+        });
+
+        /* ---------- Main load ---------- */
+        async function loadAll() {
+            var query = buildQuery();
+
+            var overview = await fetchJson(ANALYTICS_URL + "/overview?" + query) || {
+                totalPayments: 0, totalAmount: 0, completedCount: 0, failedCount: 0, inFlightCount: 0, successRate: 0, failureRate: 0
+            };
+            var statusDistribution = await fetchJson(ANALYTICS_URL + "/status-distribution?" + query) || [];
+            var errorCodes = await fetchJson(ANALYTICS_URL + "/error-codes?" + query) || [];
+            var currencyVolume = await fetchJson(ANALYTICS_URL + "/currency-volume?" + query) || [];
+            var trend = await fetchJson(ANALYTICS_URL + "/trend?" + query) || [];
+            var payments = await fetchJson(ANALYTICS_URL + "/payments?" + query + "&limit=200") || [];
+
+            if (!allHistory.length) {
+                allHistory = await fetchJson(HISTORY_URL) || [];
+            }
+
+            renderHeadline(overview);
+            renderStatusChart(statusDistribution);
+            renderErrorChart(errorCodes);
+            renderCurrencyChart(currencyVolume);
+            renderTrendChart(trend);
+            renderInsights(overview, errorCodes, currencyVolume);
+            renderPaymentsTable(payments);
+
+            document.getElementById("last-refreshed").textContent = "Last refreshed: " + new Date().toLocaleTimeString();
+        }
+
+        loadAll();
+    </script>
+</body>
+</html>
