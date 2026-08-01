@@ -197,6 +197,54 @@
         .active-chips { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
         .active-chips .chip { cursor: default; }
 
+        /* Multi-select dropdown (status filter) */
+        .multiselect { position: relative; }
+        .multiselect-trigger {
+            width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+            border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+            border-radius: 10px; padding: 9px 12px; font: inherit; font-size: 0.85rem; font-weight: 700;
+            cursor: pointer;
+        }
+        .multiselect-trigger svg { width: 16px; height: 16px; transition: transform 0.2s ease; flex-shrink: 0; }
+        .multiselect.open .multiselect-trigger svg { transform: rotate(180deg); }
+        .multiselect-panel {
+            position: absolute; top: calc(100% + 8px); left: 0; right: 0; min-width: 200px; z-index: 15;
+            background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+            box-shadow: 0 18px 32px rgba(8, 24, 44, 0.16); padding: 8px; opacity: 0;
+            transform: translateY(-6px); pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
+            max-height: 220px; overflow-y: auto;
+        }
+        .multiselect.open .multiselect-panel { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .multiselect-option {
+            display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 8px;
+            font-size: 0.84rem; font-weight: 600; cursor: pointer; color: var(--ink);
+        }
+        .multiselect-option:hover { background: var(--bg); }
+        .multiselect-option input { accent-color: var(--brand); width: 15px; height: 15px; }
+
+        /* Currency comparison */
+        .compare-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .compare-controls select {
+            border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px;
+            padding: 7px 10px; font: inherit; font-size: 0.82rem; font-weight: 700;
+        }
+        .compare-vs { color: var(--muted); font-weight: 800; font-size: 0.8rem; }
+        .compare-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+        .compare-col { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: var(--bg); }
+        .compare-col h3 { margin: 0 0 6px; font-size: 0.95rem; }
+        .compare-row { display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--line); font-size: 0.84rem; }
+        .compare-row:first-of-type { border-top: 0; }
+        .compare-row span:last-child { font-weight: 800; }
+        .compare-row.winner span:last-child { color: var(--brand-deep); }
+
+        /* FX stock-style chart */
+        .fx-ticker-header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 4px 0 14px; }
+        .fx-ticker-price { font-size: 1.7rem; font-weight: 800; color: var(--ink); }
+        .fx-ticker-change { font-size: 0.88rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; }
+        .fx-ticker-change.positive { background: #e8fbf5; color: #076e52; }
+        .fx-ticker-change.negative { background: #ffecee; color: #a12626; }
+        .fx-ticker-asof { color: var(--muted); font-size: 0.8rem; margin-left: auto; }
+
         /* Headline strip */
         .headline-grid {
             display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px;
@@ -323,7 +371,15 @@
             <div class="filter-grid">
                 <div class="filter-group">
                     <label>Status</label>
-                    <div class="chip-set" id="status-chips" data-values="CREATED,VALIDATED,SENT,COMPLETED,FAILED"></div>
+                    <div class="multiselect" id="status-multiselect">
+                        <button type="button" class="multiselect-trigger" id="status-multiselect-trigger">
+                            <span id="status-multiselect-label">All Statuses</span>
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <div class="multiselect-panel" id="status-multiselect-panel"></div>
+                    </div>
                 </div>
                 <div class="filter-group">
                     <label>Currency</label>
@@ -408,6 +464,19 @@
                 <div class="chart-wrap"><canvas id="chart-currency"></canvas></div>
             </div>
 
+            <div class="chart-card wide">
+                <div class="chart-head">
+                    <h2>Compare Currencies</h2>
+                    <div class="compare-controls">
+                        <select id="compare-currency-a" aria-label="Currency A"></select>
+                        <span class="compare-vs">vs</span>
+                        <select id="compare-currency-b" aria-label="Currency B"></select>
+                    </div>
+                </div>
+                <div class="chart-wrap" style="height: 200px;"><canvas id="chart-currency-compare"></canvas></div>
+                <div class="compare-stats" id="compare-stats"></div>
+            </div>
+
             <div class="chart-card">
                 <div class="chart-head">
                     <h2>Volume Trend</h2>
@@ -417,6 +486,40 @@
                     </div>
                 </div>
                 <div class="chart-wrap"><canvas id="chart-trend"></canvas></div>
+            </div>
+
+            <div class="chart-card wide">
+                <div class="chart-head">
+                    <h2>Currency Exchange Rate</h2>
+                    <div class="compare-controls">
+                        <select id="fx-base-currency" aria-label="Base currency">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="INR">INR</option>
+                        </select>
+                        <span class="compare-vs">/</span>
+                        <select id="fx-quote-currency" aria-label="Quote currency">
+                            <option value="USD">USD</option>
+                            <option value="EUR" selected>EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="INR">INR</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="fx-ticker-header">
+                    <div class="fx-ticker-price" id="fx-ticker-price">--</div>
+                    <div class="fx-ticker-change" id="fx-ticker-change"></div>
+                    <div class="fx-ticker-asof" id="fx-ticker-asof"></div>
+                </div>
+                <div class="chart-toggle" id="fx-range-toggle">
+                    <button type="button" data-range="1M">1M</button>
+                    <button type="button" data-range="3M">3M</button>
+                    <button type="button" data-range="6M" class="is-active">6M</button>
+                    <button type="button" data-range="1Y">1Y</button>
+                </div>
+                <div class="chart-wrap" style="height: 340px; margin-top: 14px;"><canvas id="chart-fx-trend"></canvas></div>
+                <div class="table-meta" id="fx-trend-note">Loading live exchange rate history...</div>
             </div>
         </section>
 
@@ -541,13 +644,74 @@
             });
         }
 
-        buildChipSet("status-chips", "statuses");
         buildChipSet("currency-chips", "currencies");
         buildChipSet("error-code-chips", "errorCodes");
 
+        /* ---------- Status multi-select dropdown ---------- */
+        function buildMultiSelect(panelId, triggerId, labelId, stateKey, values, allLabel) {
+            var panel = document.getElementById(panelId);
+            var trigger = document.getElementById(triggerId);
+            var label = document.getElementById(labelId);
+            var wrapper = trigger.closest(".multiselect");
+
+            function updateLabel() {
+                var selected = state[stateKey];
+                if (!selected.length) {
+                    label.textContent = allLabel;
+                } else if (selected.length === 1) {
+                    label.textContent = selected[0];
+                } else {
+                    label.textContent = selected.length + " selected";
+                }
+            }
+
+            values.forEach(function (value) {
+                var option = document.createElement("label");
+                option.className = "multiselect-option";
+                option.innerHTML = '<input type="checkbox" value="' + value + '"><span>' + value + "</span>";
+                var checkbox = option.querySelector("input");
+                checkbox.addEventListener("change", function () {
+                    var list = state[stateKey];
+                    var idx = list.indexOf(value);
+                    if (checkbox.checked && idx === -1) {
+                        list.push(value);
+                    } else if (!checkbox.checked && idx !== -1) {
+                        list.splice(idx, 1);
+                    }
+                    updateLabel();
+                });
+                panel.appendChild(option);
+            });
+
+            trigger.addEventListener("click", function (event) {
+                event.stopPropagation();
+                var isOpen = wrapper.classList.contains("open");
+                document.querySelectorAll(".multiselect.open").forEach(function (el) { el.classList.remove("open"); });
+                if (!isOpen) wrapper.classList.add("open");
+            });
+
+            document.addEventListener("click", function (event) {
+                if (!wrapper.contains(event.target)) wrapper.classList.remove("open");
+            });
+
+            updateLabel();
+
+            return {
+                sync: updateLabel,
+                reset: function () {
+                    Array.from(panel.querySelectorAll("input")).forEach(function (cb) { cb.checked = false; });
+                    updateLabel();
+                }
+            };
+        }
+
+        var statusMultiSelect = buildMultiSelect(
+            "status-multiselect-panel", "status-multiselect-trigger", "status-multiselect-label",
+            "statuses", ["CREATED", "VALIDATED", "SENT", "COMPLETED", "FAILED"], "All Statuses");
+
         function syncChipUI() {
-            ["status-chips", "currency-chips", "error-code-chips"].forEach(function (id) {
-                var key = id === "status-chips" ? "statuses" : id === "currency-chips" ? "currencies" : "errorCodes";
+            ["currency-chips", "error-code-chips"].forEach(function (id) {
+                var key = id === "currency-chips" ? "currencies" : "errorCodes";
                 Array.from(document.getElementById(id).children).forEach(function (chip) {
                     chip.classList.toggle("is-active", state[key].indexOf(chip.dataset.value) !== -1);
                 });
@@ -603,6 +767,7 @@
             document.getElementById("filter-to").value = "";
             document.getElementById("filter-min-amount").value = "";
             document.getElementById("filter-max-amount").value = "";
+            statusMultiSelect.reset();
             syncChipUI();
             renderActiveChips();
             loadAll();
@@ -680,20 +845,30 @@
             var ctx = document.getElementById("chart-errors");
             var labels = data.map(function (d) { return d.errorCode; });
             var counts = data.map(function (d) { return d.count; });
+            var total = counts.reduce(function (a, b) { return a + b; }, 0);
 
             if (charts.errors) charts.errors.destroy();
             if (!data.length) return;
 
             charts.errors = new Chart(ctx, {
-                type: "bar",
+                type: "pie",
                 data: {
                     labels: labels,
-                    datasets: [{ label: "Occurrences", data: counts, backgroundColor: "#c23a3a", borderRadius: 6 }]
+                    datasets: [{ data: counts, backgroundColor: chartColors, borderWidth: 0 }]
                 },
                 options: {
-                    indexAxis: "y", responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: "bottom" },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    var pct = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                                    return context.label + ": " + context.parsed + " (" + pct + "%)";
+                                }
+                            }
+                        }
+                    }
                 }
             });
         }
@@ -774,6 +949,119 @@
                 if (data) renderTrendChart(data);
             });
         });
+
+        /* ---------- Currency comparison ---------- */
+        var CURRENCY_OPTIONS = ["USD", "EUR", "GBP", "INR"];
+
+        (function populateCompareDropdowns() {
+            var selectA = document.getElementById("compare-currency-a");
+            var selectB = document.getElementById("compare-currency-b");
+            CURRENCY_OPTIONS.forEach(function (currency) {
+                var optionA = document.createElement("option");
+                optionA.value = currency;
+                optionA.textContent = currency;
+                selectA.appendChild(optionA);
+
+                var optionB = document.createElement("option");
+                optionB.value = currency;
+                optionB.textContent = currency;
+                selectB.appendChild(optionB);
+            });
+            selectA.value = CURRENCY_OPTIONS[0];
+            selectB.value = CURRENCY_OPTIONS[1];
+        })();
+
+        function buildComparisonQuery(currency) {
+            var params = new URLSearchParams();
+            if (state.statuses.length) params.set("status", state.statuses.join(","));
+            params.set("currency", currency);
+            if (state.errorCodes.length) params.set("errorCode", state.errorCodes.join(","));
+            if (state.from) params.set("from", state.from);
+            if (state.to) params.set("to", state.to);
+            if (state.minAmount) params.set("minAmount", state.minAmount);
+            if (state.maxAmount) params.set("maxAmount", state.maxAmount);
+            return params.toString();
+        }
+
+        function renderCurrencyCompareChart(currencyA, overviewA, currencyB, overviewB) {
+            var ctx = document.getElementById("chart-currency-compare");
+            if (charts.currencyCompare) charts.currencyCompare.destroy();
+
+            charts.currencyCompare = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: ["Total Amount Transferred"],
+                    datasets: [
+                        { label: currencyA, data: [overviewA.totalAmount || 0], backgroundColor: "#0f6fff", borderRadius: 8 },
+                        { label: currencyB, data: [overviewB.totalAmount || 0], backgroundColor: "#00c2a8", borderRadius: 8 }
+                    ]
+                },
+                options: {
+                    indexAxis: "y", responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: "bottom" } },
+                    scales: { x: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function compareRow(label, valueA, valueB, formatter) {
+            var format = formatter || function (v) { return v; };
+            return {
+                label: label,
+                a: format(valueA),
+                b: format(valueB),
+                aWin: valueA > valueB,
+                bWin: valueB > valueA
+            };
+        }
+
+        function renderCurrencyCompareStats(currencyA, overviewA, currencyB, overviewB) {
+            var container = document.getElementById("compare-stats");
+            container.innerHTML = "";
+
+            var avgA = overviewA.totalPayments ? overviewA.totalAmount / overviewA.totalPayments : 0;
+            var avgB = overviewB.totalPayments ? overviewB.totalAmount / overviewB.totalPayments : 0;
+
+            var rows = [
+                compareRow("Total Volume", overviewA.totalAmount || 0, overviewB.totalAmount || 0, formatMoney),
+                compareRow("Payment Count", overviewA.totalPayments || 0, overviewB.totalPayments || 0, formatMoney),
+                compareRow("Success Rate", overviewA.successRate || 0, overviewB.successRate || 0, formatPercent),
+                compareRow("Failure Rate", overviewA.failureRate || 0, overviewB.failureRate || 0, formatPercent),
+                compareRow("Avg Payment Size", avgA, avgB, formatMoney)
+            ];
+
+            [{ name: currencyA, side: "a" }, { name: currencyB, side: "b" }].forEach(function (col) {
+                var colEl = document.createElement("div");
+                colEl.className = "compare-col";
+                var heading = document.createElement("h3");
+                heading.textContent = col.name;
+                colEl.appendChild(heading);
+
+                rows.forEach(function (row) {
+                    var rowEl = document.createElement("div");
+                    var isWinner = col.side === "a" ? row.aWin : row.bWin;
+                    rowEl.className = "compare-row" + (isWinner ? " winner" : "");
+                    rowEl.innerHTML = "<span>" + row.label + "</span><span>" + (col.side === "a" ? row.a : row.b) + "</span>";
+                    colEl.appendChild(rowEl);
+                });
+
+                container.appendChild(colEl);
+            });
+        }
+
+        async function loadCurrencyComparison() {
+            var currencyA = document.getElementById("compare-currency-a").value;
+            var currencyB = document.getElementById("compare-currency-b").value;
+
+            var overviewA = await fetchJson(ANALYTICS_URL + "/overview?" + buildComparisonQuery(currencyA)) || {};
+            var overviewB = await fetchJson(ANALYTICS_URL + "/overview?" + buildComparisonQuery(currencyB)) || {};
+
+            renderCurrencyCompareChart(currencyA, overviewA, currencyB, overviewB);
+            renderCurrencyCompareStats(currencyA, overviewA, currencyB, overviewB);
+        }
+
+        document.getElementById("compare-currency-a").addEventListener("change", loadCurrencyComparison);
+        document.getElementById("compare-currency-b").addEventListener("change", loadCurrencyComparison);
 
         function renderInsights(overview, errorCodes, currencyVolume) {
             var strip = document.getElementById("insights-strip");
@@ -917,9 +1205,140 @@
             renderTrendChart(trend);
             renderInsights(overview, errorCodes, currencyVolume);
             renderPaymentsTable(payments);
+            await loadCurrencyComparison();
 
             document.getElementById("last-refreshed").textContent = "Last refreshed: " + new Date().toLocaleTimeString();
         }
+
+        /* ---------- Live FX rate stock-style chart (independent of payment filters) ---------- */
+        var FX_CURRENCIES = ["USD", "EUR", "GBP", "INR"];
+        var fxState = { base: "USD", quote: "EUR", range: "6M" };
+
+        function fxRangeToDates(range) {
+            var to = new Date();
+            var from = new Date(to);
+            if (range === "1M") from.setMonth(from.getMonth() - 1);
+            else if (range === "3M") from.setMonth(from.getMonth() - 3);
+            else if (range === "1Y") from.setFullYear(from.getFullYear() - 1);
+            else from.setMonth(from.getMonth() - 6);
+            return { from: from, to: to };
+        }
+
+        function fxToIso(date) { return date.toISOString().slice(0, 10); }
+
+        async function loadFxTrend() {
+            var canvas = document.getElementById("chart-fx-trend");
+            var noteEl = document.getElementById("fx-trend-note");
+            var priceEl = document.getElementById("fx-ticker-price");
+            var changeEl = document.getElementById("fx-ticker-change");
+            var asOfEl = document.getElementById("fx-ticker-asof");
+            if (!canvas) return;
+
+            var base = fxState.base;
+            var quote = fxState.quote;
+
+            if (base === quote) {
+                if (charts.fxTrend) { charts.fxTrend.destroy(); charts.fxTrend = null; }
+                priceEl.textContent = "--";
+                changeEl.textContent = "";
+                changeEl.className = "fx-ticker-change";
+                asOfEl.textContent = "";
+                noteEl.textContent = "Choose two different currencies to compare.";
+                return;
+            }
+
+            var range = fxRangeToDates(fxState.range);
+            var url = "https://api.frankfurter.dev/v2/rates?base=" + base + "&quotes=" + quote
+                + "&from=" + fxToIso(range.from) + "&to=" + fxToIso(range.to);
+
+            try {
+                var response = await fetch(url);
+                if (!response.ok) throw new Error("Frankfurter status " + response.status);
+                var rows = await response.json();
+                if (!Array.isArray(rows) || !rows.length) throw new Error("No FX history returned");
+
+                rows.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+
+                var labels = rows.map(function (row) { return row.date; });
+                var series = rows.map(function (row) { return Number(row.rate); });
+
+                var first = series[0];
+                var last = series[series.length - 1];
+                var change = last - first;
+                var changePct = first !== 0 ? (change / first) * 100 : 0;
+                var isUp = change >= 0;
+
+                if (charts.fxTrend) charts.fxTrend.destroy();
+
+                var lineColor = isUp ? "#0a8e67" : "#c23a3a";
+                var fillColor = isUp ? "rgba(10,142,103,0.14)" : "rgba(194,58,58,0.14)";
+
+                charts.fxTrend = new Chart(canvas, {
+                    type: "line",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: base + "/" + quote,
+                            data: series,
+                            borderColor: lineColor,
+                            backgroundColor: fillColor,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            tension: 0.15,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        interaction: { mode: "index", intersect: false },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) { return base + "/" + quote + ": " + context.parsed.y.toFixed(5); }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { maxTicksLimit: 8 } },
+                            y: { position: "right", ticks: { callback: function (value) { return Number(value).toFixed(4); } } }
+                        }
+                    }
+                });
+
+                priceEl.textContent = last.toFixed(5);
+                changeEl.textContent = (isUp ? "+" : "") + change.toFixed(5) + " (" + (isUp ? "+" : "") + changePct.toFixed(2) + "%)";
+                changeEl.className = "fx-ticker-change " + (isUp ? "positive" : "negative");
+                asOfEl.textContent = "1 " + base + " = " + quote + " \u00b7 As of " + labels[labels.length - 1] + " \u00b7 Source: Frankfurter";
+                noteEl.textContent = labels.length + " data points \u00b7 Range: " + fxState.range;
+            } catch (error) {
+                noteEl.textContent = "Live FX trend unavailable right now.";
+                priceEl.textContent = "--";
+                changeEl.textContent = "";
+                changeEl.className = "fx-ticker-change";
+                asOfEl.textContent = "";
+            }
+        }
+
+        document.getElementById("fx-base-currency").addEventListener("change", function () {
+            fxState.base = this.value;
+            loadFxTrend();
+        });
+        document.getElementById("fx-quote-currency").addEventListener("change", function () {
+            fxState.quote = this.value;
+            loadFxTrend();
+        });
+        document.getElementById("fx-range-toggle").addEventListener("click", function (event) {
+            var button = event.target.closest("button");
+            if (!button) return;
+            fxState.range = button.dataset.range;
+            Array.from(this.querySelectorAll("button")).forEach(function (b) { b.classList.toggle("is-active", b === button); });
+            loadFxTrend();
+        });
+
+        loadFxTrend();
+        window.setInterval(loadFxTrend, 5 * 60 * 1000);
 
         loadAll();
     </script>
