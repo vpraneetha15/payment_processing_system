@@ -1,0 +1,1998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Analytics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --surface: #ffffff;
+            --ink: #13233a;
+            --muted: #5f6f85;
+            --brand: #0f6fff;
+            --brand-deep: #0046b8;
+            --accent: #00c2a8;
+            --line: #dbe4f0;
+            --glow-a: rgba(15, 111, 255, 0.18);
+            --glow-b: rgba(0, 194, 168, 0.18);
+            --bg-stop-a: #f7fbff;
+            --bg-stop-b: #eef3fb;
+            --table-head: #f6f9ff;
+            --table-head-ink: #385070;
+            --card-shadow: 0 10px 24px rgba(18, 40, 70, 0.06);
+            --hero-shadow: 0 18px 40px rgba(18, 40, 70, 0.08);
+            --button-primary-shadow: 0 12px 25px rgba(15, 111, 255, 0.28);
+            --theme-pill: #ffffff;
+            --theme-pill-ink: #304763;
+            --theme-pill-active-bg: #163a6c;
+            --theme-pill-active-ink: #ffffff;
+            --chip-bg: #eef4ff;
+            --chip-ink: #16407a;
+            --chip-active-bg: #0f6fff;
+            --chip-active-ink: #ffffff;
+            --danger: #c23a3a;
+            --warning: #b46b00;
+            --success: #0a8e67;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0a1221;
+                --surface: #111d32;
+                --ink: #e5eefc;
+                --muted: #a8bddb;
+                --brand: #4f98ff;
+                --brand-deep: #2d6ed0;
+                --accent: #3ad6be;
+                --line: #2a3a56;
+                --glow-a: rgba(79, 152, 255, 0.2);
+                --glow-b: rgba(58, 214, 190, 0.18);
+                --bg-stop-a: #0d1a2d;
+                --bg-stop-b: #08111f;
+                --table-head: #17253d;
+                --table-head-ink: #bed1eb;
+                --card-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+                --hero-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+                --button-primary-shadow: 0 12px 25px rgba(41, 110, 214, 0.4);
+                --theme-pill: #1a2a42;
+                --theme-pill-ink: #d7e6fd;
+                --theme-pill-active-bg: #5fafff;
+                --theme-pill-active-ink: #081627;
+                --chip-bg: #16273f;
+                --chip-ink: #bfd7fb;
+                --chip-active-bg: #4f98ff;
+                --chip-active-ink: #081627;
+            }
+        }
+
+        :root[data-theme="light"] {
+            --bg: #f4f7fb; --surface: #ffffff; --ink: #13233a; --muted: #5f6f85;
+            --brand: #0f6fff; --brand-deep: #0046b8; --accent: #00c2a8; --line: #dbe4f0;
+            --glow-a: rgba(15, 111, 255, 0.18); --glow-b: rgba(0, 194, 168, 0.18);
+            --bg-stop-a: #f7fbff; --bg-stop-b: #eef3fb; --table-head: #f6f9ff; --table-head-ink: #385070;
+            --card-shadow: 0 10px 24px rgba(18, 40, 70, 0.06); --hero-shadow: 0 18px 40px rgba(18, 40, 70, 0.08);
+            --button-primary-shadow: 0 12px 25px rgba(15, 111, 255, 0.28);
+            --theme-pill: #ffffff; --theme-pill-ink: #304763; --theme-pill-active-bg: #163a6c; --theme-pill-active-ink: #ffffff;
+            --chip-bg: #eef4ff; --chip-ink: #16407a; --chip-active-bg: #0f6fff; --chip-active-ink: #ffffff;
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #0a1221; --surface: #111d32; --ink: #e5eefc; --muted: #a8bddb;
+            --brand: #4f98ff; --brand-deep: #2d6ed0; --accent: #3ad6be; --line: #2a3a56;
+            --glow-a: rgba(79, 152, 255, 0.2); --glow-b: rgba(58, 214, 190, 0.18);
+            --bg-stop-a: #0d1a2d; --bg-stop-b: #08111f; --table-head: #17253d; --table-head-ink: #bed1eb;
+            --card-shadow: 0 10px 24px rgba(0, 0, 0, 0.28); --hero-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+            --button-primary-shadow: 0 12px 25px rgba(41, 110, 214, 0.4);
+            --theme-pill: #1a2a42; --theme-pill-ink: #d7e6fd; --theme-pill-active-bg: #5fafff; --theme-pill-active-ink: #081627;
+            --chip-bg: #16273f; --chip-ink: #bfd7fb; --chip-active-bg: #4f98ff; --chip-active-ink: #081627;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Manrope", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 15% 15%, var(--glow-a), transparent 40%),
+                radial-gradient(circle at 85% 10%, var(--glow-b), transparent 32%),
+                linear-gradient(135deg, var(--bg-stop-a) 0%, var(--bg-stop-b) 52%, var(--bg-stop-a) 100%);
+            min-height: 100vh;
+            transition: background 0.55s cubic-bezier(0.22, 0.61, 0.36, 1), color 0.35s ease;
+        }
+
+        body.theme-switching, body.theme-switching * {
+            transition: background-color 0.45s cubic-bezier(0.22, 0.61, 0.36, 1), color 0.35s ease,
+                border-color 0.45s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+        }
+
+        .page { width: min(1240px, 94vw); margin: 0 auto; padding: 28px 0 60px; }
+
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+
+        .brand { font-size: 1.05rem; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase; }
+        .brand span { color: var(--brand-deep); }
+
+        .actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+
+        .theme-menu { position: relative; }
+        .theme-trigger {
+            width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 50%;
+            background: var(--surface); color: var(--theme-pill-ink); display: inline-flex;
+            align-items: center; justify-content: center; cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.25s ease, background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+        }
+        .theme-trigger:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(10, 27, 48, 0.14); }
+        .theme-trigger svg { width: 20px; height: 20px; }
+        .theme-dropdown {
+            position: absolute; top: calc(100% + 10px); right: 0; min-width: 150px;
+            background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+            box-shadow: 0 18px 32px rgba(8, 24, 44, 0.2); padding: 8px; opacity: 0;
+            transform: translateY(-8px) scale(0.98); pointer-events: none;
+            transition: opacity 0.22s ease, transform 0.22s ease; z-index: 20;
+        }
+        .theme-menu.open .theme-dropdown { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+        .theme-btn {
+            width: 100%; border: 0; border-radius: 10px; background: transparent; color: var(--theme-pill-ink);
+            font: inherit; font-size: 0.84rem; font-weight: 700; padding: 9px 10px; text-align: left; cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .theme-btn.is-active { background: var(--theme-pill-active-bg); color: var(--theme-pill-active-ink); }
+
+        .btn {
+            text-decoration: none; border-radius: 999px; font-weight: 700; font-size: 0.9rem;
+            padding: 10px 16px; transition: transform 0.2s ease, box-shadow 0.2s ease; border: 1px solid transparent;
+            display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+        .btn-primary { background: linear-gradient(135deg, var(--brand), var(--brand-deep)); color: #fff; box-shadow: var(--button-primary-shadow); }
+        .btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--line); }
+        .btn:hover { transform: translateY(-2px); }
+
+        .hero-strip {
+            background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
+            padding: 20px 24px; box-shadow: var(--hero-shadow); margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+        }
+        .hero-strip .kicker {
+            display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.78rem;
+            letter-spacing: 0.04em; text-transform: uppercase; color: var(--brand-deep); background: rgba(15,111,255,0.08);
+            border: 1px solid rgba(15,111,255,0.2); border-radius: 999px; padding: 6px 11px; margin-bottom: 8px;
+        }
+        .hero-strip h1 { margin: 0; font-size: clamp(1.4rem, 2.6vw, 1.9rem); letter-spacing: -0.02em; }
+        .hero-strip p { margin: 6px 0 0; color: var(--muted); font-size: 0.92rem; max-width: 60ch; }
+        .refresh-meta { text-align: right; color: var(--muted); font-size: 0.82rem; }
+        .refresh-meta button { margin-top: 6px; }
+
+        /* Filter bar */
+        .filter-bar {
+            background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+            padding: 18px 20px; box-shadow: var(--card-shadow); margin-bottom: 20px;
+        }
+        .filter-row {
+            display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;
+        }
+        .filter-cell { display: flex; flex-direction: column; gap: 6px; }
+        .filter-cell.grow { flex: 1 1 140px; min-width: 130px; }
+        .filter-cell.shrink { flex: 0 0 auto; }
+        .filter-cell label {
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
+            color: var(--muted); font-weight: 700;
+        }
+        .filter-cell input[type="date"], .filter-cell input[type="number"] {
+            width: 100%; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+            border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 0.84rem; min-width: 0;
+        }
+        .currency-toggles { display: flex; gap: 5px; }
+        .cur-btn {
+            border: 1px solid var(--line); background: var(--chip-bg); color: var(--chip-ink);
+            border-radius: 8px; padding: 7px 11px; font-size: 0.82rem; font-weight: 700; cursor: pointer;
+            transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+        }
+        .cur-btn.is-active { background: var(--chip-active-bg); color: var(--chip-active-ink); border-color: transparent; }
+        .filter-divider { width: 1px; background: var(--line); align-self: stretch; margin: 0 4px; flex-shrink: 0; }
+        .filter-actions-cell { display: flex; gap: 8px; align-items: flex-end; flex-shrink: 0; }
+        .active-filters { margin-top: 14px; display: flex; gap: 7px; flex-wrap: wrap; align-items: center; min-height: 28px; }
+        .active-tag {
+            display: inline-flex; align-items: center; gap: 5px; border-radius: 8px;
+            background: var(--chip-active-bg); color: var(--chip-active-ink);
+            font-size: 0.76rem; font-weight: 700; padding: 4px 9px;
+        }
+        .active-tag-remove {
+            border: 0; background: none; color: inherit; font-size: 0.9rem; cursor: pointer;
+            padding: 0 0 0 2px; opacity: 0.7; line-height: 1;
+        }
+        .active-tag-remove:hover { opacity: 1; }
+        .no-filter-note { color: var(--muted); font-size: 0.8rem; }
+
+        /* Multi-select dropdown (status + error code filters) */
+        .multiselect { position: relative; }
+        .multiselect-trigger {
+            width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+            border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+            border-radius: 10px; padding: 9px 12px; font: inherit; font-size: 0.85rem; font-weight: 700;
+            cursor: pointer;
+        }
+        .multiselect-trigger svg { width: 16px; height: 16px; transition: transform 0.2s ease; flex-shrink: 0; }
+        .multiselect.open .multiselect-trigger svg { transform: rotate(180deg); }
+        .multiselect-panel {
+            position: absolute; top: calc(100% + 8px); left: 0; right: 0; min-width: 200px; z-index: 15;
+            background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+            box-shadow: 0 18px 32px rgba(8, 24, 44, 0.16); padding: 8px; opacity: 0;
+            transform: translateY(-6px); pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
+            max-height: 220px; overflow-y: auto;
+        }
+        .multiselect.open .multiselect-panel { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .multiselect-option {
+            display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 8px;
+            font-size: 0.84rem; font-weight: 600; cursor: pointer; color: var(--ink);
+        }
+        .multiselect-option:hover { background: var(--bg); }
+        .multiselect-option input { accent-color: var(--brand); width: 15px; height: 15px; }
+
+        /* Currency comparison */
+        .compare-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .compare-controls select {
+            border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px;
+            padding: 7px 10px; font: inherit; font-size: 0.82rem; font-weight: 700;
+        }
+        .compare-vs { color: var(--muted); font-weight: 800; font-size: 0.8rem; }
+        .compare-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+        .compare-col { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: var(--bg); }
+        .compare-col h3 { margin: 0 0 6px; font-size: 0.95rem; }
+        .compare-row { display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--line); font-size: 0.84rem; }
+        .compare-row:first-of-type { border-top: 0; }
+        .compare-row span:last-child { font-weight: 800; }
+        .compare-row.winner span:last-child { color: var(--brand-deep); }
+
+        /* FX stock-style chart */
+        .fx-ticker-header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 4px 0 14px; }
+        .fx-ticker-price { font-size: 1.7rem; font-weight: 800; color: var(--ink); }
+        .fx-ticker-change { font-size: 0.88rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; }
+        .fx-ticker-change.positive { background: #e8fbf5; color: #076e52; }
+        .fx-ticker-change.negative { background: #ffecee; color: #a12626; }
+        .fx-ticker-asof { color: var(--muted); font-size: 0.8rem; margin-left: auto; }
+
+        /* Headline strip */
+        .headline-grid {
+            display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px;
+        }
+        .headline-card {
+            background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+            padding: 16px; box-shadow: var(--card-shadow);
+        }
+        .headline-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+        .headline-value { font-size: 1.5rem; font-weight: 800; line-height: 1.15; }
+        .headline-value.success { color: var(--success); }
+        .headline-value.failed { color: var(--danger); }
+        .headline-value.pending { color: var(--warning); }
+
+        /* Insights */
+        .insights-strip {
+            background: linear-gradient(135deg, rgba(15,111,255,0.06), rgba(0,194,168,0.06));
+            border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px; margin-bottom: 20px;
+            display: flex; flex-wrap: wrap; gap: 10px 24px;
+        }
+        .insight-item { display: flex; align-items: center; gap: 8px; font-size: 0.86rem; color: var(--ink); }
+        .insight-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
+
+        /* Charts grid */
+        .charts-grid {
+            display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px;
+        }
+        .chart-card {
+            background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+            padding: 18px; box-shadow: var(--card-shadow);
+        }
+        .chart-card.wide { grid-column: 1 / -1; }
+        .chart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+        .chart-head h2 { margin: 0; font-size: 1.02rem; }
+        .chart-head .chart-toggle {
+            display: flex; gap: 6px; background: var(--bg); border-radius: 999px; padding: 3px; border: 1px solid var(--line);
+        }
+        .chart-toggle button {
+            border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 0.76rem; font-weight: 700;
+            padding: 5px 10px; border-radius: 999px; cursor: pointer;
+        }
+        .chart-toggle button.is-active { background: var(--brand); color: #fff; }
+        .chart-wrap { position: relative; height: 280px; }
+        .chart-empty { color: var(--muted); font-size: 0.86rem; text-align: center; padding: 40px 0; }
+
+        .segment-strip {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .segment-tag {
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--muted);
+            background: var(--bg);
+        }
+
+        .segment-tag.active {
+            color: #fff;
+            background: var(--brand);
+            border-color: transparent;
+        }
+
+        .funnel-notes {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .funnel-note {
+            border: 1px solid var(--line);
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 0.78rem;
+            color: var(--muted);
+        }
+
+        .heatmap-wrap {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 2px;
+        }
+
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: 70px repeat(24, minmax(18px, 1fr));
+            min-width: 780px;
+        }
+
+        .heatmap-cell {
+            border-right: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+            min-height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.68rem;
+            color: var(--muted);
+            user-select: none;
+        }
+
+        .heatmap-cell.head {
+            background: var(--table-head);
+            font-weight: 700;
+            font-size: 0.65rem;
+            letter-spacing: 0.02em;
+        }
+
+        .heatmap-cell.day {
+            background: var(--table-head);
+            font-weight: 700;
+            justify-content: flex-start;
+            padding-left: 8px;
+        }
+
+        .heatmap-legend {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+
+        .legend-swatch {
+            width: 14px;
+            height: 10px;
+            border-radius: 3px;
+            border: 1px solid var(--line);
+        }
+
+        /* Detail table */
+        .table-panel {
+            background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+            padding: 18px; box-shadow: var(--card-shadow);
+        }
+        .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+        .panel-head h2 { margin: 0; font-size: 1.05rem; }
+        .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+        table { width: 100%; border-collapse: collapse; min-width: 760px; background: var(--surface); }
+        th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); font-size: 0.88rem; }
+        th { background: var(--table-head); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--table-head-ink); }
+        tbody tr { cursor: pointer; }
+        tbody tr:hover { background: rgba(15, 111, 255, 0.04); }
+        tbody tr:last-child td { border-bottom: 0; }
+        .status-pill {
+            display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 9px;
+            font-size: 0.74rem; font-weight: 700; background: var(--chip-bg); color: var(--chip-ink);
+        }
+        .status-pill.completed, .status-pill.success { background: #e8fbf5; color: #076e52; }
+        .status-pill.failed { background: #ffecee; color: #a12626; }
+        .status-pill.created { background: #e8f3ff; color: #114f94; }
+        .status-pill.validated, .status-pill.sent { background: #fff4e0; color: #93590a; }
+        .error-tag { font-size: 0.76rem; font-weight: 700; color: var(--danger); }
+        .history-row td { background: var(--bg); }
+        .history-timeline { display: grid; gap: 8px; padding: 6px 0; }
+        .history-event { display: flex; gap: 10px; align-items: flex-start; font-size: 0.84rem; }
+        .history-event .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--brand); margin-top: 5px; flex-shrink: 0; }
+        .history-event .meta { color: var(--muted); font-size: 0.78rem; }
+        .table-meta { margin-top: 10px; color: var(--muted); font-size: 0.84rem; }
+        .empty-row td { color: var(--muted); text-align: center; padding: 24px; }
+
+        @media (max-width: 1000px) {
+            .headline-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .charts-grid { grid-template-columns: 1fr; }
+            .funnel-notes { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 640px) {
+            .headline-grid { grid-template-columns: 1fr; }
+        }
+
+        /* =====================================================================
+           ENTRANCE ANIMATIONS
+        ===================================================================== */
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(22px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(10, 142, 103, 0.55); }
+            50%       { opacity: 0.8; box-shadow: 0 0 0 6px rgba(10, 142, 103, 0); }
+        }
+
+        .hero-strip       { animation: fadeSlideUp 0.45s cubic-bezier(0.22,0.61,0.36,1) both 0.03s; }
+        .filter-bar       { animation: fadeSlideUp 0.45s cubic-bezier(0.22,0.61,0.36,1) both 0.08s; }
+        .headline-grid    { animation: fadeSlideUp 0.45s cubic-bezier(0.22,0.61,0.36,1) both 0.14s; }
+        .insights-strip   { animation: fadeSlideUp 0.45s cubic-bezier(0.22,0.61,0.36,1) both 0.19s; }
+        .charts-grid      { animation: fadeSlideUp 0.45s cubic-bezier(0.22,0.61,0.36,1) both 0.24s; }
+        .table-panel      { animation: fadeSlideUp 0.45s cubic-bezier(0.22,0.61,0.36,1) both 0.30s; }
+
+        .headline-card:nth-child(1) { animation: fadeSlideUp 0.38s cubic-bezier(0.22,0.61,0.36,1) both 0.14s; }
+        .headline-card:nth-child(2) { animation: fadeSlideUp 0.38s cubic-bezier(0.22,0.61,0.36,1) both 0.18s; }
+        .headline-card:nth-child(3) { animation: fadeSlideUp 0.38s cubic-bezier(0.22,0.61,0.36,1) both 0.22s; }
+        .headline-card:nth-child(4) { animation: fadeSlideUp 0.38s cubic-bezier(0.22,0.61,0.36,1) both 0.26s; }
+        .headline-card:nth-child(5) { animation: fadeSlideUp 0.38s cubic-bezier(0.22,0.61,0.36,1) both 0.30s; }
+
+        /* =====================================================================
+           HEADLINE CARD HOVER
+        ===================================================================== */
+        .headline-card {
+            border-left: 3px solid var(--line);
+            cursor: default;
+            transition: transform 0.22s cubic-bezier(0.22,0.61,0.36,1), box-shadow 0.22s ease, border-color 0.22s ease;
+        }
+        .headline-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 38px rgba(18, 40, 70, 0.12);
+        }
+        .headline-card:has(.headline-value.success) { border-left-color: var(--success); }
+        .headline-card:has(.headline-value.failed)  { border-left-color: var(--danger); }
+        .headline-card:has(.headline-value.pending) { border-left-color: var(--warning); }
+
+        /* =====================================================================
+           CHART CARD HOVER
+        ===================================================================== */
+        .chart-card {
+            transition: transform 0.22s cubic-bezier(0.22,0.61,0.36,1), box-shadow 0.22s ease;
+        }
+        .chart-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(18, 40, 70, 0.11);
+        }
+
+        /* =====================================================================
+           LIVE BADGE
+        ===================================================================== */
+        .live-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+            color: #0a8e67; background: rgba(10, 142, 103, 0.1); border: 1px solid rgba(10, 142, 103, 0.22);
+            border-radius: 999px; padding: 5px 10px;
+        }
+        .live-dot {
+            width: 7px; height: 7px; border-radius: 50%; background: #0a8e67; flex-shrink: 0;
+            animation: livePulse 2.2s ease-in-out infinite;
+        }
+
+        /* =====================================================================
+           BUTTON IMPROVEMENTS
+        ===================================================================== */
+        .btn:active { transform: translateY(0) scale(0.97); }
+        .btn-primary:hover { box-shadow: 0 16px 30px rgba(15, 111, 255, 0.42); }
+
+        /* =====================================================================
+           TABLE ROW ANIMATION
+        ===================================================================== */
+        @keyframes rowFadeIn {
+            from { opacity: 0; transform: translateX(-5px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        tbody tr { animation: rowFadeIn 0.25s ease both; }
+
+        /* =====================================================================
+           TOPBAR REFINEMENT
+        ===================================================================== */
+        .topbar { border-bottom: 1px solid var(--line); padding-bottom: 18px; }
+        .hero-strip { margin-top: 18px; }
+
+        /* =====================================================================
+           FILTER BAR IMPROVEMENTS
+        ===================================================================== */
+        .filter-bar {
+            transition: box-shadow 0.22s ease;
+        }
+        .filter-bar:focus-within {
+            box-shadow: 0 0 0 3px rgba(15, 111, 255, 0.14), var(--card-shadow);
+        }
+        .cur-btn { transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.15s ease; }
+        .cur-btn:hover { transform: translateY(-1px); }
+        .multiselect-trigger { transition: border-color 0.18s ease, box-shadow 0.18s ease; }
+        .multiselect-trigger:hover { border-color: var(--brand); }
+        .multiselect.open .multiselect-trigger { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(15,111,255,0.12); }
+
+        /* =====================================================================
+           INSIGHTS STRIP IMPROVEMENTS
+        ===================================================================== */
+        .insight-dot { transition: transform 0.2s ease; }
+        .insight-item:hover .insight-dot { transform: scale(1.5); }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header class="topbar">
+            <div class="brand">Payment Processing System <span>/ Analytics</span></div>
+            <div class="actions">
+                <div class="theme-menu" id="theme-menu">
+                    <button class="theme-trigger" id="theme-trigger" type="button" aria-label="Theme mode" aria-haspopup="true" aria-expanded="false">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M12 3C7.03 3 3 6.85 3 11.6C3 14.2 4.25 16.5 6.2 17.95C6.62 18.27 6.86 18.78 6.85 19.3C6.85 19.41 6.85 19.52 6.85 19.64C6.85 20.95 7.96 22 9.34 22H11.25C12.63 22 13.74 20.95 13.74 19.64V19.5C13.74 18.82 14.11 18.2 14.73 17.86C18.22 15.95 20.22 12.08 19.18 7.93C18.43 4.92 15.47 3 12 3Z" stroke="currentColor" stroke-width="1.5"/>
+                            <circle cx="8.2" cy="11" r="1" fill="currentColor"/>
+                            <circle cx="12" cy="9.6" r="1" fill="currentColor"/>
+                            <circle cx="15.6" cy="11.7" r="1" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <div class="theme-dropdown" id="theme-dropdown" role="menu" aria-label="Theme options">
+                        <button class="theme-btn" type="button" data-theme-mode="light" role="menuitem">Light</button>
+                        <button class="theme-btn" type="button" data-theme-mode="dark" role="menuitem">Dark</button>
+                        <button class="theme-btn" type="button" data-theme-mode="system" role="menuitem">System</button>
+                    </div>
+                </div>
+                <a class="btn btn-secondary" href="dashboard.html">Back to Dashboard</a>
+                <span class="live-badge"><span class="live-dot"></span>Live</span>
+                <button class="btn btn-primary" id="export-csv-button" type="button">Export CSV</button>
+            </div>
+        </header>
+
+        <section class="hero-strip">
+            <div>
+                <div class="kicker">Payment Intelligence Center</div>
+                <h1>Detailed Analytics &amp; Reporting</h1>
+                <p>Filter, break down, and visualize the full payment lifecycle &mdash; including error code diagnostics and currency volume &mdash; for stakeholder review.</p>
+            </div>
+            <div class="refresh-meta">
+                <div id="last-refreshed">Last refreshed: --</div>
+                <button class="btn btn-secondary" id="refresh-button" type="button">Refresh Now</button>
+            </div>
+        </section>
+
+        <section class="filter-bar" aria-label="Filters">
+            <div class="filter-row">
+                <div class="filter-cell shrink" style="min-width:155px;">
+                    <label>Status</label>
+                    <div class="multiselect" id="status-multiselect">
+                        <button type="button" class="multiselect-trigger" id="status-multiselect-trigger">
+                            <span id="status-multiselect-label">All Statuses</span>
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <div class="multiselect-panel" id="status-multiselect-panel"></div>
+                    </div>
+                </div>
+
+                <div class="filter-divider" aria-hidden="true"></div>
+
+                <div class="filter-cell shrink">
+                    <label>Currency</label>
+                    <div class="currency-toggles" id="currency-chips"></div>
+                </div>
+
+                <div class="filter-divider" aria-hidden="true"></div>
+
+                <div class="filter-cell shrink" style="min-width:175px;">
+                    <label>Error Code</label>
+                    <div class="multiselect" id="error-code-multiselect">
+                        <button type="button" class="multiselect-trigger" id="error-code-multiselect-trigger">
+                            <span id="error-code-multiselect-label">All Error Codes</span>
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <div class="multiselect-panel" id="error-code-multiselect-panel"></div>
+                    </div>
+                </div>
+
+                <div class="filter-divider" aria-hidden="true"></div>
+
+                <div class="filter-cell grow">
+                    <label>From</label>
+                    <input type="date" id="filter-from" aria-label="From date">
+                </div>
+                <div class="filter-cell grow">
+                    <label>To</label>
+                    <input type="date" id="filter-to" aria-label="To date">
+                </div>
+
+                <div class="filter-divider" aria-hidden="true"></div>
+
+                <div class="filter-cell grow">
+                    <label>Min Amount</label>
+                    <input type="number" id="filter-min-amount" placeholder="0.00" min="0" step="0.01">
+                </div>
+                <div class="filter-cell grow">
+                    <label>Max Amount</label>
+                    <input type="number" id="filter-max-amount" placeholder="Any" min="0" step="0.01">
+                </div>
+
+                <div class="filter-actions-cell">
+                    <button class="btn btn-secondary" id="reset-filters-button" type="button">Reset</button>
+                    <button class="btn btn-primary" id="apply-filters-button" type="button">Apply</button>
+                </div>
+            </div>
+            <div class="active-filters" id="active-chips"></div>
+        </section>
+
+        <section class="headline-grid" aria-label="Headline metrics">
+            <article class="headline-card">
+                <div class="headline-label">Total Volume</div>
+                <div class="headline-value" id="headline-total-amount">--</div>
+            </article>
+            <article class="headline-card">
+                <div class="headline-label">Total Payments</div>
+                <div class="headline-value" id="headline-total-count">--</div>
+            </article>
+            <article class="headline-card">
+                <div class="headline-label">Success Rate</div>
+                <div class="headline-value success" id="headline-success-rate">--</div>
+            </article>
+            <article class="headline-card">
+                <div class="headline-label">Failure Rate</div>
+                <div class="headline-value failed" id="headline-failure-rate">--</div>
+            </article>
+            <article class="headline-card">
+                <div class="headline-label">In Flight</div>
+                <div class="headline-value pending" id="headline-inflight">--</div>
+            </article>
+        </section>
+
+        <section class="insights-strip" id="insights-strip" aria-label="Automated insights">
+            <div class="insight-item"><span class="insight-dot"></span><span id="insight-placeholder">Loading insights...</span></div>
+        </section>
+
+        <section class="charts-grid" aria-label="Visualizations">
+            <div class="chart-card">
+                <div class="chart-head">
+                    <h2>Status Distribution</h2>
+                </div>
+                <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-head">
+                    <h2>Error Code Breakdown</h2>
+                </div>
+                <div class="chart-wrap"><canvas id="chart-errors"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-head">
+                    <h2>Money Transferred by Currency</h2>
+                    <div class="chart-toggle" id="currency-toggle">
+                        <button type="button" data-mode="amount" class="is-active">Amount</button>
+                        <button type="button" data-mode="count">Count</button>
+                    </div>
+                </div>
+                <div class="chart-wrap"><canvas id="chart-currency"></canvas></div>
+            </div>
+
+            <div class="chart-card wide">
+                <div class="chart-head">
+                    <h2>Compare Currencies</h2>
+                    <div class="compare-controls">
+                        <select id="compare-currency-a" aria-label="Currency A"></select>
+                        <span class="compare-vs">vs</span>
+                        <select id="compare-currency-b" aria-label="Currency B"></select>
+                    </div>
+                </div>
+                <div class="chart-wrap" style="height: 200px;"><canvas id="chart-currency-compare"></canvas></div>
+                <div class="compare-stats" id="compare-stats"></div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-head">
+                    <h2>Volume Trend</h2>
+                    <div class="chart-toggle" id="trend-toggle">
+                        <button type="button" data-mode="count" class="is-active">Count</button>
+                        <button type="button" data-mode="amount">Amount</button>
+                    </div>
+                </div>
+                <div class="chart-wrap"><canvas id="chart-trend"></canvas></div>
+            </div>
+
+            <div class="chart-card wide">
+                <div class="chart-head">
+                    <h2>Lifecycle Funnel &amp; Drop-off</h2>
+                </div>
+                <div class="chart-wrap" style="height: 240px;"><canvas id="chart-funnel"></canvas></div>
+                <div class="funnel-notes" id="funnel-notes"></div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-head">
+                    <h2>Cohort Stability (Monthly)</h2>
+                </div>
+                <div class="chart-wrap"><canvas id="chart-cohort"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-head">
+                    <h2>Amount Distribution Buckets</h2>
+                </div>
+                <div class="chart-wrap"><canvas id="chart-distribution"></canvas></div>
+                <div class="segment-strip" id="segment-strip"></div>
+            </div>
+
+            <div class="chart-card wide">
+                <div class="chart-head">
+                    <h2>Failure Heatmap (Day x Hour)</h2>
+                </div>
+                <div class="heatmap-wrap">
+                    <div class="heatmap-grid" id="failure-heatmap"></div>
+                </div>
+                <div class="heatmap-legend" id="heatmap-legend"></div>
+            </div>
+
+            <div class="chart-card wide">
+                <div class="chart-head">
+                    <h2>Currency Exchange Rate</h2>
+                    <div class="compare-controls">
+                        <select id="fx-base-currency" aria-label="Base currency">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="INR">INR</option>
+                        </select>
+                        <span class="compare-vs">/</span>
+                        <select id="fx-quote-currency" aria-label="Quote currency">
+                            <option value="USD">USD</option>
+                            <option value="EUR" selected>EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="INR">INR</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="fx-ticker-header">
+                    <div class="fx-ticker-price" id="fx-ticker-price">--</div>
+                    <div class="fx-ticker-change" id="fx-ticker-change"></div>
+                    <div class="fx-ticker-asof" id="fx-ticker-asof"></div>
+                </div>
+                <div class="chart-toggle" id="fx-range-toggle">
+                    <button type="button" data-range="1M">1M</button>
+                    <button type="button" data-range="3M">3M</button>
+                    <button type="button" data-range="6M" class="is-active">6M</button>
+                    <button type="button" data-range="1Y">1Y</button>
+                </div>
+                <div class="chart-wrap" style="height: 340px; margin-top: 14px;"><canvas id="chart-fx-trend"></canvas></div>
+                <div class="table-meta" id="fx-trend-note">Loading live exchange rate history...</div>
+            </div>
+        </section>
+
+        <section class="table-panel" aria-label="Filtered payment detail">
+            <div class="panel-head">
+                <h2>Filtered Payments</h2>
+                <span class="table-meta" id="table-count-meta">Showing 0 payments</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Payment ID</th>
+                            <th>Amount</th>
+                            <th>Currency</th>
+                            <th>Status</th>
+                            <th>Error Code</th>
+                            <th>Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payments-body">
+                        <tr class="empty-row"><td colspan="6">Loading payments...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        var API_BASE_URL = window.PAYMENT_API_BASE_URL || "http://localhost:8080";
+
+        /* =====================================================================
+           COUNTER ANIMATION UTILITY
+        ===================================================================== */
+        function animateCount(element, targetValue, duration, formatter) {
+            var start = performance.now();
+            function step(now) {
+                var progress = Math.min((now - start) / duration, 1);
+                var eased = 1 - Math.pow(1 - progress, 3);
+                var current = targetValue * eased;
+                element.textContent = formatter(current);
+                if (progress < 1) requestAnimationFrame(step);
+                else element.textContent = formatter(targetValue);
+            }
+            requestAnimationFrame(step);
+        }
+        var ANALYTICS_URL = API_BASE_URL.replace(/\/$/, "") + "/analytics";
+        var HISTORY_URL = API_BASE_URL.replace(/\/$/, "") + "/payment-history";
+
+        var state = {
+            statuses: [],
+            currencies: [],
+            errorCodes: [],
+            from: "",
+            to: "",
+            minAmount: "",
+            maxAmount: ""
+        };
+
+        var charts = {};
+        var allHistory = [];
+        var currentPayments = [];
+        var currencyChartMode = "amount";
+        var trendChartMode = "count";
+        var activeSegment = "ALL";
+
+        var DISTRIBUTION_BUCKETS = [
+            { key: "0-100", label: "0-100", min: 0, max: 100 },
+            { key: "100-500", label: "100-500", min: 100, max: 500 },
+            { key: "500-1000", label: "500-1K", min: 500, max: 1000 },
+            { key: "1000-5000", label: "1K-5K", min: 1000, max: 5000 },
+            { key: "5000+", label: "5K+", min: 5000, max: null }
+        ];
+
+        /* ---------- Theme ---------- */
+        (function setupThemeMode() {
+            var root = document.documentElement;
+            var body = document.body;
+            var storageKey = "dashboard-theme-mode";
+            var buttons = Array.from(document.querySelectorAll(".theme-btn"));
+            var menu = document.getElementById("theme-menu");
+            var trigger = document.getElementById("theme-trigger");
+
+            function closeMenu() { menu.classList.remove("open"); trigger.setAttribute("aria-expanded", "false"); }
+            function openMenu() { menu.classList.add("open"); trigger.setAttribute("aria-expanded", "true"); }
+
+            function applyMode(mode) {
+                body.classList.add("theme-switching");
+                if (mode === "light" || mode === "dark") {
+                    root.setAttribute("data-theme", mode);
+                } else {
+                    root.removeAttribute("data-theme");
+                }
+                buttons.forEach(function (button) {
+                    var active = button.getAttribute("data-theme-mode") === mode;
+                    button.classList.toggle("is-active", active);
+                });
+                window.clearTimeout(applyMode._timer);
+                applyMode._timer = window.setTimeout(function () { body.classList.remove("theme-switching"); }, 500);
+            }
+
+            var saved = localStorage.getItem(storageKey);
+            applyMode(saved === "light" || saved === "dark" || saved === "system" ? saved : "system");
+
+            buttons.forEach(function (button) {
+                button.addEventListener("click", function () {
+                    var mode = button.getAttribute("data-theme-mode") || "system";
+                    localStorage.setItem(storageKey, mode);
+                    applyMode(mode);
+                    closeMenu();
+                });
+            });
+
+            trigger.addEventListener("click", function () {
+                menu.classList.contains("open") ? closeMenu() : openMenu();
+            });
+            document.addEventListener("click", function (event) {
+                if (!menu.contains(event.target)) closeMenu();
+            });
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") closeMenu();
+            });
+        })();
+
+        /* ---------- Filter chip setup ---------- */
+        function buildCurrencyToggles(containerId, stateKey) {
+            var container = document.getElementById(containerId);
+            ["USD", "EUR", "GBP", "INR"].forEach(function (value) {
+                var btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "cur-btn";
+                btn.textContent = value;
+                btn.dataset.value = value;
+                btn.addEventListener("click", function () {
+                    var list = state[stateKey];
+                    var idx = list.indexOf(value);
+                    if (idx === -1) { list.push(value); btn.classList.add("is-active"); }
+                    else { list.splice(idx, 1); btn.classList.remove("is-active"); }
+                });
+                container.appendChild(btn);
+            });
+        }
+
+        buildCurrencyToggles("currency-chips", "currencies");
+
+        /* ---------- Status multi-select dropdown ---------- */
+        function buildMultiSelect(panelId, triggerId, labelId, stateKey, values, allLabel) {
+            var panel = document.getElementById(panelId);
+            var trigger = document.getElementById(triggerId);
+            var label = document.getElementById(labelId);
+            var wrapper = trigger.closest(".multiselect");
+
+            function updateLabel() {
+                var selected = state[stateKey];
+                if (!selected.length) {
+                    label.textContent = allLabel;
+                } else if (selected.length === 1) {
+                    label.textContent = selected[0];
+                } else {
+                    label.textContent = selected.length + " selected";
+                }
+            }
+
+            values.forEach(function (value) {
+                var option = document.createElement("label");
+                option.className = "multiselect-option";
+                option.innerHTML = '<input type="checkbox" value="' + value + '"><span>' + value + "</span>";
+                var checkbox = option.querySelector("input");
+                checkbox.addEventListener("change", function () {
+                    var list = state[stateKey];
+                    var idx = list.indexOf(value);
+                    if (checkbox.checked && idx === -1) {
+                        list.push(value);
+                    } else if (!checkbox.checked && idx !== -1) {
+                        list.splice(idx, 1);
+                    }
+                    updateLabel();
+                });
+                panel.appendChild(option);
+            });
+
+            trigger.addEventListener("click", function (event) {
+                event.stopPropagation();
+                var isOpen = wrapper.classList.contains("open");
+                document.querySelectorAll(".multiselect.open").forEach(function (el) { el.classList.remove("open"); });
+                if (!isOpen) wrapper.classList.add("open");
+            });
+
+            document.addEventListener("click", function (event) {
+                if (!wrapper.contains(event.target)) wrapper.classList.remove("open");
+            });
+
+            updateLabel();
+
+            return {
+                sync: updateLabel,
+                reset: function () {
+                    Array.from(panel.querySelectorAll("input")).forEach(function (cb) { cb.checked = false; });
+                    updateLabel();
+                },
+                setSelected: function (values) {
+                    state[stateKey] = (values || []).slice();
+                    Array.from(panel.querySelectorAll("input")).forEach(function (cb) {
+                        cb.checked = state[stateKey].indexOf(cb.value) !== -1;
+                    });
+                    updateLabel();
+                }
+            };
+        }
+
+        var statusMultiSelect = buildMultiSelect(
+            "status-multiselect-panel", "status-multiselect-trigger", "status-multiselect-label",
+            "statuses", ["CREATED", "VALIDATED", "SENT", "COMPLETED", "FAILED"], "All Statuses");
+
+        var errorCodeMultiSelect = buildMultiSelect(
+            "error-code-multiselect-panel", "error-code-multiselect-trigger", "error-code-multiselect-label",
+            "errorCodes",
+            ["VALIDATION_FAILED", "INSUFFICIENT_FUNDS", "INVALID_ACCOUNT", "INVALID_CURRENCY",
+             "INVALID_AMOUNT", "NETWORK_ERROR", "PROCESSING_ERROR"],
+            "All Error Codes");
+
+        function syncChipUI() {
+            Array.from(document.getElementById("currency-chips").children).forEach(function (btn) {
+                btn.classList.toggle("is-active", state.currencies.indexOf(btn.dataset.value) !== -1);
+            });
+        }
+
+        function syncFilterUiFromState() {
+            document.getElementById("filter-from").value = state.from;
+            document.getElementById("filter-to").value = state.to;
+            document.getElementById("filter-min-amount").value = state.minAmount;
+            document.getElementById("filter-max-amount").value = state.maxAmount;
+            statusMultiSelect.setSelected(state.statuses);
+            errorCodeMultiSelect.setSelected(state.errorCodes);
+            syncChipUI();
+            renderActiveChips();
+        }
+
+        function applySegmentTagState() {
+            var strip = document.getElementById("segment-strip");
+            if (!strip) return;
+            Array.from(strip.querySelectorAll(".segment-tag")).forEach(function (tag) {
+                tag.classList.toggle("active", tag.dataset.segment === activeSegment);
+            });
+        }
+
+        function setStateFromDrilldown(nextState) {
+            if (nextState.statuses) state.statuses = nextState.statuses.slice();
+            if (nextState.currencies) state.currencies = nextState.currencies.slice();
+            if (nextState.errorCodes) state.errorCodes = nextState.errorCodes.slice();
+            if (Object.prototype.hasOwnProperty.call(nextState, "minAmount")) state.minAmount = nextState.minAmount;
+            if (Object.prototype.hasOwnProperty.call(nextState, "maxAmount")) state.maxAmount = nextState.maxAmount;
+            if (Object.prototype.hasOwnProperty.call(nextState, "from")) state.from = nextState.from;
+            if (Object.prototype.hasOwnProperty.call(nextState, "to")) state.to = nextState.to;
+            syncFilterUiFromState();
+            loadAll();
+        }
+
+        function renderActiveChips() {
+            var container = document.getElementById("active-chips");
+            container.innerHTML = "";
+
+            var pieces = [];
+            if (state.statuses.length) pieces.push({ label: "Status", value: state.statuses.join(", ") });
+            if (state.currencies.length) pieces.push({ label: "Currency", value: state.currencies.join(", ") });
+            if (state.errorCodes.length) pieces.push({ label: "Error", value: state.errorCodes.join(", ") });
+            if (state.from) pieces.push({ label: "From", value: state.from });
+            if (state.to) pieces.push({ label: "To", value: state.to });
+            if (state.minAmount) pieces.push({ label: "Min", value: state.minAmount });
+            if (state.maxAmount) pieces.push({ label: "Max", value: state.maxAmount });
+
+            if (pieces.length === 0) {
+                var note = document.createElement("span");
+                note.className = "no-filter-note";
+                note.textContent = "No active filters — showing all payments";
+                container.appendChild(note);
+                return;
+            }
+
+            pieces.forEach(function (piece) {
+                var tag = document.createElement("span");
+                tag.className = "active-tag";
+                tag.innerHTML = "<strong>" + piece.label + ":</strong>&nbsp;" + piece.value;
+                container.appendChild(tag);
+            });
+        }
+
+        document.getElementById("apply-filters-button").addEventListener("click", function () {
+            state.from = document.getElementById("filter-from").value;
+            state.to = document.getElementById("filter-to").value;
+            state.minAmount = document.getElementById("filter-min-amount").value;
+            state.maxAmount = document.getElementById("filter-max-amount").value;
+            renderActiveChips();
+            loadAll();
+        });
+
+        document.getElementById("reset-filters-button").addEventListener("click", function () {
+            state.statuses = [];
+            state.currencies = [];
+            state.errorCodes = [];
+            state.from = "";
+            state.to = "";
+            state.minAmount = "";
+            state.maxAmount = "";
+            activeSegment = "ALL";
+            document.getElementById("filter-from").value = "";
+            document.getElementById("filter-to").value = "";
+            document.getElementById("filter-min-amount").value = "";
+            document.getElementById("filter-max-amount").value = "";
+            statusMultiSelect.reset();
+            errorCodeMultiSelect.reset();
+            syncChipUI();
+            renderActiveChips();
+            loadAll();
+        });
+
+        document.getElementById("refresh-button").addEventListener("click", loadAll);
+
+        /* ---------- Query building ---------- */
+        function buildQuery(extra) {
+            var params = new URLSearchParams();
+            if (state.statuses.length) params.set("status", state.statuses.join(","));
+            if (state.currencies.length) params.set("currency", state.currencies.join(","));
+            if (state.errorCodes.length) params.set("errorCode", state.errorCodes.join(","));
+            if (state.from) params.set("from", state.from);
+            if (state.to) params.set("to", state.to);
+            if (state.minAmount) params.set("minAmount", state.minAmount);
+            if (state.maxAmount) params.set("maxAmount", state.maxAmount);
+            if (extra) {
+                Object.keys(extra).forEach(function (key) { params.set(key, extra[key]); });
+            }
+            return params.toString();
+        }
+
+        async function fetchJson(url) {
+            try {
+                var response = await fetch(url);
+                if (!response.ok) return null;
+                return await response.json();
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function formatMoney(value) {
+            return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(value || 0);
+        }
+
+        function formatPercent(value) {
+            return (value || 0).toFixed(1) + "%";
+        }
+
+        var chartColors = ["#0f6fff", "#00c2a8", "#f4a340", "#c23a3a", "#7c5cff", "#2d6ed0", "#e05aa0", "#3ad6be", "#b46b00", "#5f6f85"];
+
+        /* ---------- Renderers ---------- */
+        function renderHeadline(overview) {
+            animateCount(document.getElementById("headline-total-amount"), overview.totalAmount || 0, 900,
+                function (v) { return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(v); });
+            animateCount(document.getElementById("headline-total-count"), overview.totalPayments || 0, 900,
+                function (v) { return Math.round(v).toLocaleString(); });
+            animateCount(document.getElementById("headline-success-rate"), overview.successRate || 0, 900,
+                function (v) { return v.toFixed(1) + "%"; });
+            animateCount(document.getElementById("headline-failure-rate"), overview.failureRate || 0, 900,
+                function (v) { return v.toFixed(1) + "%"; });
+            animateCount(document.getElementById("headline-inflight"), overview.inFlightCount || 0, 900,
+                function (v) { return Math.round(v).toLocaleString(); });
+        }
+
+        function renderStatusChart(data) {
+            var ctx = document.getElementById("chart-status");
+            var labels = data.map(function (d) { return d.status; });
+            var counts = data.map(function (d) { return d.count; });
+
+            if (charts.status) charts.status.destroy();
+            if (!data.length) return;
+
+            charts.status = new Chart(ctx, {
+                type: "doughnut",
+                data: {
+                    labels: labels,
+                    datasets: [{ data: counts, backgroundColor: chartColors, borderWidth: 0 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: "bottom" } },
+                    onClick: function (_, elements) {
+                        if (!elements.length) return;
+                        var idx = elements[0].index;
+                        var status = labels[idx];
+                        setStateFromDrilldown({ statuses: [status] });
+                    }
+                }
+            });
+        }
+
+        function renderErrorChart(data) {
+            var ctx = document.getElementById("chart-errors");
+            var labels = data.map(function (d) { return d.errorCode; });
+            var counts = data.map(function (d) { return d.count; });
+            var total = counts.reduce(function (a, b) { return a + b; }, 0);
+
+            if (charts.errors) charts.errors.destroy();
+            if (!data.length) return;
+
+            charts.errors = new Chart(ctx, {
+                type: "pie",
+                data: {
+                    labels: labels,
+                    datasets: [{ data: counts, backgroundColor: chartColors, borderWidth: 0 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: "bottom" },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    var pct = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                                    return context.label + ": " + context.parsed + " (" + pct + "%)";
+                                }
+                            }
+                        }
+                    },
+                    onClick: function (_, elements) {
+                        if (!elements.length) return;
+                        var idx = elements[0].index;
+                        var code = labels[idx];
+                        setStateFromDrilldown({ errorCodes: [code] });
+                    }
+                }
+            });
+        }
+
+        function renderCurrencyChart(data) {
+            var ctx = document.getElementById("chart-currency");
+            var labels = data.map(function (d) { return d.currency; });
+            var values = data.map(function (d) { return currencyChartMode === "amount" ? d.totalAmount : d.count; });
+
+            if (charts.currency) charts.currency.destroy();
+            if (!data.length) return;
+
+            charts.currency = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: currencyChartMode === "amount" ? "Total Amount" : "Payment Count",
+                        data: values,
+                        backgroundColor: chartColors,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } },
+                    onClick: function (_, elements) {
+                        if (!elements.length) return;
+                        var idx = elements[0].index;
+                        var currency = labels[idx];
+                        setStateFromDrilldown({ currencies: [currency] });
+                    }
+                }
+            });
+        }
+
+        function renderTrendChart(data) {
+            var ctx = document.getElementById("chart-trend");
+            var labels = data.map(function (d) { return d.periodLabel; });
+            var values = data.map(function (d) { return trendChartMode === "amount" ? d.totalAmount : d.count; });
+
+            if (charts.trend) charts.trend.destroy();
+            if (!data.length) return;
+
+            charts.trend = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: trendChartMode === "amount" ? "Total Amount" : "Payment Count",
+                        data: values,
+                        borderColor: "#0f6fff",
+                        backgroundColor: "rgba(15,111,255,0.14)",
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function renderLifecycleFunnel(payments, history) {
+            var ctx = document.getElementById("chart-funnel");
+            var notesEl = document.getElementById("funnel-notes");
+            var order = ["CREATED", "VALIDATED", "SENT", "COMPLETED"];
+            var stageSets = {
+                CREATED: new Set(),
+                VALIDATED: new Set(),
+                SENT: new Set(),
+                COMPLETED: new Set()
+            };
+
+            payments.forEach(function (payment) {
+                if (payment && payment.id !== undefined && payment.id !== null) {
+                    stageSets.CREATED.add(payment.id);
+                }
+            });
+
+            history.forEach(function (entry) {
+                var status = String(entry.status || "").toUpperCase();
+                if (stageSets[status]) {
+                    stageSets[status].add(entry.paymentId);
+                }
+            });
+
+            var labels = order;
+            var counts = labels.map(function (status) { return stageSets[status].size; });
+
+            if (charts.funnel) charts.funnel.destroy();
+            charts.funnel = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: ["#7c5cff", "#2d6ed0", "#00c2a8", "#0a8e67"],
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    indexAxis: "y",
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true } },
+                    onClick: function (_, elements) {
+                        if (!elements.length) return;
+                        var status = labels[elements[0].index];
+                        setStateFromDrilldown({ statuses: [status] });
+                    }
+                }
+            });
+
+            notesEl.innerHTML = "";
+            for (var i = 1; i < labels.length; i += 1) {
+                var prev = counts[i - 1] || 0;
+                var current = counts[i] || 0;
+                var dropPct = prev ? (((prev - current) / prev) * 100) : 0;
+                var note = document.createElement("div");
+                note.className = "funnel-note";
+                note.textContent = labels[i - 1] + " -> " + labels[i] + ": drop-off " + dropPct.toFixed(1) + "%";
+                notesEl.appendChild(note);
+            }
+        }
+
+        function renderCohortChart(payments) {
+            var ctx = document.getElementById("chart-cohort");
+            var now = new Date();
+            var buckets = [];
+            for (var i = 5; i >= 0; i -= 1) {
+                var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                var key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+                buckets.push({ key: key, label: d.toLocaleString(undefined, { month: "short", year: "2-digit" }), total: 0, success: 0, failed: 0 });
+            }
+            var map = {};
+            buckets.forEach(function (b) { map[b.key] = b; });
+
+            payments.forEach(function (payment) {
+                var created = new Date(payment.createdAt || "");
+                if (isNaN(created.getTime())) return;
+                var key = created.getFullYear() + "-" + String(created.getMonth() + 1).padStart(2, "0");
+                var bucket = map[key];
+                if (!bucket) return;
+                bucket.total += 1;
+                var status = String(payment.status || "").toUpperCase();
+                if (status === "COMPLETED" || status === "SUCCESS" || status === "SUCCEEDED") bucket.success += 1;
+                if (status === "FAILED" || status === "REJECTED" || status === "CANCELLED") bucket.failed += 1;
+            });
+
+            var labels = buckets.map(function (b) { return b.label; });
+            var successRate = buckets.map(function (b) { return b.total ? (b.success / b.total) * 100 : 0; });
+            var failRate = buckets.map(function (b) { return b.total ? (b.failed / b.total) * 100 : 0; });
+
+            if (charts.cohort) charts.cohort.destroy();
+            charts.cohort = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: "Success %",
+                            data: successRate,
+                            borderColor: "#0a8e67",
+                            backgroundColor: "rgba(10,142,103,0.12)",
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 3
+                        },
+                        {
+                            label: "Failure %",
+                            data: failRate,
+                            borderColor: "#c23a3a",
+                            backgroundColor: "rgba(194,58,58,0.12)",
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 100 }
+                    }
+                }
+            });
+        }
+
+        function renderAmountDistribution(payments) {
+            var ctx = document.getElementById("chart-distribution");
+            var strip = document.getElementById("segment-strip");
+
+            var counts = DISTRIBUTION_BUCKETS.map(function () { return 0; });
+            payments.forEach(function (payment) {
+                var amount = Number(payment.amount || 0);
+                for (var i = 0; i < DISTRIBUTION_BUCKETS.length; i += 1) {
+                    var bucket = DISTRIBUTION_BUCKETS[i];
+                    var passMin = amount >= bucket.min;
+                    var passMax = bucket.max === null ? true : amount < bucket.max;
+                    if (passMin && passMax) {
+                        counts[i] += 1;
+                        break;
+                    }
+                }
+            });
+
+            if (charts.distribution) charts.distribution.destroy();
+            charts.distribution = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: DISTRIBUTION_BUCKETS.map(function (b) { return b.label; }),
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: ["#c6d7f2", "#98baf0", "#6c9de8", "#3f7fe0", "#1a63d4"],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } },
+                    onClick: function (_, elements) {
+                        if (!elements.length) return;
+                        var bucket = DISTRIBUTION_BUCKETS[elements[0].index];
+                        activeSegment = bucket.key;
+                        applySegmentTagState();
+                        setStateFromDrilldown({
+                            minAmount: String(bucket.min),
+                            maxAmount: bucket.max === null ? "" : String(bucket.max)
+                        });
+                    }
+                }
+            });
+
+            strip.innerHTML = "";
+            var allTag = document.createElement("button");
+            allTag.type = "button";
+            allTag.className = "segment-tag";
+            allTag.dataset.segment = "ALL";
+            allTag.textContent = "All Segments";
+            allTag.addEventListener("click", function () {
+                activeSegment = "ALL";
+                applySegmentTagState();
+                setStateFromDrilldown({ minAmount: "", maxAmount: "" });
+            });
+            strip.appendChild(allTag);
+
+            DISTRIBUTION_BUCKETS.forEach(function (bucket, idx) {
+                var tag = document.createElement("button");
+                tag.type = "button";
+                tag.className = "segment-tag";
+                tag.dataset.segment = bucket.key;
+                tag.textContent = bucket.label + " (" + counts[idx] + ")";
+                tag.addEventListener("click", function () {
+                    activeSegment = bucket.key;
+                    applySegmentTagState();
+                    setStateFromDrilldown({
+                        minAmount: String(bucket.min),
+                        maxAmount: bucket.max === null ? "" : String(bucket.max)
+                    });
+                });
+                strip.appendChild(tag);
+            });
+            applySegmentTagState();
+        }
+
+        function renderFailureHeatmap(history, payments) {
+            var heatmapEl = document.getElementById("failure-heatmap");
+            var legendEl = document.getElementById("heatmap-legend");
+            var paymentIds = new Set(payments.map(function (p) { return p.id; }));
+            var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            var grid = [];
+            for (var d = 0; d < 7; d += 1) {
+                grid[d] = [];
+                for (var h = 0; h < 24; h += 1) {
+                    grid[d][h] = 0;
+                }
+            }
+
+            history.forEach(function (entry) {
+                if (!paymentIds.has(entry.paymentId)) return;
+                var status = String(entry.status || "").toUpperCase();
+                if (status.indexOf("FAIL") === -1 && status !== "REJECTED") return;
+                var time = new Date(entry.createdAt || "");
+                if (isNaN(time.getTime())) return;
+                grid[time.getDay()][time.getHours()] += 1;
+            });
+
+            var maxValue = 0;
+            for (var day = 0; day < 7; day += 1) {
+                for (var hour = 0; hour < 24; hour += 1) {
+                    maxValue = Math.max(maxValue, grid[day][hour]);
+                }
+            }
+
+            heatmapEl.innerHTML = "";
+            var blank = document.createElement("div");
+            blank.className = "heatmap-cell head";
+            blank.textContent = "Day/Hour";
+            heatmapEl.appendChild(blank);
+
+            for (var i = 0; i < 24; i += 1) {
+                var head = document.createElement("div");
+                head.className = "heatmap-cell head";
+                head.textContent = String(i).padStart(2, "0");
+                heatmapEl.appendChild(head);
+            }
+
+            for (var row = 0; row < 7; row += 1) {
+                var dayLabel = document.createElement("div");
+                dayLabel.className = "heatmap-cell day";
+                dayLabel.textContent = days[row];
+                heatmapEl.appendChild(dayLabel);
+
+                for (var col = 0; col < 24; col += 1) {
+                    var val = grid[row][col];
+                    var intensity = maxValue ? val / maxValue : 0;
+                    var cell = document.createElement("div");
+                    cell.className = "heatmap-cell";
+                    cell.title = days[row] + " " + String(col).padStart(2, "0") + ":00 - failures: " + val;
+                    cell.style.backgroundColor = "rgba(194,58,58," + (0.08 + intensity * 0.72).toFixed(2) + ")";
+                    cell.style.color = intensity > 0.62 ? "#fff" : "var(--muted)";
+                    cell.textContent = val > 0 ? String(val) : "";
+                    heatmapEl.appendChild(cell);
+                }
+            }
+
+            legendEl.innerHTML = "";
+            [0.15, 0.35, 0.6, 0.85].forEach(function (ratio, idx) {
+                var sw = document.createElement("span");
+                sw.className = "legend-swatch";
+                sw.style.backgroundColor = "rgba(194,58,58," + ratio + ")";
+                legendEl.appendChild(sw);
+                if (idx === 0) {
+                    var low = document.createElement("span");
+                    low.textContent = "Low";
+                    legendEl.appendChild(low);
+                }
+                if (idx === 3) {
+                    var high = document.createElement("span");
+                    high.textContent = "High";
+                    legendEl.appendChild(high);
+                }
+            });
+        }
+
+        document.getElementById("currency-toggle").addEventListener("click", function (event) {
+            var button = event.target.closest("button");
+            if (!button) return;
+            currencyChartMode = button.dataset.mode;
+            Array.from(this.querySelectorAll("button")).forEach(function (b) { b.classList.toggle("is-active", b === button); });
+            fetchJson(ANALYTICS_URL + "/currency-volume?" + buildQuery()).then(function (data) {
+                if (data) renderCurrencyChart(data);
+            });
+        });
+
+        document.getElementById("trend-toggle").addEventListener("click", function (event) {
+            var button = event.target.closest("button");
+            if (!button) return;
+            trendChartMode = button.dataset.mode;
+            Array.from(this.querySelectorAll("button")).forEach(function (b) { b.classList.toggle("is-active", b === button); });
+            fetchJson(ANALYTICS_URL + "/trend?" + buildQuery()).then(function (data) {
+                if (data) renderTrendChart(data);
+            });
+        });
+
+        /* ---------- Currency comparison ---------- */
+        var CURRENCY_OPTIONS = ["USD", "EUR", "GBP", "INR"];
+
+        (function populateCompareDropdowns() {
+            var selectA = document.getElementById("compare-currency-a");
+            var selectB = document.getElementById("compare-currency-b");
+            CURRENCY_OPTIONS.forEach(function (currency) {
+                var optionA = document.createElement("option");
+                optionA.value = currency;
+                optionA.textContent = currency;
+                selectA.appendChild(optionA);
+
+                var optionB = document.createElement("option");
+                optionB.value = currency;
+                optionB.textContent = currency;
+                selectB.appendChild(optionB);
+            });
+            selectA.value = CURRENCY_OPTIONS[0];
+            selectB.value = CURRENCY_OPTIONS[1];
+        })();
+
+        function buildComparisonQuery(currency) {
+            var params = new URLSearchParams();
+            if (state.statuses.length) params.set("status", state.statuses.join(","));
+            params.set("currency", currency);
+            if (state.errorCodes.length) params.set("errorCode", state.errorCodes.join(","));
+            if (state.from) params.set("from", state.from);
+            if (state.to) params.set("to", state.to);
+            if (state.minAmount) params.set("minAmount", state.minAmount);
+            if (state.maxAmount) params.set("maxAmount", state.maxAmount);
+            return params.toString();
+        }
+
+        function renderCurrencyCompareChart(currencyA, overviewA, currencyB, overviewB) {
+            var ctx = document.getElementById("chart-currency-compare");
+            if (charts.currencyCompare) charts.currencyCompare.destroy();
+
+            charts.currencyCompare = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: ["Total Amount Transferred"],
+                    datasets: [
+                        { label: currencyA, data: [overviewA.totalAmount || 0], backgroundColor: "#0f6fff", borderRadius: 8 },
+                        { label: currencyB, data: [overviewB.totalAmount || 0], backgroundColor: "#00c2a8", borderRadius: 8 }
+                    ]
+                },
+                options: {
+                    indexAxis: "y", responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: "bottom" } },
+                    scales: { x: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function compareRow(label, valueA, valueB, formatter) {
+            var format = formatter || function (v) { return v; };
+            return {
+                label: label,
+                a: format(valueA),
+                b: format(valueB),
+                aWin: valueA > valueB,
+                bWin: valueB > valueA
+            };
+        }
+
+        function renderCurrencyCompareStats(currencyA, overviewA, currencyB, overviewB) {
+            var container = document.getElementById("compare-stats");
+            container.innerHTML = "";
+
+            var avgA = overviewA.totalPayments ? overviewA.totalAmount / overviewA.totalPayments : 0;
+            var avgB = overviewB.totalPayments ? overviewB.totalAmount / overviewB.totalPayments : 0;
+
+            var rows = [
+                compareRow("Total Volume", overviewA.totalAmount || 0, overviewB.totalAmount || 0, formatMoney),
+                compareRow("Payment Count", overviewA.totalPayments || 0, overviewB.totalPayments || 0, formatMoney),
+                compareRow("Success Rate", overviewA.successRate || 0, overviewB.successRate || 0, formatPercent),
+                compareRow("Failure Rate", overviewA.failureRate || 0, overviewB.failureRate || 0, formatPercent),
+                compareRow("Avg Payment Size", avgA, avgB, formatMoney)
+            ];
+
+            [{ name: currencyA, side: "a" }, { name: currencyB, side: "b" }].forEach(function (col) {
+                var colEl = document.createElement("div");
+                colEl.className = "compare-col";
+                var heading = document.createElement("h3");
+                heading.textContent = col.name;
+                colEl.appendChild(heading);
+
+                rows.forEach(function (row) {
+                    var rowEl = document.createElement("div");
+                    var isWinner = col.side === "a" ? row.aWin : row.bWin;
+                    rowEl.className = "compare-row" + (isWinner ? " winner" : "");
+                    rowEl.innerHTML = "<span>" + row.label + "</span><span>" + (col.side === "a" ? row.a : row.b) + "</span>";
+                    colEl.appendChild(rowEl);
+                });
+
+                container.appendChild(colEl);
+            });
+        }
+
+        async function loadCurrencyComparison() {
+            var currencyA = document.getElementById("compare-currency-a").value;
+            var currencyB = document.getElementById("compare-currency-b").value;
+
+            var overviewA = await fetchJson(ANALYTICS_URL + "/overview?" + buildComparisonQuery(currencyA)) || {};
+            var overviewB = await fetchJson(ANALYTICS_URL + "/overview?" + buildComparisonQuery(currencyB)) || {};
+
+            renderCurrencyCompareChart(currencyA, overviewA, currencyB, overviewB);
+            renderCurrencyCompareStats(currencyA, overviewA, currencyB, overviewB);
+        }
+
+        document.getElementById("compare-currency-a").addEventListener("change", loadCurrencyComparison);
+        document.getElementById("compare-currency-b").addEventListener("change", loadCurrencyComparison);
+
+        function renderInsights(overview, errorCodes, currencyVolume) {
+            var strip = document.getElementById("insights-strip");
+            strip.innerHTML = "";
+            var insights = [];
+
+            if (overview.totalPayments > 0) {
+                insights.push(overview.failureRate.toFixed(1) + "% of payments failed in the selected range.");
+            }
+            if (errorCodes.length) {
+                var top = errorCodes[0];
+                var pctOfFailures = overview.failedCount > 0 ? ((top.count / overview.failedCount) * 100).toFixed(0) : 0;
+                insights.push(top.errorCode + " is the leading failure reason (" + top.count + " occurrences, " + pctOfFailures + "% of failures).");
+            }
+            if (currencyVolume.length) {
+                var topCurrency = currencyVolume.slice().sort(function (a, b) { return b.totalAmount - a.totalAmount; })[0];
+                insights.push(topCurrency.currency + " leads total volume with " + formatMoney(topCurrency.totalAmount) + " across " + topCurrency.count + " payments.");
+            }
+            if (!insights.length) {
+                insights.push("No data available yet for the selected filters.");
+            }
+
+            insights.forEach(function (text) {
+                var item = document.createElement("div");
+                item.className = "insight-item";
+                item.innerHTML = '<span class="insight-dot"></span><span></span>';
+                item.querySelector("span:last-child").textContent = text;
+                strip.appendChild(item);
+            });
+        }
+
+        function statusClass(status) {
+            return String(status || "").toLowerCase();
+        }
+
+        function renderPaymentsTable(payments) {
+            currentPayments = payments;
+            var body = document.getElementById("payments-body");
+            body.innerHTML = "";
+            document.getElementById("table-count-meta").textContent = "Showing " + payments.length + " payments";
+
+            if (!payments.length) {
+                body.innerHTML = '<tr class="empty-row"><td colspan="6">No payments match the current filters.</td></tr>';
+                return;
+            }
+
+            payments.forEach(function (payment) {
+                var row = document.createElement("tr");
+                row.innerHTML =
+                    "<td>" + (payment.id || "-") + "</td>" +
+                    "<td>" + formatMoney(payment.amount) + "</td>" +
+                    "<td>" + (payment.currency || "-") + "</td>" +
+                    '<td><span class="status-pill ' + statusClass(payment.status) + '">' + (payment.status || "-") + "</span></td>" +
+                    '<td><span class="error-tag">' + (payment.errorCode || "&mdash;") + "</span></td>" +
+                    "<td>" + (payment.createdAt ? new Date(payment.createdAt).toLocaleString() : "-") + "</td>";
+
+                row.addEventListener("click", function () {
+                    toggleHistoryRow(row, payment);
+                });
+                body.appendChild(row);
+            });
+        }
+
+        function toggleHistoryRow(row, payment) {
+            var next = row.nextElementSibling;
+            if (next && next.classList.contains("history-row")) {
+                next.remove();
+                return;
+            }
+
+            Array.from(document.querySelectorAll(".history-row")).forEach(function (el) { el.remove(); });
+
+            var historyEntries = allHistory.filter(function (entry) { return entry.paymentId === payment.id; });
+            historyEntries.sort(function (a, b) { return new Date(a.createdAt) - new Date(b.createdAt); });
+
+            var historyRow = document.createElement("tr");
+            historyRow.className = "history-row";
+            var cell = document.createElement("td");
+            cell.colSpan = 6;
+
+            if (!historyEntries.length) {
+                cell.innerHTML = '<div class="history-timeline">No history entries found for this payment.</div>';
+            } else {
+                var timeline = document.createElement("div");
+                timeline.className = "history-timeline";
+                historyEntries.forEach(function (entry) {
+                    var event = document.createElement("div");
+                    event.className = "history-event";
+                    event.innerHTML =
+                        '<span class="dot"></span><div><strong>' + entry.status + "</strong> &mdash; " +
+                        (entry.note || "") +
+                        '<div class="meta">' + (entry.createdAt ? new Date(entry.createdAt).toLocaleString() : "") +
+                        " &middot; triggered by " + (entry.triggeredBy || "SYSTEM") + "</div></div>";
+                    timeline.appendChild(event);
+                });
+                cell.appendChild(timeline);
+            }
+
+            historyRow.appendChild(cell);
+            row.after(historyRow);
+        }
+
+        /* ---------- CSV export ---------- */
+        document.getElementById("export-csv-button").addEventListener("click", function () {
+            if (!currentPayments.length) return;
+            var header = ["Payment ID", "Amount", "Currency", "Status", "Error Code", "Created At"];
+            var rows = currentPayments.map(function (p) {
+                return [p.id, p.amount, p.currency, p.status, p.errorCode || "", p.createdAt].join(",");
+            });
+            var csv = [header.join(",")].concat(rows).join("\n");
+            var blob = new Blob([csv], { type: "text/csv" });
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement("a");
+            link.href = url;
+            link.download = "payment-analytics-export.csv";
+            link.click();
+            URL.revokeObjectURL(url);
+        });
+
+        /* ---------- Main load ---------- */
+        async function loadAll() {
+            var query = buildQuery();
+
+            var overview = await fetchJson(ANALYTICS_URL + "/overview?" + query) || {
+                totalPayments: 0, totalAmount: 0, completedCount: 0, failedCount: 0, inFlightCount: 0, successRate: 0, failureRate: 0
+            };
+            var statusDistribution = await fetchJson(ANALYTICS_URL + "/status-distribution?" + query) || [];
+            var errorCodes = await fetchJson(ANALYTICS_URL + "/error-codes?" + query) || [];
+            var currencyVolume = await fetchJson(ANALYTICS_URL + "/currency-volume?" + query) || [];
+            var trend = await fetchJson(ANALYTICS_URL + "/trend?" + query) || [];
+            var payments = await fetchJson(ANALYTICS_URL + "/payments?" + query + "&limit=200") || [];
+
+            if (!allHistory.length) {
+                allHistory = await fetchJson(HISTORY_URL) || [];
+            }
+
+            var paymentIds = new Set(payments.map(function (payment) { return payment.id; }));
+            var scopedHistory = allHistory.filter(function (entry) { return paymentIds.has(entry.paymentId); });
+
+            renderHeadline(overview);
+            renderStatusChart(statusDistribution);
+            renderErrorChart(errorCodes);
+            renderCurrencyChart(currencyVolume);
+            renderTrendChart(trend);
+            renderLifecycleFunnel(payments, scopedHistory);
+            renderCohortChart(payments);
+            renderAmountDistribution(payments);
+            renderFailureHeatmap(scopedHistory, payments);
+            renderInsights(overview, errorCodes, currencyVolume);
+            renderPaymentsTable(payments);
+            await loadCurrencyComparison();
+
+            document.getElementById("last-refreshed").textContent = "Last refreshed: " + new Date().toLocaleTimeString();
+        }
+
+        /* ---------- Live FX rate stock-style chart (independent of payment filters) ---------- */
+        var FX_CURRENCIES = ["USD", "EUR", "GBP", "INR"];
+        var fxState = { base: "USD", quote: "EUR", range: "6M" };
+
+        function fxRangeToDates(range) {
+            var to = new Date();
+            var from = new Date(to);
+            if (range === "1M") from.setMonth(from.getMonth() - 1);
+            else if (range === "3M") from.setMonth(from.getMonth() - 3);
+            else if (range === "1Y") from.setFullYear(from.getFullYear() - 1);
+            else from.setMonth(from.getMonth() - 6);
+            return { from: from, to: to };
+        }
+
+        function fxToIso(date) { return date.toISOString().slice(0, 10); }
+
+        async function loadFxTrend() {
+            var canvas = document.getElementById("chart-fx-trend");
+            var noteEl = document.getElementById("fx-trend-note");
+            var priceEl = document.getElementById("fx-ticker-price");
+            var changeEl = document.getElementById("fx-ticker-change");
+            var asOfEl = document.getElementById("fx-ticker-asof");
+            if (!canvas) return;
+
+            var base = fxState.base;
+            var quote = fxState.quote;
+
+            if (base === quote) {
+                if (charts.fxTrend) { charts.fxTrend.destroy(); charts.fxTrend = null; }
+                priceEl.textContent = "--";
+                changeEl.textContent = "";
+                changeEl.className = "fx-ticker-change";
+                asOfEl.textContent = "";
+                noteEl.textContent = "Choose two different currencies to compare.";
+                return;
+            }
+
+            var range = fxRangeToDates(fxState.range);
+            var url = "https://api.frankfurter.dev/v2/rates?base=" + base + "&quotes=" + quote
+                + "&from=" + fxToIso(range.from) + "&to=" + fxToIso(range.to);
+
+            try {
+                var response = await fetch(url);
+                if (!response.ok) throw new Error("Frankfurter status " + response.status);
+                var rows = await response.json();
+                if (!Array.isArray(rows) || !rows.length) throw new Error("No FX history returned");
+
+                rows.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+
+                var labels = rows.map(function (row) { return row.date; });
+                var series = rows.map(function (row) { return Number(row.rate); });
+
+                var first = series[0];
+                var last = series[series.length - 1];
+                var change = last - first;
+                var changePct = first !== 0 ? (change / first) * 100 : 0;
+                var isUp = change >= 0;
+
+                if (charts.fxTrend) charts.fxTrend.destroy();
+
+                var lineColor = isUp ? "#0a8e67" : "#c23a3a";
+                var fillColor = isUp ? "rgba(10,142,103,0.14)" : "rgba(194,58,58,0.14)";
+
+                charts.fxTrend = new Chart(canvas, {
+                    type: "line",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: base + "/" + quote,
+                            data: series,
+                            borderColor: lineColor,
+                            backgroundColor: fillColor,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            tension: 0.15,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        interaction: { mode: "index", intersect: false },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) { return base + "/" + quote + ": " + context.parsed.y.toFixed(5); }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { maxTicksLimit: 8 } },
+                            y: { position: "right", ticks: { callback: function (value) { return Number(value).toFixed(4); } } }
+                        }
+                    }
+                });
+
+                priceEl.textContent = last.toFixed(5);
+                changeEl.textContent = (isUp ? "+" : "") + change.toFixed(5) + " (" + (isUp ? "+" : "") + changePct.toFixed(2) + "%)";
+                changeEl.className = "fx-ticker-change " + (isUp ? "positive" : "negative");
+                asOfEl.textContent = "1 " + base + " = " + quote + " \u00b7 As of " + labels[labels.length - 1] + " \u00b7 Source: Frankfurter";
+                noteEl.textContent = labels.length + " data points \u00b7 Range: " + fxState.range;
+            } catch (error) {
+                noteEl.textContent = "Live FX trend unavailable right now.";
+                priceEl.textContent = "--";
+                changeEl.textContent = "";
+                changeEl.className = "fx-ticker-change";
+                asOfEl.textContent = "";
+            }
+        }
+
+        document.getElementById("fx-base-currency").addEventListener("change", function () {
+            fxState.base = this.value;
+            loadFxTrend();
+        });
+        document.getElementById("fx-quote-currency").addEventListener("change", function () {
+            fxState.quote = this.value;
+            loadFxTrend();
+        });
+        document.getElementById("fx-range-toggle").addEventListener("click", function (event) {
+            var button = event.target.closest("button");
+            if (!button) return;
+            fxState.range = button.dataset.range;
+            Array.from(this.querySelectorAll("button")).forEach(function (b) { b.classList.toggle("is-active", b === button); });
+            loadFxTrend();
+        });
+
+        loadFxTrend();
+        window.setInterval(loadFxTrend, 5 * 60 * 1000);
+
+        loadAll();
+    </script>
+</body>
+</html>

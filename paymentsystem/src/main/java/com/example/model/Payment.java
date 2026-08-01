@@ -11,6 +11,7 @@ public class Payment {
     private String destinationAccount;
     private String status;
     private LocalDateTime createdAt;
+    private String errorCode;
 
     public Payment() {
     }
@@ -86,6 +87,14 @@ public class Payment {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(String errorCode) {
+        this.errorCode = errorCode;
     }
 
 }
