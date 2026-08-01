@@ -210,6 +210,15 @@
             font-size: 0.8rem;
         }
 
+        .market-rate {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--line);
+            color: var(--brand-deep);
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+
         .brand {
             font-size: 1.05rem;
             font-weight: 800;
@@ -841,6 +850,7 @@
                 </div>
                 <div class="market-time">--:--</div>
                 <div class="market-date">Loading local time...</div>
+                <div class="market-rate">Base currency</div>
             </article>
             <article class="market-card" data-timezone="Europe/Brussels" data-label="EUR">
                 <div class="market-head">
@@ -849,6 +859,7 @@
                 </div>
                 <div class="market-time">--:--</div>
                 <div class="market-date">Loading local time...</div>
+                <div class="market-rate" id="rate-EUR">Loading rate...</div>
             </article>
             <article class="market-card" data-timezone="Europe/London" data-label="GBP">
                 <div class="market-head">
@@ -857,6 +868,7 @@
                 </div>
                 <div class="market-time">--:--</div>
                 <div class="market-date">Loading local time...</div>
+                <div class="market-rate" id="rate-GBP">Loading rate...</div>
             </article>
             <article class="market-card" data-timezone="Asia/Kolkata" data-label="INR">
                 <div class="market-head">
@@ -865,6 +877,7 @@
                 </div>
                 <div class="market-time">--:--</div>
                 <div class="market-date">Loading local time...</div>
+                <div class="market-rate" id="rate-INR">Loading rate...</div>
             </article>
         </section>
 
@@ -1019,6 +1032,66 @@
 
             updateClocks();
             window.setInterval(updateClocks, 1000);
+        })();
+
+        (function setupLiveFxTicker() {
+            var targets = ["EUR", "GBP", "INR"];
+
+            function applyRates(rates) {
+                if (!rates) {
+                    return false;
+                }
+                var appliedAny = false;
+                targets.forEach(function (code) {
+                    var el = document.getElementById("rate-" + code);
+                    var rate = Number(rates[code]);
+                    if (el && !isNaN(rate)) {
+                        el.textContent = "1 USD = " + rate.toFixed(4) + " " + code;
+                        appliedAny = true;
+                    }
+                });
+                return appliedAny;
+            }
+
+            async function fetchRates() {
+                try {
+                    var response = await fetch("https://api.frankfurter.dev/v2/rates?base=USD&quotes=" + targets.join(","));
+                    if (!response.ok) {
+                        throw new Error("Frankfurter status " + response.status);
+                    }
+                    var rows = await response.json();
+                    var rates = {};
+                    if (Array.isArray(rows)) {
+                        rows.forEach(function (row) {
+                            rates[row.quote] = row.rate;
+                        });
+                    }
+                    if (!applyRates(rates)) {
+                        throw new Error("Frankfurter missing rates");
+                    }
+                } catch (primaryError) {
+                    try {
+                        var fallbackResponse = await fetch("https://open.er-api.com/v6/latest/USD");
+                        if (!fallbackResponse.ok) {
+                            throw new Error("OpenERAPI status " + fallbackResponse.status);
+                        }
+                        var fallbackData = await fallbackResponse.json();
+                        if (!applyRates(fallbackData.rates)) {
+                            throw new Error("OpenERAPI missing rates");
+                        }
+                    } catch (fallbackError) {
+                        targets.forEach(function (code) {
+                            var el = document.getElementById("rate-" + code);
+                            if (el) {
+                                el.textContent = "Rate unavailable";
+                            }
+                        });
+                    }
+                }
+            }
+
+            fetchRates();
+            window.setInterval(fetchRates, 60000);
         })();
 
         (function setupThemeMode() {
