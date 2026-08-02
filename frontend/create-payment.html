@@ -5,11 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Payment</title>
     <link rel="stylesheet" href="create-payment.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
 </head>
 <body>
     <main class="page-shell">
         <section class="panel" aria-labelledby="create-payment-title">
             <header class="page-header">
+                <button class="back-button" type="button" onclick="window.location.href='dashboard.html'" aria-label="Back to dashboard">
+                    &#8592; Back
+                </button>
                 <span class="eyebrow">Payment Processing System</span>
                 <h1 id="create-payment-title">Create Payment</h1>
                 <p class="page-intro">Enter the payment details below, validate them on the client, and submit the payment request safely.</p>
@@ -32,7 +36,142 @@
             </section>
 
             <form id="create-payment-form" novalidate>
-                <div class="form-grid">
+
+                <!-- ── Payment Mode Selector ──────────────────── -->
+                <div class="mode-section">
+                    <h2 class="mode-section-title">How would you like to pay?</h2>
+                    <p class="mode-section-sub">Select a payment method to continue</p>
+                    <div class="mode-grid" role="radiogroup" aria-label="Choose payment mode">
+
+                        <label class="mode-card" for="mode-card">
+                            <input type="radio" name="paymentMode" id="mode-card" value="CARD" class="mode-radio">
+                            <span class="mode-check" aria-hidden="true"><span class="material-icons-outlined">check</span></span>
+                            <span class="mode-icon" aria-hidden="true"><span class="material-icons-outlined">credit_card</span></span>
+                            <span class="mode-name">Credit / Debit Card</span>
+                            <span class="mode-sub">Visa, Mastercard, Amex</span>
+                        </label>
+
+                        <label class="mode-card" for="mode-bank">
+                            <input type="radio" name="paymentMode" id="mode-bank" value="BANK_TRANSFER" class="mode-radio">
+                            <span class="mode-check" aria-hidden="true"><span class="material-icons-outlined">check</span></span>
+                            <span class="mode-icon" aria-hidden="true"><span class="material-icons-outlined">account_balance</span></span>
+                            <span class="mode-name">Bank Transfer</span>
+                            <span class="mode-sub">Direct account to account</span>
+                        </label>
+
+                        <label class="mode-card" for="mode-wallet">
+                            <input type="radio" name="paymentMode" id="mode-wallet" value="DIGITAL_WALLET" class="mode-radio">
+                            <span class="mode-check" aria-hidden="true"><span class="material-icons-outlined">check</span></span>
+                            <span class="mode-icon" aria-hidden="true"><span class="material-icons-outlined">account_balance_wallet</span></span>
+                            <span class="mode-name">Digital Wallet</span>
+                            <span class="mode-sub">PayPal, Apple Pay &amp; more</span>
+                        </label>
+
+                        <label class="mode-card" for="mode-mobile">
+                            <input type="radio" name="paymentMode" id="mode-mobile" value="MOBILE_PAYMENT" class="mode-radio">
+                            <span class="mode-check" aria-hidden="true"><span class="material-icons-outlined">check</span></span>
+                            <span class="mode-icon" aria-hidden="true"><span class="material-icons-outlined">smartphone</span></span>
+                            <span class="mode-name">Mobile Payment</span>
+                            <span class="mode-sub">UPI, QR Code, NFC</span>
+                        </label>
+
+                    </div>
+                </div>
+
+                <!-- ── Form Details (revealed on mode select) ─── -->
+                <div class="form-details-wrap" id="form-details-wrap" aria-hidden="true">
+
+                    <!-- Mode-specific extra fields -->
+                    <div class="mode-extra-group" id="extra-CARD">
+                        <div class="mode-extra-header">
+                            <span class="material-icons-outlined">credit_card</span>
+                            <h3>Card Details</h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="field field-full">
+                                <label for="cardNumber">Card Number</label>
+                                <input id="cardNumber" name="cardNumber" type="text" inputmode="numeric" maxlength="19" placeholder="1234  5678  9012  3456" autocomplete="off">
+                                <span class="field-hint">16-digit number on the front of your card.</span>
+                            </div>
+                            <div class="field">
+                                <label for="cardExpiry">Expiry Date</label>
+                                <input id="cardExpiry" name="cardExpiry" type="text" maxlength="5" placeholder="MM/YY" autocomplete="off">
+                                <span class="field-hint">Month and year on card.</span>
+                            </div>
+                            <div class="field">
+                                <label for="cardCvv">CVV</label>
+                                <input id="cardCvv" name="cardCvv" type="text" inputmode="numeric" maxlength="4" placeholder="&bull;&bull;&bull;" autocomplete="off">
+                                <span class="field-hint">3 or 4 digits on the back.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mode-extra-group" id="extra-BANK_TRANSFER">
+                        <div class="mode-extra-header">
+                            <span class="material-icons-outlined">account_balance</span>
+                            <h3>Bank Details</h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="bankName">Bank Name</label>
+                                <input id="bankName" name="bankName" type="text" maxlength="60" placeholder="e.g. HDFC Bank" autocomplete="off">
+                                <span class="field-hint">Name of the beneficiary bank.</span>
+                            </div>
+                            <div class="field">
+                                <label for="routingCode">SWIFT / IFSC Code</label>
+                                <input id="routingCode" name="routingCode" type="text" maxlength="20" placeholder="e.g. HDFCINBB" autocomplete="off">
+                                <span class="field-hint">Bank routing or SWIFT/BIC code.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mode-extra-group" id="extra-DIGITAL_WALLET">
+                        <div class="mode-extra-header">
+                            <span class="material-icons-outlined">account_balance_wallet</span>
+                            <h3>Wallet Details</h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="walletProvider">Wallet Provider</label>
+                                <select id="walletProvider" name="walletProvider">
+                                    <option value="">Select provider</option>
+                                    <option value="paypal">PayPal</option>
+                                    <option value="applepay">Apple Pay</option>
+                                    <option value="googlepay">Google Pay</option>
+                                    <option value="other">Other</option>
+                                </select>
+                                <span class="field-hint">Choose your wallet provider.</span>
+                            </div>
+                            <div class="field">
+                                <label for="walletId">Wallet ID / Email</label>
+                                <input id="walletId" name="walletId" type="text" maxlength="80" placeholder="e.g. user@example.com" autocomplete="off">
+                                <span class="field-hint">Your digital wallet identifier.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mode-extra-group" id="extra-MOBILE_PAYMENT">
+                        <div class="mode-extra-header">
+                            <span class="material-icons-outlined">smartphone</span>
+                            <h3>Mobile Payment Details</h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="upiId">UPI ID</label>
+                                <input id="upiId" name="upiId" type="text" maxlength="60" placeholder="e.g. name@upi" autocomplete="off">
+                                <span class="field-hint">Your registered UPI virtual payment address.</span>
+                            </div>
+                            <div class="field">
+                                <label for="mobilePhone">Mobile Number</label>
+                                <input id="mobilePhone" name="mobilePhone" type="tel" maxlength="20" placeholder="e.g. +44 7911 123456" autocomplete="off">
+                                <span class="field-hint">Registered mobile number for payment.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section-divider"><span>Payment Details</span></div>
+
+                    <div class="form-grid">
                     <div class="field">
                         <label for="sourceAccount">Source Account Number</label>
                         <input
@@ -136,6 +275,8 @@
                     <button id="submit-button" class="submit-button" type="submit">Create Payment</button>
                     <span id="form-status" class="status-text" aria-live="polite"></span>
                 </div>
+
+                </div><!-- /form-details-wrap -->
             </form>
         </section>
     </main>
@@ -153,6 +294,11 @@
         const submitButton = document.getElementById("submit-button");
         const generateKeyButton = document.getElementById("generate-key-button");
         const referenceCount = document.getElementById("referenceCount");
+
+        let selectedPaymentMode = null;
+        const modeCards = document.querySelectorAll(".mode-card");
+        const formDetailsWrap = document.getElementById("form-details-wrap");
+        const modeExtraGroups = document.querySelectorAll(".mode-extra-group");
 
         const fields = {
             sourceAccount: document.getElementById("sourceAccount"),
@@ -226,6 +372,11 @@
             clearFieldErrors();
             clearApiError();
 
+            if (!selectedPaymentMode) {
+                showApiError("Please select a payment mode to continue.");
+                return false;
+            }
+
             const sourceAccount = fields.sourceAccount.value.trim();
             const destinationAccount = fields.destinationAccount.value.trim();
             const amountText = fields.amount.value.trim();
@@ -285,12 +436,14 @@
         }
 
         function buildPayload() {
-            return {
+            const payload = {
                 sourceAccount: fields.sourceAccount.value.trim(),
                 destinationAccount: fields.destinationAccount.value.trim(),
                 amount: Number(fields.amount.value.trim()),
                 currency: fields.currency.value.trim()
             };
+            if (selectedPaymentMode) payload.paymentMode = selectedPaymentMode;
+            return payload;
         }
 
         function normalizeDateValue(value) {
@@ -441,6 +594,20 @@
         fields.idempotencyKey.value = generateIdempotencyKey();
         updateReferenceCount();
 
+        modeCards.forEach((card) => {
+            card.addEventListener("click", () => {
+                const radio = card.querySelector(".mode-radio");
+                selectedPaymentMode = radio.value;
+                modeCards.forEach((c) => c.classList.remove("is-selected"));
+                card.classList.add("is-selected");
+                formDetailsWrap.classList.add("revealed");
+                formDetailsWrap.removeAttribute("aria-hidden");
+                modeExtraGroups.forEach((g) => g.classList.remove("active"));
+                const target = document.getElementById("extra-" + selectedPaymentMode);
+                if (target) target.classList.add("active");
+            });
+        });
+
         form.addEventListener("submit", async (event) => {
             event.preventDefault();
             clearSuccess();
@@ -461,6 +628,11 @@
                 showSuccess(result.paymentId || result.id, result.status || "CREATED");
                 formStatus.textContent = "Payment request submitted successfully.";
                 form.reset();
+                modeCards.forEach((c) => c.classList.remove("is-selected"));
+                formDetailsWrap.classList.remove("revealed");
+                formDetailsWrap.setAttribute("aria-hidden", "true");
+                modeExtraGroups.forEach((g) => g.classList.remove("active"));
+                selectedPaymentMode = null;
                 fields.idempotencyKey.value = generateIdempotencyKey();
                 updateReferenceCount();
             } catch (error) {
