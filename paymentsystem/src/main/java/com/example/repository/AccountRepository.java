@@ -32,7 +32,7 @@ public class AccountRepository {
 
     public List<Account> findAll() {
 
-        String sql = "select * from accounts";
+        String sql = "select * from accounts order by created_at desc";
 
         return jdbcTemplate.query(sql,
                 new BeanPropertyRowMapper<>(Account.class));

@@ -275,6 +275,41 @@ textarea {
   cursor: pointer;
 }
 
+.btn-mini {
+  margin-left: 8px;
+  border: 0;
+  border-radius: 999px;
+  background: #eaf4fb;
+  color: #0c5572;
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-mini:hover {
+  background: #d9ecf8;
+}
+
+.count-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #e8f6fb;
+  color: #0d6e8a;
+  font-size: 0.84rem;
+  margin-left: 8px;
+}
+
+.search-input {
+  width: 100%;
+  margin-top: 12px;
+}
+
 .card-head {
   display: flex;
   justify-content: space-between;
@@ -332,6 +367,27 @@ textarea {
   color: var(--muted);
 }
 
+.user-actions-row {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.user-action {
+  border: 1px solid #d2dfeb;
+  border-radius: 999px;
+  background: #f2f8fd;
+  color: #1f4d6b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.user-action:hover {
+  background: #e7f2fb;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -364,6 +420,62 @@ textarea {
 .toast.show {
   transform: translateY(0);
   opacity: 1;
+}
+
+.btn-primary.is-loading {
+  opacity: 0.85;
+  cursor: progress;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(9, 24, 39, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 40;
+}
+
+.modal-backdrop.show {
+  display: flex;
+}
+
+.modal-card {
+  width: min(680px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #d6e2ee;
+  box-shadow: 0 20px 50px rgba(7, 23, 37, 0.24);
+  padding: 16px;
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-head h3 {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.modal-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.modal-grid p {
+  margin: 0;
+  border: 1px solid #e0eaf4;
+  border-radius: 10px;
+  background: #fafcff;
+  padding: 8px 10px;
+  color: #294861;
 }
 
 @keyframes rise {
@@ -403,5 +515,9 @@ textarea {
 
   .btn {
     width: 100%;
+  }
+
+  .modal-grid {
+    grid-template-columns: 1fr;
   }
 }
