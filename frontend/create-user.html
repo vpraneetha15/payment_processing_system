@@ -33,7 +33,7 @@
             <h2 id="form-title">User Onboarding Form</h2>
 
             <div class="system-values" aria-live="polite">
-                <p><strong>Generated Account Number:</strong> <span id="generatedAccountNumber">-</span></p>
+                <p><strong>Generated Account Number:</strong> <span id="generatedAccountNumber">-</span> <button type="button" id="copyAccountBtn" class="btn-mini">Copy</button></p>
                 <p><strong>Selected Opening Balance:</strong> <span id="generatedOpeningBalance">-</span></p>
             </div>
 
@@ -110,15 +110,35 @@
 
             <section class="card">
                 <div class="card-head">
-                    <h2>Recently Added Users</h2>
+                    <h2>Recently Added Users <span id="userCount" class="count-pill">0</span></h2>
                     <button id="clearUsersBtn" class="btn-link" type="button">Refresh</button>
                 </div>
+                <input type="search" id="userSearch" class="search-input" placeholder="Search by account, name or email">
                 <ul id="userList" class="user-list" aria-live="polite"></ul>
             </section>
         </aside>
     </main>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <div id="userModal" class="modal-backdrop" aria-hidden="true">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <div class="modal-head">
+                <h3 id="modalTitle">User Details</h3>
+                <button type="button" id="closeModalBtn" class="btn-link">Close</button>
+            </div>
+            <div class="modal-grid">
+                <p><strong>Account Number:</strong> <span id="modalAccountNumber">-</span></p>
+                <p><strong>Name:</strong> <span id="modalName">-</span></p>
+                <p><strong>Email:</strong> <span id="modalEmail">-</span></p>
+                <p><strong>Currency:</strong> <span id="modalCurrency">-</span></p>
+                <p><strong>Opening Balance:</strong> <span id="modalBalance">-</span></p>
+                <p><strong>Status:</strong> <span id="modalStatus">-</span></p>
+                <p><strong>Created At:</strong> <span id="modalCreatedAt">-</span></p>
+                <p><strong>Notes:</strong> <span id="modalNotes">-</span></p>
+            </div>
+        </div>
+    </div>
 
         <script>
             const apiBaseUrl = "http://localhost:8080";
@@ -129,13 +149,19 @@
             const clearBtn = document.getElementById("clearBtn");
             const clearUsersBtn = document.getElementById("clearUsersBtn");
             const userList = document.getElementById("userList");
+            const userSearch = document.getElementById("userSearch");
+            const userCountEl = document.getElementById("userCount");
             const toast = document.getElementById("toast");
             const generatedAccountNumberEl = document.getElementById("generatedAccountNumber");
+            const copyAccountBtn = document.getElementById("copyAccountBtn");
             const generatedOpeningBalanceEl = document.getElementById("generatedOpeningBalance");
             const submitBtn = form.querySelector("button[type='submit']");
+            const userModal = document.getElementById("userModal");
+            const closeModalBtn = document.getElementById("closeModalBtn");
 
             let currentGeneratedAccountNumber = "";
             let accountsCache = [];
+            const userMetaKey = "pps_user_meta";
 
             const fieldIds = ["fullName", "email", "openingBalance", "preferredCurrency", "terms"];
 
@@ -171,7 +197,27 @@
                 if (!currency) {
                     return "-";
                 }
-                return `${currency} ${Number(amount).toFixed(2)}`;
+                const symbolMap = {
+                    INR: "₹",
+                    USD: "$",
+                    EUR: "€",
+                    GBP: "£"
+                };
+                const symbol = symbolMap[String(currency).toUpperCase()] || "";
+                return `${symbol}${Number(amount).toFixed(2)} ${currency}`;
+            }
+
+            function getUserMeta() {
+                try {
+                    const raw = localStorage.getItem(userMetaKey);
+                    return raw ? JSON.parse(raw) : {};
+                } catch (_error) {
+                    return {};
+                }
+            }
+
+            function saveUserMeta(meta) {
+                localStorage.setItem(userMetaKey, JSON.stringify(meta));
             }
 
             function escapeHtml(text) {
@@ -207,6 +253,36 @@
                 generatedAccountNumberEl.textContent = currentGeneratedAccountNumber;
             }
 
+            function formatCreatedAt(value) {
+                if (!value) {
+                    return "-";
+                }
+                const d = new Date(value);
+                if (Number.isNaN(d.getTime())) {
+                    return "-";
+                }
+                return d.toLocaleString();
+            }
+
+            function openUserModal(account) {
+                const createdAt = account.createdAt || account.created_at;
+                document.getElementById("modalAccountNumber").textContent = account.accountNumber || "-";
+                document.getElementById("modalName").textContent = account.accountName || "-";
+                document.getElementById("modalEmail").textContent = account.email || "-";
+                document.getElementById("modalCurrency").textContent = account.currency || "-";
+                document.getElementById("modalBalance").textContent = formatBalance(account.currency, account.balance || 0);
+                document.getElementById("modalStatus").textContent = account.active ? "Active" : "Inactive";
+                document.getElementById("modalCreatedAt").textContent = formatCreatedAt(createdAt);
+                document.getElementById("modalNotes").textContent = account.notes || "-";
+                userModal.classList.add("show");
+                userModal.setAttribute("aria-hidden", "false");
+            }
+
+            function closeUserModal() {
+                userModal.classList.remove("show");
+                userModal.setAttribute("aria-hidden", "true");
+            }
+
             function refreshPreview() {
                 const fullName = document.getElementById("fullName").value.trim();
                 const email = document.getElementById("email").value.trim();
@@ -225,12 +301,24 @@
             }
 
             function renderUserList() {
-                if (!accountsCache.length) {
+                const query = userSearch.value.trim().toLowerCase();
+                const filtered = accountsCache.filter((account) => {
+                    if (!query) {
+                        return true;
+                    }
+                    return String(account.accountNumber || "").toLowerCase().includes(query)
+                        || String(account.accountName || "").toLowerCase().includes(query)
+                        || String(account.email || "").toLowerCase().includes(query);
+                });
+
+                userCountEl.textContent = String(accountsCache.length);
+
+                if (!filtered.length) {
                     userList.innerHTML = "<li>No users/accounts found in database yet.</li>";
                     return;
                 }
 
-                const latest = [...accountsCache].reverse().slice(0, 5);
+                const latest = filtered.slice(0, 5);
 
                 userList.innerHTML = latest
                     .map((account) => {
@@ -243,7 +331,12 @@
                                     <span>${escapeHtml(account.accountName)} (${escapeHtml(account.accountNumber)})</span>
                                     <span class="${badgeClass}">${badgeText}</span>
                                 </div>
-                                <div class="line-2">${escapeHtml(account.currency)} ${Number(account.balance).toFixed(2)}</div>
+                                <div class="line-2">${escapeHtml(account.email || "No email")}</div>
+                                <div class="line-2">${formatBalance(account.currency, account.balance)}</div>
+                                <div class="user-actions-row">
+                                    <button type="button" class="user-action" data-copy="${escapeHtml(account.accountNumber)}">Copy Account</button>
+                                    <button type="button" class="user-action" data-view="${escapeHtml(account.accountNumber)}">View Details</button>
+                                </div>
                             </li>
                         `;
                     })
@@ -257,10 +350,21 @@
                 }
 
                 const data = await response.json();
-                accountsCache = Array.isArray(data) ? data : [];
+                const accountList = Array.isArray(data) ? data : [];
+                const metaMap = getUserMeta();
+                accountsCache = accountList.map((account) => {
+                    const meta = metaMap[account.accountNumber] || {};
+                    return {
+                        ...account,
+                        email: meta.email || "",
+                        notes: meta.notes || "",
+                        createdAt: account.createdAt || account.created_at || meta.createdAt || ""
+                    };
+                });
                 regenerateAccountNumber();
                 renderUserList();
                 refreshPreview();
+                updateCreateButtonState();
             }
 
             function formToRequestPayload() {
@@ -281,23 +385,31 @@
                 let isValid = true;
 
                 if (!payload.accountName || payload.accountName.trim().length < 3) {
-                    setError("fullName", "Enter at least 3 characters.");
+                    setError("fullName", "Name required (minimum 3 characters).");
                     isValid = false;
                 }
 
                 const email = document.getElementById("email").value.trim();
                 if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-                    setError("email", "Enter a valid email address.");
+                    setError("email", "Invalid email.");
+                    isValid = false;
+                }
+
+                const duplicateEmail = accountsCache.some((account) =>
+                    String(account.email || "").toLowerCase() === email.toLowerCase()
+                );
+                if (email && duplicateEmail) {
+                    setError("email", "Email already exists.");
                     isValid = false;
                 }
 
                 if (!payload.currency) {
-                    setError("preferredCurrency", "Select preferred currency.");
+                    setError("preferredCurrency", "Currency required.");
                     isValid = false;
                 }
 
                 if (Number.isNaN(payload.balance) || payload.balance < 0) {
-                    setError("openingBalance", "Enter a valid opening balance (0 or more).");
+                    setError("openingBalance", "Balance cannot be negative.");
                     isValid = false;
                 }
 
@@ -310,11 +422,50 @@
                 return isValid;
             }
 
+            function isFormSubmittable() {
+                const payload = formToRequestPayload();
+                const email = document.getElementById("email").value.trim();
+                const termsAccepted = document.getElementById("terms").checked;
+                if (!payload.accountName || payload.accountName.trim().length < 3) {
+                    return false;
+                }
+                if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+                    return false;
+                }
+                const duplicateEmail = accountsCache.some((account) =>
+                    String(account.email || "").toLowerCase() === email.toLowerCase()
+                );
+                if (duplicateEmail) {
+                    return false;
+                }
+                if (!payload.currency) {
+                    return false;
+                }
+                if (Number.isNaN(payload.balance) || payload.balance < 0) {
+                    return false;
+                }
+                if (!termsAccepted) {
+                    return false;
+                }
+                return true;
+            }
+
+            function updateCreateButtonState() {
+                submitBtn.disabled = !isFormSubmittable();
+            }
+
+            function setLoadingState(isLoading) {
+                submitBtn.disabled = isLoading;
+                submitBtn.textContent = isLoading ? "Creating..." : "Create User";
+                submitBtn.classList.toggle("is-loading", isLoading);
+            }
+
             function resetForm() {
                 form.reset();
                 document.getElementById("isActive").checked = true;
                 clearErrors();
                 refreshPreview();
+                updateCreateButtonState();
             }
 
             async function createAccount(payload) {
@@ -342,20 +493,40 @@
                     return;
                 }
 
-                submitBtn.disabled = true;
-                submitBtn.textContent = "Creating...";
+                setLoadingState(true);
 
                 try {
                     await createAccount(payload);
+
+                    const meta = getUserMeta();
+                    meta[payload.accountNumber] = {
+                        email: document.getElementById("email").value.trim(),
+                        notes: document.getElementById("notes").value.trim(),
+                        createdAt: new Date().toISOString()
+                    };
+                    saveUserMeta(meta);
+
                     await fetchAccounts();
+                    const created = accountsCache.find((account) => account.accountNumber === payload.accountNumber)
+                        || {
+                            accountNumber: payload.accountNumber,
+                            accountName: payload.accountName,
+                            email: meta[payload.accountNumber].email,
+                            notes: meta[payload.accountNumber].notes,
+                            currency: payload.currency,
+                            balance: payload.balance,
+                            active: true,
+                            createdAt: meta[payload.accountNumber].createdAt
+                        };
                     resetForm();
-                    showToast("User/account created and saved to database.");
+                    showToast(`User created: ${payload.accountNumber}`);
+                    openUserModal(created);
                 } catch (_error) {
                     await fetchAccounts().catch(() => {});
                     showToast("Create failed. Check backend/API and try again.");
                 } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = "Create User";
+                    setLoadingState(false);
+                    updateCreateButtonState();
                 }
             });
 
@@ -373,9 +544,59 @@
                 }
             });
 
-            ["input", "change"].forEach((eventName) => {
-                form.addEventListener(eventName, refreshPreview);
+            copyAccountBtn.addEventListener("click", async () => {
+                if (!currentGeneratedAccountNumber) {
+                    return;
+                }
+                try {
+                    await navigator.clipboard.writeText(currentGeneratedAccountNumber);
+                    showToast(`Copied: ${currentGeneratedAccountNumber}`);
+                } catch (_error) {
+                    showToast("Copy failed. Please copy manually.");
+                }
             });
+
+            userList.addEventListener("click", async (event) => {
+                const target = event.target;
+                if (!(target instanceof HTMLElement)) {
+                    return;
+                }
+
+                const copyNumber = target.getAttribute("data-copy");
+                if (copyNumber) {
+                    try {
+                        await navigator.clipboard.writeText(copyNumber);
+                        showToast(`Copied: ${copyNumber}`);
+                    } catch (_error) {
+                        showToast("Copy failed. Please copy manually.");
+                    }
+                    return;
+                }
+
+                const viewNumber = target.getAttribute("data-view");
+                if (viewNumber) {
+                    const account = accountsCache.find((item) => item.accountNumber === viewNumber);
+                    if (account) {
+                        openUserModal(account);
+                    }
+                }
+            });
+
+            closeModalBtn.addEventListener("click", closeUserModal);
+            userModal.addEventListener("click", (event) => {
+                if (event.target === userModal) {
+                    closeUserModal();
+                }
+            });
+
+            ["input", "change"].forEach((eventName) => {
+                form.addEventListener(eventName, () => {
+                    refreshPreview();
+                    updateCreateButtonState();
+                });
+            });
+
+            userSearch.addEventListener("input", renderUserList);
 
             (async function init() {
                 try {
@@ -386,6 +607,7 @@
                     regenerateAccountNumber();
                     renderUserList();
                     refreshPreview();
+                    updateCreateButtonState();
                     showToast("Backend offline. Start paymentsystem on port 8080.");
                 }
             })();
