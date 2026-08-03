@@ -20,13 +20,24 @@ public class PaymentHistoryRepository {
 
     public int save(PaymentHistory paymentHistory) {
         String sql = "insert into payment_history(id,payment_id,status,created_at,triggered_by,note) values(?,?,?,?,?,?)";
-        return jdbcTemplate.update(sql,
-                paymentHistory.getId(),
-                paymentHistory.getPaymentId(),
-                paymentHistory.getStatus(),
-                paymentHistory.getCreatedAt(),
-                paymentHistory.getTriggeredBy(),
-                paymentHistory.getNote());
+        try {
+            return jdbcTemplate.update(sql,
+                    paymentHistory.getId(),
+                    paymentHistory.getPaymentId(),
+                    paymentHistory.getStatus(),
+                    paymentHistory.getCreatedAt(),
+                    paymentHistory.getTriggeredBy(),
+                    paymentHistory.getNote());
+        } catch (BadSqlGrammarException ex) {
+            String fallbackSql = "insert into payment_history(id,payment_id,status,`timestamp`,triggered_by,note) values(?,?,?,?,?,?)";
+            return jdbcTemplate.update(fallbackSql,
+                    paymentHistory.getId(),
+                    paymentHistory.getPaymentId(),
+                    paymentHistory.getStatus(),
+                    paymentHistory.getCreatedAt(),
+                    paymentHistory.getTriggeredBy(),
+                    paymentHistory.getNote());
+        }
     }
 
     public List<PaymentHistory> findAll() {
@@ -180,9 +191,17 @@ public class PaymentHistoryRepository {
 
         String sql = "update payment_history set status=?,created_at=? where id=?";
 
-        return jdbcTemplate.update(sql,
-                paymentHistory.getStatus(),
-                paymentHistory.getCreatedAt(),
-                paymentHistory.getId());
+        try {
+            return jdbcTemplate.update(sql,
+                    paymentHistory.getStatus(),
+                    paymentHistory.getCreatedAt(),
+                    paymentHistory.getId());
+        } catch (BadSqlGrammarException ex) {
+            String fallbackSql = "update payment_history set status=?,`timestamp`=? where id=?";
+            return jdbcTemplate.update(fallbackSql,
+                    paymentHistory.getStatus(),
+                    paymentHistory.getCreatedAt(),
+                    paymentHistory.getId());
+        }
     }
 }
