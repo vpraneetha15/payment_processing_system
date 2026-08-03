@@ -3,293 +3,406 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Payment</title>
-    <link rel="stylesheet" href="create-payment.css">
+    <title>Create Payment — Payment Processing System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="create-payment.css">
 </head>
 <body>
-    <main class="page-shell">
-        <section class="panel" aria-labelledby="create-payment-title">
-            <header class="page-header">
-                <button class="back-button" type="button" onclick="window.location.href='dashboard.html'" aria-label="Back to dashboard">
-                    &#8592; Back
-                </button>
-                <span class="eyebrow">Payment Processing System</span>
-                <h1 id="create-payment-title">Create Payment</h1>
-                <p class="page-intro">Enter the payment details below, validate them on the client, and submit the payment request safely.</p>
-            </header>
+<div class="app-shell">
 
-            <div id="api-error" class="message error" role="alert" aria-live="polite"></div>
+    <!-- ── Header ────────────────────────────────────── -->
+    <header class="app-header">
+        <button class="back-btn" type="button" onclick="window.location.href='dashboard.html'" aria-label="Back to dashboard">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back to Dashboard
+        </button>
+        <div class="header-center">
+            <span class="header-badge">
+                <span class="material-icons-outlined" style="font-size:14px">shield</span>
+                Secure Payment System
+            </span>
+        </div>
+        <span class="header-env">Development</span>
+    </header>
 
-            <section id="success-message" class="message success" aria-live="polite" aria-labelledby="success-title">
-                <h2 id="success-title">Payment Created Successfully</h2>
-                <div class="result-grid">
-                    <div class="result-row">
-                        <span class="result-label">Payment ID</span>
-                        <span id="payment-id" class="result-value">-</span>
-                    </div>
-                    <div class="result-row">
-                        <span class="result-label">Status</span>
-                        <span id="payment-status" class="result-value">-</span>
-                    </div>
+    <!-- ── Hero ──────────────────────────────────────── -->
+    <div class="page-hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Create New Payment</h1>
+            <p class="hero-sub">Initiate a secure payment across supported channels and currencies</p>
+        </div>
+        <span class="material-icons-outlined hero-deco" aria-hidden="true">payments</span>
+    </div>
+
+    <!-- ── Main Content ───────────────────────────────── -->
+    <main class="page-body">
+
+        <div id="api-error" class="alert alert-error" role="alert" aria-live="polite"></div>
+
+        <!-- ── Success Screen ─────────────────────────────── -->
+        <section id="success-screen" class="success-screen" style="display:none" aria-live="polite">
+            <div class="success-card">
+                <div class="success-icon-ring">
+                    <span class="material-icons-outlined success-check">check_circle</span>
                 </div>
-            </section>
+                <h2 class="success-heading">Payment Created Successfully</h2>
+                <p class="success-sub">Your payment has been initiated and is being processed</p>
 
-            <form id="create-payment-form" novalidate>
-
-                <!-- ── Payment Mode Selector ──────────────────── -->
-                <div class="mode-section">
-                    <h2 class="mode-section-title">How would you like to pay?</h2>
-                    <p class="mode-section-sub">Select a payment method to continue</p>
-                    <div class="mode-grid" role="radiogroup" aria-label="Choose payment mode">
-
-                        <label class="mode-card" for="mode-card">
-                            <input type="radio" name="paymentMode" id="mode-card" value="CARD" class="mode-radio">
-                            <span class="mode-check" aria-hidden="true"><span class="material-icons-outlined">check</span></span>
-                            <span class="mode-icon" aria-hidden="true"><span class="material-icons-outlined">credit_card</span></span>
-                            <span class="mode-name">Credit / Debit Card</span>
-                            <span class="mode-sub">Visa, Mastercard, Amex</span>
-                        </label>
-
-                        <label class="mode-card" for="mode-bank">
-                            <input type="radio" name="paymentMode" id="mode-bank" value="BANK_TRANSFER" class="mode-radio">
-                            <span class="mode-check" aria-hidden="true"><span class="material-icons-outlined">check</span></span>
-                            <span class="mode-icon" aria-hidden="true"><span class="material-icons-outlined">account_balance</span></span>
-                            <span class="mode-name">Bank Transfer</span>
-                            <span class="mode-sub">Direct account to account</span>
-                        </label>
-
-                        <label class="mode-card" for="mode-wallet">
-                            <input type="radio" name="paymentMode" id="mode-wallet" value="DIGITAL_WALLET" class="mode-radio">
-                            <span class="mode-check" aria-hidden="true"><span class="material-icons-outlined">check</span></span>
-                            <span class="mode-icon" aria-hidden="true"><span class="material-icons-outlined">account_balance_wallet</span></span>
-                            <span class="mode-name">Digital Wallet</span>
-                            <span class="mode-sub">PayPal, Apple Pay &amp; more</span>
-                        </label>
-
-                        <label class="mode-card" for="mode-mobile">
-                            <input type="radio" name="paymentMode" id="mode-mobile" value="MOBILE_PAYMENT" class="mode-radio">
-                            <span class="mode-check" aria-hidden="true"><span class="material-icons-outlined">check</span></span>
-                            <span class="mode-icon" aria-hidden="true"><span class="material-icons-outlined">smartphone</span></span>
-                            <span class="mode-name">Mobile Payment</span>
-                            <span class="mode-sub">UPI, QR Code, NFC</span>
-                        </label>
-
+                <div class="success-details-grid">
+                    <div class="sdet">
+                        <span class="sdet-label">Payment ID</span>
+                        <span id="payment-id" class="sdet-value mono">—</span>
+                    </div>
+                    <div class="sdet">
+                        <span class="sdet-label">Payment Method</span>
+                        <span id="success-mode" class="sdet-value">—</span>
+                    </div>
+                    <div class="sdet">
+                        <span class="sdet-label">Amount</span>
+                        <span id="success-amount" class="sdet-value sdet-amount">—</span>
+                    </div>
+                    <div class="sdet">
+                        <span class="sdet-label">Status</span>
+                        <span id="payment-status" class="sdet-value status-pill status-created">CREATED</span>
                     </div>
                 </div>
 
-                <!-- ── Form Details (revealed on mode select) ─── -->
-                <div class="form-details-wrap" id="form-details-wrap" aria-hidden="true">
-
-                    <!-- Mode-specific extra fields -->
-                    <div class="mode-extra-group" id="extra-CARD">
-                        <div class="mode-extra-header">
-                            <span class="material-icons-outlined">credit_card</span>
-                            <h3>Card Details</h3>
+                <div class="lifecycle-wrap">
+                    <h3 class="lifecycle-heading">
+                        <span class="material-icons-outlined">timeline</span>
+                        Payment Lifecycle
+                    </h3>
+                    <div class="lc-stepper">
+                        <div class="lc-step active" id="step-CREATED">
+                            <div class="lc-node"><span class="lc-num">1</span><span class="lc-done-icon material-icons-outlined">check</span></div>
+                            <span class="lc-label">Created</span>
                         </div>
-                        <div class="form-grid">
-                            <div class="field field-full">
-                                <label for="cardNumber">Card Number</label>
-                                <input id="cardNumber" name="cardNumber" type="text" inputmode="numeric" maxlength="19" placeholder="1234  5678  9012  3456" autocomplete="off">
-                                <span class="field-hint">16-digit number on the front of your card.</span>
-                            </div>
-                            <div class="field">
-                                <label for="cardExpiry">Expiry Date</label>
-                                <input id="cardExpiry" name="cardExpiry" type="text" maxlength="5" placeholder="MM/YY" autocomplete="off">
-                                <span class="field-hint">Month and year on card.</span>
-                            </div>
-                            <div class="field">
-                                <label for="cardCvv">CVV</label>
-                                <input id="cardCvv" name="cardCvv" type="text" inputmode="numeric" maxlength="4" placeholder="&bull;&bull;&bull;" autocomplete="off">
-                                <span class="field-hint">3 or 4 digits on the back.</span>
-                            </div>
+                        <div class="lc-connector" id="line-1"></div>
+                        <div class="lc-step" id="step-VALIDATED">
+                            <div class="lc-node"><span class="lc-num">2</span><span class="lc-done-icon material-icons-outlined">check</span></div>
+                            <span class="lc-label">Validated</span>
                         </div>
-                    </div>
-
-                    <div class="mode-extra-group" id="extra-BANK_TRANSFER">
-                        <div class="mode-extra-header">
-                            <span class="material-icons-outlined">account_balance</span>
-                            <h3>Bank Details</h3>
+                        <div class="lc-connector" id="line-2"></div>
+                        <div class="lc-step" id="step-SENT">
+                            <div class="lc-node"><span class="lc-num">3</span><span class="lc-done-icon material-icons-outlined">check</span></div>
+                            <span class="lc-label">Sent</span>
                         </div>
-                        <div class="form-grid">
-                            <div class="field">
-                                <label for="bankName">Bank Name</label>
-                                <input id="bankName" name="bankName" type="text" maxlength="60" placeholder="e.g. HDFC Bank" autocomplete="off">
-                                <span class="field-hint">Name of the beneficiary bank.</span>
-                            </div>
-                            <div class="field">
-                                <label for="routingCode">SWIFT / IFSC Code</label>
-                                <input id="routingCode" name="routingCode" type="text" maxlength="20" placeholder="e.g. HDFCINBB" autocomplete="off">
-                                <span class="field-hint">Bank routing or SWIFT/BIC code.</span>
-                            </div>
+                        <div class="lc-connector" id="line-3"></div>
+                        <div class="lc-step" id="step-COMPLETED">
+                            <div class="lc-node"><span class="lc-num">4</span><span class="lc-done-icon material-icons-outlined">check</span></div>
+                            <span class="lc-label">Completed</span>
                         </div>
                     </div>
-
-                    <div class="mode-extra-group" id="extra-DIGITAL_WALLET">
-                        <div class="mode-extra-header">
-                            <span class="material-icons-outlined">account_balance_wallet</span>
-                            <h3>Wallet Details</h3>
-                        </div>
-                        <div class="form-grid">
-                            <div class="field">
-                                <label for="walletProvider">Wallet Provider</label>
-                                <select id="walletProvider" name="walletProvider">
-                                    <option value="">Select provider</option>
-                                    <option value="paypal">PayPal</option>
-                                    <option value="applepay">Apple Pay</option>
-                                    <option value="googlepay">Google Pay</option>
-                                    <option value="other">Other</option>
-                                </select>
-                                <span class="field-hint">Choose your wallet provider.</span>
-                            </div>
-                            <div class="field">
-                                <label for="walletId">Wallet ID / Email</label>
-                                <input id="walletId" name="walletId" type="text" maxlength="80" placeholder="e.g. user@example.com" autocomplete="off">
-                                <span class="field-hint">Your digital wallet identifier.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mode-extra-group" id="extra-MOBILE_PAYMENT">
-                        <div class="mode-extra-header">
-                            <span class="material-icons-outlined">smartphone</span>
-                            <h3>Mobile Payment Details</h3>
-                        </div>
-                        <div class="form-grid">
-                            <div class="field">
-                                <label for="upiId">UPI ID</label>
-                                <input id="upiId" name="upiId" type="text" maxlength="60" placeholder="e.g. name@upi" autocomplete="off">
-                                <span class="field-hint">Your registered UPI virtual payment address.</span>
-                            </div>
-                            <div class="field">
-                                <label for="mobilePhone">Mobile Number</label>
-                                <input id="mobilePhone" name="mobilePhone" type="tel" maxlength="20" placeholder="e.g. +44 7911 123456" autocomplete="off">
-                                <span class="field-hint">Registered mobile number for payment.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-section-divider"><span>Payment Details</span></div>
-
-                    <div class="form-grid">
-                    <div class="field">
-                        <label for="sourceAccount">Source Account Number</label>
-                        <input
-                            id="sourceAccount"
-                            name="sourceAccount"
-                            type="text"
-                            inputmode="text"
-                            autocomplete="off"
-                            maxlength="20"
-                            placeholder="Enter source account number (e.g. ACC001)"
-                            required
-                            aria-describedby="sourceAccountHint sourceAccountError">
-                        <span id="sourceAccountHint" class="field-hint">Enter the debiting account number.</span>
-                        <span id="sourceAccountError" class="field-error" aria-live="polite"></span>
-                    </div>
-
-                    <div class="field">
-                        <label for="destinationAccount">Destination Account Number</label>
-                        <input
-                            id="destinationAccount"
-                            name="destinationAccount"
-                            type="text"
-                            inputmode="text"
-                            autocomplete="off"
-                            maxlength="20"
-                            placeholder="Enter destination account number (e.g. ACC002)"
-                            required
-                            aria-describedby="destinationAccountHint destinationAccountError">
-                        <span id="destinationAccountHint" class="field-hint">Enter the beneficiary account number.</span>
-                        <span id="destinationAccountError" class="field-error" aria-live="polite"></span>
-                    </div>
-
-                    <div class="field">
-                        <label for="amount">Amount</label>
-                        <input
-                            id="amount"
-                            name="amount"
-                            type="number"
-                            inputmode="decimal"
-                            min="0.01"
-                            step="0.01"
-                            placeholder="0.00"
-                            required
-                            aria-describedby="amountHint amountError">
-                        <span id="amountHint" class="field-hint">Only positive values with up to 2 decimal places are allowed.</span>
-                        <span id="amountError" class="field-error" aria-live="polite"></span>
-                    </div>
-
-                    <div class="field">
-                        <label for="currency">Currency</label>
-                        <select
-                            id="currency"
-                            name="currency"
-                            required
-                            aria-describedby="currencyHint currencyError">
-                            <option value="">Select currency</option>
-                            <option value="GBP">GBP</option>
-                            <option value="EUR">EUR</option>
-                            <option value="INR">INR</option>
-                            <option value="USD">USD</option>
-                        </select>
-                        <span id="currencyHint" class="field-hint">Choose the settlement currency.</span>
-                        <span id="currencyError" class="field-error" aria-live="polite"></span>
-                    </div>
-
-                    <div class="field field-full">
-                        <label for="reference">Payment Reference/Description</label>
-                        <textarea
-                            id="reference"
-                            name="reference"
-                            placeholder="Enter payment reference or description"
-                            required
-                            maxlength="140"
-                            aria-describedby="referenceHint referenceError"></textarea>
-                        <div class="field-meta">
-                            <span id="referenceHint" class="field-hint">Add a clear payment reason or business description.</span>
-                            <span id="referenceCount" class="field-count">0 / 140</span>
-                        </div>
-                        <span id="referenceError" class="field-error" aria-live="polite"></span>
-                    </div>
-
-                    <div class="field field-full">
-                        <div class="label-row">
-                            <label for="idempotencyKey">Idempotency Key</label>
-                            <button id="generate-key-button" class="text-button" type="button">Generate Key</button>
-                        </div>
-                        <input
-                            id="idempotencyKey"
-                            name="idempotencyKey"
-                            type="text"
-                            autocomplete="off"
-                            placeholder="Enter idempotency key"
-                            required
-                            aria-describedby="idempotencyKeyHint idempotencyKeyError">
-                        <span id="idempotencyKeyHint" class="field-hint">Use a unique key so retries do not create duplicate payments.</span>
-                        <span id="idempotencyKeyError" class="field-error" aria-live="polite"></span>
+                    <div id="polling-indicator" class="polling-indicator">
+                        <span class="pulse-dot"></span>
+                        <span>Updating status automatically…</span>
                     </div>
                 </div>
 
-                <div class="actions">
-                    <button id="submit-button" class="submit-button" type="submit">Create Payment</button>
-                    <span id="form-status" class="status-text" aria-live="polite"></span>
+                <div class="success-btns">
+                    <button class="btn btn-ghost" onclick="resetToForm()">
+                        <span class="material-icons-outlined">add</span> Create Another
+                    </button>
+                    <button class="btn btn-primary" onclick="window.location.href='payment-history.html'">
+                        View History <span class="material-icons-outlined">arrow_forward</span>
+                    </button>
                 </div>
-
-                </div><!-- /form-details-wrap -->
-            </form>
+            </div>
         </section>
+
+        <!-- ── Form + Summary Grid ─────────────────────────── -->
+        <div class="content-grid" id="payment-form-area">
+
+            <!-- LEFT: Form -->
+            <div class="form-wrap">
+                <form id="create-payment-form" novalidate autocomplete="off">
+
+                    <!-- § 1 — Payment Method -->
+                    <div class="card form-card">
+                        <div class="card-header">
+                            <span class="card-step">01</span>
+                            <div>
+                                <h2 class="card-title">Payment Method</h2>
+                                <p class="card-sub">Select how you'd like to send this payment</p>
+                            </div>
+                        </div>
+                        <div class="mode-grid" role="radiogroup" aria-label="Choose payment mode">
+
+                            <label class="mode-card" for="mode-card">
+                                <input type="radio" name="paymentMode" id="mode-card" value="CARD" class="mode-radio">
+                                <span class="mode-check material-icons-outlined" aria-hidden="true">check</span>
+                                <span class="mode-icon card-blue"><span class="material-icons-outlined">credit_card</span></span>
+                                <span class="mode-name">Card</span>
+                                <span class="mode-sub">Visa · Mastercard · Amex</span>
+                            </label>
+
+                            <label class="mode-card" for="mode-bank">
+                                <input type="radio" name="paymentMode" id="mode-bank" value="BANK_TRANSFER" class="mode-radio">
+                                <span class="mode-check material-icons-outlined" aria-hidden="true">check</span>
+                                <span class="mode-icon card-green"><span class="material-icons-outlined">account_balance</span></span>
+                                <span class="mode-name">Bank Transfer</span>
+                                <span class="mode-sub">SWIFT · SEPA · IFSC</span>
+                            </label>
+
+                            <label class="mode-card" for="mode-wallet">
+                                <input type="radio" name="paymentMode" id="mode-wallet" value="DIGITAL_WALLET" class="mode-radio">
+                                <span class="mode-check material-icons-outlined" aria-hidden="true">check</span>
+                                <span class="mode-icon card-purple"><span class="material-icons-outlined">account_balance_wallet</span></span>
+                                <span class="mode-name">Digital Wallet</span>
+                                <span class="mode-sub">PayPal · Apple Pay</span>
+                            </label>
+
+                            <label class="mode-card" for="mode-mobile">
+                                <input type="radio" name="paymentMode" id="mode-mobile" value="MOBILE_PAYMENT" class="mode-radio">
+                                <span class="mode-check material-icons-outlined" aria-hidden="true">check</span>
+                                <span class="mode-icon card-orange"><span class="material-icons-outlined">smartphone</span></span>
+                                <span class="mode-name">Mobile</span>
+                                <span class="mode-sub">UPI · QR Code · NFC</span>
+                            </label>
+
+                        </div>
+                    </div>
+
+                    <!-- § 2 — Method-specific Details -->
+                    <div id="mode-extra-section" class="reveal-section">
+
+                        <div class="card form-card mode-extra-group" id="extra-CARD">
+                            <div class="card-header">
+                                <span class="mode-icon card-blue" style="width:38px;height:38px"><span class="material-icons-outlined" style="font-size:20px">credit_card</span></span>
+                                <div><h2 class="card-title">Card Details</h2><p class="card-sub">Enter your card information</p></div>
+                            </div>
+                            <div class="form-grid">
+                                <div class="field field-full">
+                                    <label for="cardNumber">Card Number</label>
+                                    <input id="cardNumber" name="cardNumber" type="text" inputmode="numeric" maxlength="19" placeholder="1234  5678  9012  3456">
+                                    <span class="field-hint">16-digit number on the front of your card</span>
+                                </div>
+                                <div class="field">
+                                    <label for="cardExpiry">Expiry Date</label>
+                                    <input id="cardExpiry" name="cardExpiry" type="text" maxlength="5" placeholder="MM/YY">
+                                </div>
+                                <div class="field">
+                                    <label for="cardCvv">CVV</label>
+                                    <input id="cardCvv" name="cardCvv" type="text" inputmode="numeric" maxlength="4" placeholder="&bull;&bull;&bull;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card form-card mode-extra-group" id="extra-BANK_TRANSFER">
+                            <div class="card-header">
+                                <span class="mode-icon card-green" style="width:38px;height:38px"><span class="material-icons-outlined" style="font-size:20px">account_balance</span></span>
+                                <div><h2 class="card-title">Bank Details</h2><p class="card-sub">Provide the beneficiary bank information</p></div>
+                            </div>
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label for="bankName">Bank Name</label>
+                                    <input id="bankName" name="bankName" type="text" maxlength="60" placeholder="e.g. HDFC Bank">
+                                    <span class="field-hint">Name of the destination bank</span>
+                                </div>
+                                <div class="field">
+                                    <label for="routingCode">SWIFT / IFSC Code</label>
+                                    <input id="routingCode" name="routingCode" type="text" maxlength="20" placeholder="e.g. HDFCINBB">
+                                    <span class="field-hint">Bank routing or SWIFT/BIC code</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card form-card mode-extra-group" id="extra-DIGITAL_WALLET">
+                            <div class="card-header">
+                                <span class="mode-icon card-purple" style="width:38px;height:38px"><span class="material-icons-outlined" style="font-size:20px">account_balance_wallet</span></span>
+                                <div><h2 class="card-title">Wallet Details</h2><p class="card-sub">Enter your digital wallet information</p></div>
+                            </div>
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label for="walletProvider">Wallet Provider</label>
+                                    <select id="walletProvider" name="walletProvider">
+                                        <option value="">Select provider</option>
+                                        <option value="paypal">PayPal</option>
+                                        <option value="applepay">Apple Pay</option>
+                                        <option value="googlepay">Google Pay</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label for="walletId">Wallet ID / Email</label>
+                                    <input id="walletId" name="walletId" type="text" maxlength="80" placeholder="e.g. user@example.com">
+                                    <span class="field-hint">Your wallet identifier or linked email</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card form-card mode-extra-group" id="extra-MOBILE_PAYMENT">
+                            <div class="card-header">
+                                <span class="mode-icon card-orange" style="width:38px;height:38px"><span class="material-icons-outlined" style="font-size:20px">smartphone</span></span>
+                                <div><h2 class="card-title">Mobile Payment Details</h2><p class="card-sub">Enter your mobile payment information</p></div>
+                            </div>
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label for="upiId">UPI ID</label>
+                                    <input id="upiId" name="upiId" type="text" maxlength="60" placeholder="e.g. name@upi">
+                                    <span class="field-hint">Registered UPI virtual payment address</span>
+                                </div>
+                                <div class="field">
+                                    <label for="mobilePhone">Mobile Number</label>
+                                    <input id="mobilePhone" name="mobilePhone" type="tel" maxlength="20" placeholder="e.g. +44 7911 123456">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div><!-- /mode-extra-section -->
+
+                    <!-- § 3 — Core Payment Details -->
+                    <div id="payment-details-section" class="reveal-section">
+                        <div class="card form-card">
+                            <div class="card-header">
+                                <span class="card-step">02</span>
+                                <div>
+                                    <h2 class="card-title">Payment Details</h2>
+                                    <p class="card-sub">Specify the transfer amount and account information</p>
+                                </div>
+                            </div>
+                            <div class="form-grid">
+
+                                <div class="field">
+                                    <label for="sourceAccount">Source Account <span class="required-mark">*</span></label>
+                                    <input id="sourceAccount" name="sourceAccount" type="text" inputmode="text"
+                                        maxlength="20" placeholder="e.g. ACC001" required
+                                        aria-describedby="sourceAccountHint sourceAccountError">
+                                    <span id="sourceAccountHint" class="field-hint">The account to debit</span>
+                                    <span id="sourceAccountError" class="field-error" aria-live="polite"></span>
+                                </div>
+
+                                <div class="field">
+                                    <label for="destinationAccount">Destination Account <span class="required-mark">*</span></label>
+                                    <input id="destinationAccount" name="destinationAccount" type="text" inputmode="text"
+                                        maxlength="20" placeholder="e.g. ACC002" required
+                                        aria-describedby="destinationAccountHint destinationAccountError">
+                                    <span id="destinationAccountHint" class="field-hint">The account to credit</span>
+                                    <span id="destinationAccountError" class="field-error" aria-live="polite"></span>
+                                </div>
+
+                                <div class="field">
+                                    <label for="amount">Amount <span class="required-mark">*</span></label>
+                                    <input id="amount" name="amount" type="number" inputmode="decimal"
+                                        min="0.01" step="0.01" placeholder="0.00" required
+                                        aria-describedby="amountHint amountError">
+                                    <span id="amountHint" class="field-hint">Greater than zero, max 2 decimal places</span>
+                                    <span id="amountError" class="field-error" aria-live="polite"></span>
+                                </div>
+
+                                <div class="field">
+                                    <label for="currency">Currency <span class="required-mark">*</span></label>
+                                    <select id="currency" name="currency" required
+                                        aria-describedby="currencyHint currencyError">
+                                        <option value="">Select currency</option>
+                                        <option value="GBP">🇬🇧 GBP &mdash; British Pound</option>
+                                        <option value="EUR">🇪🇺 EUR &mdash; Euro</option>
+                                        <option value="INR">🇮🇳 INR &mdash; Indian Rupee</option>
+                                        <option value="USD">🇺🇸 USD &mdash; US Dollar</option>
+                                    </select>
+                                    <span id="currencyHint" class="field-hint">Settlement currency</span>
+                                    <span id="currencyError" class="field-error" aria-live="polite"></span>
+                                </div>
+
+                                <div class="field field-full">
+                                    <label for="reference">Payment Reference <span class="required-mark">*</span></label>
+                                    <textarea id="reference" name="reference"
+                                        placeholder="e.g. Invoice #1234 – Q3 supplier payment" required
+                                        maxlength="140" rows="3"
+                                        aria-describedby="referenceHint referenceError"></textarea>
+                                    <div class="field-foot">
+                                        <span id="referenceHint" class="field-hint">Describe the payment purpose</span>
+                                        <span id="referenceCount" class="field-count">0 / 140</span>
+                                    </div>
+                                    <span id="referenceError" class="field-error" aria-live="polite"></span>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div><!-- /payment-details-section -->
+
+                    <!-- Hidden system fields -->
+                    <input type="hidden" id="idempotencyKey" name="idempotencyKey">
+                    <span id="idempotencyKeyError" aria-live="polite" style="display:none"></span>
+                    <button id="generate-key-button" type="button" style="display:none" aria-hidden="true">Generate Key</button>
+
+                    <!-- Actions -->
+                    <div id="form-actions" class="reveal-section">
+                        <div class="actions-row">
+                            <button id="submit-button" class="btn-submit" type="submit">
+                                <span id="submit-spinner" class="spinner" style="display:none" aria-hidden="true"></span>
+                                <span id="submit-label">
+                                    <span class="material-icons-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">lock</span>
+                                    Create Payment
+                                </span>
+                            </button>
+                            <p id="form-status" class="form-status" aria-live="polite"></p>
+                        </div>
+                        <p class="secure-note">
+                            <span class="material-icons-outlined" style="font-size:14px;vertical-align:middle">verified_user</span>
+                            All transactions are securely logged and auditable.
+                        </p>
+                    </div>
+
+                </form>
+            </div><!-- /form-wrap -->
+
+            <!-- RIGHT: Summary -->
+            <aside class="summary-aside">
+
+                <div class="card summary-card">
+                    <div class="summary-hdr">
+                        <span class="material-icons-outlined">receipt_long</span>
+                        <h3>Payment Summary</h3>
+                    </div>
+                    <div id="summary-placeholder" class="summary-empty">
+                        <span class="material-icons-outlined summary-empty-icon">payments</span>
+                        <p>Select a payment method to see your live summary</p>
+                    </div>
+                    <div id="summary-body" style="display:none">
+                        <div class="srow"><span class="srow-label">Method</span><span class="srow-val" id="sum-mode">—</span></div>
+                        <div class="srow"><span class="srow-label">From</span><span class="srow-val mono" id="sum-source">—</span></div>
+                        <div class="srow"><span class="srow-label">To</span><span class="srow-val mono" id="sum-destination">—</span></div>
+                        <div class="srow srow-amount"><span class="srow-label">Amount</span><span class="srow-val srow-big" id="sum-amount">—</span></div>
+                        <div class="srow"><span class="srow-label">Currency</span><span class="srow-val" id="sum-currency">—</span></div>
+                        <div class="srow"><span class="srow-label">Reference</span><span class="srow-val srow-ref" id="sum-reference">—</span></div>
+                    </div>
+                    <div class="summary-footer">
+                        <span class="sf-dot sf-dot--idle" id="sf-dot"></span>
+                        <span id="summary-status-text">Select a payment method</span>
+                    </div>
+                </div>
+
+                <div class="card tips-card">
+                    <h4 class="tips-heading">
+                        <span class="material-icons-outlined" style="font-size:16px;color:#f59e0b">lightbulb</span>
+                        Quick Tips
+                    </h4>
+                    <ul class="tips-list">
+                        <li>Double-check account numbers before submitting</li>
+                        <li>Amount must be greater than zero</li>
+                        <li>Add a clear reference for reconciliation</li>
+                        <li>Source account must exist in the system</li>
+                    </ul>
+                </div>
+
+            </aside>
+
+        </div><!-- /content-grid -->
     </main>
+</div>
 
     <script>
+        // ─── API Endpoints ────────────────────────────────────────────
         const API_BASE_URL = window.PAYMENT_API_BASE_URL || "http://localhost:8080";
         const PAYMENT_API_URL = API_BASE_URL.replace(/\/$/, "") + "/payments";
 
+        // ─── DOM ────────────────────────────────────────────────
         const form = document.getElementById("create-payment-form");
         const apiError = document.getElementById("api-error");
-        const successMessage = document.getElementById("success-message");
-        const paymentIdValue = document.getElementById("payment-id");
-        const paymentStatusValue = document.getElementById("payment-status");
         const formStatus = document.getElementById("form-status");
         const submitButton = document.getElementById("submit-button");
         const generateKeyButton = document.getElementById("generate-key-button");
@@ -297,8 +410,8 @@
 
         let selectedPaymentMode = null;
         const modeCards = document.querySelectorAll(".mode-card");
-        const formDetailsWrap = document.getElementById("form-details-wrap");
         const modeExtraGroups = document.querySelectorAll(".mode-extra-group");
+        let pollingTimer = null;
 
         const fields = {
             sourceAccount: document.getElementById("sourceAccount"),
@@ -308,7 +421,6 @@
             reference: document.getElementById("reference"),
             idempotencyKey: document.getElementById("idempotencyKey")
         };
-
         const errorElements = {
             sourceAccount: document.getElementById("sourceAccountError"),
             destinationAccount: document.getElementById("destinationAccountError"),
@@ -318,181 +430,194 @@
             idempotencyKey: document.getElementById("idempotencyKeyError")
         };
 
+        // ─── Utilities ──────────────────────────────────────────
         function generateIdempotencyKey() {
-            if (window.crypto && typeof window.crypto.randomUUID === "function") {
-                return window.crypto.randomUUID();
-            }
-
+            if (window.crypto && typeof window.crypto.randomUUID === "function") return window.crypto.randomUUID();
             return "key-" + Date.now() + "-" + Math.random().toString(16).slice(2, 10);
         }
-
         function updateReferenceCount() {
             referenceCount.textContent = fields.reference.value.length + " / 140";
         }
-
         function normalizeAccountInput(field) {
             field.value = field.value.replace(/\s+/g, "").toUpperCase().slice(0, 20);
         }
-
         function showApiError(message) {
             apiError.textContent = message;
             apiError.classList.add("is-visible");
+            apiError.scrollIntoView({ behavior: "smooth", block: "nearest" });
         }
-
         function clearApiError() {
             apiError.textContent = "";
             apiError.classList.remove("is-visible");
         }
-
-        function showSuccess(paymentId, status) {
-            paymentIdValue.textContent = paymentId || "Unavailable";
-            paymentStatusValue.textContent = status || "Created";
-            successMessage.classList.add("is-visible");
-        }
-
-        function clearSuccess() {
-            paymentIdValue.textContent = "-";
-            paymentStatusValue.textContent = "-";
-            successMessage.classList.remove("is-visible");
-        }
-
         function setFieldError(fieldName, message) {
             errorElements[fieldName].textContent = message;
             fields[fieldName].setAttribute("aria-invalid", message ? "true" : "false");
         }
-
         function clearFieldErrors() {
-            Object.keys(errorElements).forEach((fieldName) => {
-                errorElements[fieldName].textContent = "";
-                fields[fieldName].setAttribute("aria-invalid", "false");
+            Object.keys(errorElements).forEach((n) => {
+                errorElements[n].textContent = "";
+                fields[n].setAttribute("aria-invalid", "false");
             });
         }
 
+        // ─── Submit loading state ──────────────────────────────
+        function setSubmitLoading(loading) {
+            submitButton.disabled = loading;
+            document.getElementById("submit-spinner").style.display = loading ? "inline-block" : "none";
+            document.getElementById("submit-label").style.display = loading ? "none" : "inline";
+        }
+
+        // ─── Section reveal ───────────────────────────────────
+        function revealSection(id) { const el = document.getElementById(id); if (el) el.classList.add("is-revealed"); }
+        function hideSection(id)   { const el = document.getElementById(id); if (el) el.classList.remove("is-revealed"); }
+
+        // ─── Live Payment Summary ────────────────────────────
+        const MODE_LABELS = {
+            CARD: "Credit / Debit Card",
+            BANK_TRANSFER: "Bank Transfer",
+            DIGITAL_WALLET: "Digital Wallet",
+            MOBILE_PAYMENT: "Mobile Payment"
+        };
+        function updateSummary() {
+            const source = fields.sourceAccount.value.trim();
+            const dest   = fields.destinationAccount.value.trim();
+            const amount = fields.amount.value.trim();
+            const currency = fields.currency.value.trim();
+            const ref    = fields.reference.value.trim();
+            document.getElementById("sum-mode").textContent = selectedPaymentMode ? MODE_LABELS[selectedPaymentMode] : "—";
+            document.getElementById("sum-source").textContent = source || "—";
+            document.getElementById("sum-destination").textContent = dest || "—";
+            document.getElementById("sum-amount").textContent = amount
+                ? parseFloat(amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—";
+            document.getElementById("sum-currency").textContent = currency || "—";
+            document.getElementById("sum-reference").textContent = ref || "—";
+            const isReady = selectedPaymentMode && source && dest && amount && currency && ref;
+            const dot = document.getElementById("sf-dot");
+            const txt = document.getElementById("summary-status-text");
+            if (isReady)                  { txt.textContent = "Ready to submit";         dot.className = "sf-dot sf-dot--ready";    }
+            else if (selectedPaymentMode) { txt.textContent = "Complete required fields"; dot.className = "sf-dot sf-dot--progress"; }
+            else                          { txt.textContent = "Select a payment method";  dot.className = "sf-dot sf-dot--idle";     }
+        }
+
+        // ─── Success screen ──────────────────────────────────
+        function showSuccessScreen(paymentId, mode, amount, currency, status) {
+            document.getElementById("payment-id").textContent = paymentId || "—";
+            document.getElementById("success-mode").textContent = MODE_LABELS[mode] || mode || "—";
+            document.getElementById("success-amount").textContent = amount
+                ? parseFloat(amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + (currency || "")
+                : "—";
+            updateLifecycleStepper(status || "CREATED");
+            document.getElementById("payment-form-area").style.display = "none";
+            document.getElementById("success-screen").style.display = "block";
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+        function resetToForm() {
+            stopPolling();
+            document.getElementById("success-screen").style.display = "none";
+            document.getElementById("payment-form-area").style.display = "grid";
+            clearApiError();
+            updateSummary();
+        }
+
+        // ─── Lifecycle stepper ──────────────────────────────
+        const LIFECYCLE = ["CREATED", "VALIDATED", "SENT", "COMPLETED"];
+        const TERMINAL_STATUSES = ["SUCCESS", "COMPLETED", "FAILED"];
+
+        function updateLifecycleStepper(status) {
+            const upper = (status || "").toUpperCase();
+            const isFailed = upper === "FAILED";
+            const normalized = (upper === "SUCCESS") ? "COMPLETED" : upper;
+            const currentIdx = LIFECYCLE.indexOf(normalized);
+            LIFECYCLE.forEach((step, idx) => {
+                const el = document.getElementById("step-" + step);
+                const lineEl = document.getElementById("line-" + (idx + 1));
+                if (!el) return;
+                el.className = "lc-step";
+                if (isFailed && idx === Math.max(0, currentIdx)) el.classList.add("failed");
+                else if (idx < currentIdx || (normalized === "COMPLETED" && idx <= currentIdx)) el.classList.add("done");
+                else if (idx === currentIdx) el.classList.add("active");
+                if (lineEl) lineEl.className = "lc-connector" + (idx < currentIdx ? " done" : "");
+            });
+            document.getElementById("polling-indicator").style.display = TERMINAL_STATUSES.includes(upper) ? "none" : "flex";
+            const badge = document.getElementById("payment-status");
+            if (badge) { badge.textContent = upper; badge.className = "sdet-value status-pill status-" + upper.toLowerCase(); }
+        }
+
+        // ─── Status polling ──────────────────────────────────
+        function startPolling(paymentId) {
+            if (!paymentId || paymentId === "Not returned by backend") return;
+            stopPolling();
+            pollingTimer = setInterval(async () => {
+                try {
+                    const res = await fetch(PAYMENT_API_URL + "/" + encodeURIComponent(paymentId), { headers: { "Accept": "application/json" } });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    const status = (data.status || "").toUpperCase();
+                    updateLifecycleStepper(status);
+                    if (TERMINAL_STATUSES.includes(status)) stopPolling();
+                } catch { /* ignore */ }
+            }, 3000);
+        }
+        function stopPolling() { if (pollingTimer) { clearInterval(pollingTimer); pollingTimer = null; } }
+
+        // ─── Form validation ────────────────────────────────
         function validateForm() {
             clearFieldErrors();
             clearApiError();
-
-            if (!selectedPaymentMode) {
-                showApiError("Please select a payment mode to continue.");
-                return false;
-            }
-
-            const sourceAccount = fields.sourceAccount.value.trim();
-            const destinationAccount = fields.destinationAccount.value.trim();
-            const amountText = fields.amount.value.trim();
-            const currency = fields.currency.value.trim();
-            const reference = fields.reference.value.trim();
-            const idempotencyKey = fields.idempotencyKey.value.trim();
-
-            let isValid = true;
-
-            if (!sourceAccount) {
-                setFieldError("sourceAccount", "Source account number is required.");
-                isValid = false;
-            }
-
-            if (!destinationAccount) {
-                setFieldError("destinationAccount", "Destination account number is required.");
-                isValid = false;
-            }
-
-            if (sourceAccount && destinationAccount && sourceAccount === destinationAccount) {
-                setFieldError("destinationAccount", "Source and destination accounts cannot be the same.");
-                isValid = false;
-            }
-
-            if (!amountText) {
-                setFieldError("amount", "Amount is required.");
-                isValid = false;
+            if (!selectedPaymentMode) { showApiError("Please select a payment method to continue."); return false; }
+            const src = fields.sourceAccount.value.trim();
+            const dst = fields.destinationAccount.value.trim();
+            const amt = fields.amount.value.trim();
+            const cur = fields.currency.value.trim();
+            const ref = fields.reference.value.trim();
+            const idk = fields.idempotencyKey.value.trim();
+            let ok = true;
+            if (!src) { setFieldError("sourceAccount", "Source account is required."); ok = false; }
+            if (!dst) { setFieldError("destinationAccount", "Destination account is required."); ok = false; }
+            if (src && dst && src === dst) { setFieldError("destinationAccount", "Source and destination cannot be the same."); ok = false; }
+            if (!amt) {
+                setFieldError("amount", "Amount is required."); ok = false;
             } else {
-                const amountValue = Number(amountText);
-                const validAmountPattern = /^\d+(\.\d{1,2})?$/;
-
-                if (!validAmountPattern.test(amountText)) {
-                    setFieldError("amount", "Amount must use no more than 2 decimal places.");
-                    isValid = false;
-                } else if (!Number.isFinite(amountValue) || amountValue <= 0) {
-                    setFieldError("amount", "Amount must be greater than zero.");
-                    isValid = false;
-                }
+                const v = Number(amt);
+                if (!/^\d+(\.\d{1,2})?$/.test(amt)) { setFieldError("amount", "Use no more than 2 decimal places."); ok = false; }
+                else if (!Number.isFinite(v) || v <= 0) { setFieldError("amount", "Amount must be greater than zero."); ok = false; }
             }
-
-            if (!currency) {
-                setFieldError("currency", "Currency must be selected.");
-                isValid = false;
-            }
-
-            if (!reference) {
-                setFieldError("reference", "Payment reference or description is required.");
-                isValid = false;
-            }
-
-            if (!idempotencyKey) {
-                setFieldError("idempotencyKey", "Idempotency key is required.");
-                isValid = false;
-            }
-
-            return isValid;
+            if (!cur) { setFieldError("currency", "Please select a currency."); ok = false; }
+            if (!ref) { setFieldError("reference", "Payment reference is required."); ok = false; }
+            if (!idk) { setFieldError("idempotencyKey", "Idempotency key is missing."); ok = false; }
+            return ok;
         }
 
+        // ─── Build payload ──────────────────────────────────
         function buildPayload() {
-            const payload = {
+            const p = {
                 sourceAccount: fields.sourceAccount.value.trim(),
                 destinationAccount: fields.destinationAccount.value.trim(),
                 amount: Number(fields.amount.value.trim()),
                 currency: fields.currency.value.trim()
             };
-            if (selectedPaymentMode) payload.paymentMode = selectedPaymentMode;
-            return payload;
+            if (selectedPaymentMode) p.paymentMode = selectedPaymentMode;
+            return p;
         }
 
-        function normalizeDateValue(value) {
-            if (!value) {
-                return 0;
-            }
-
-            const timestamp = Date.parse(value);
-            return Number.isNaN(timestamp) ? 0 : timestamp;
-        }
+        // ─── API helpers ───────────────────────────────────
+        function normalizeDateValue(v) { if (!v) return 0; const ts = Date.parse(v); return Number.isNaN(ts) ? 0 : ts; }
 
         async function fetchLatestMatchingPayment(payload) {
             try {
-                const response = await fetch(PAYMENT_API_URL, {
-                    method: "GET",
-                    headers: {
-                        "Accept": "application/json"
-                    }
-                });
-
-                if (!response.ok) {
-                    return null;
-                }
-
-                const payments = await response.json();
-                if (!Array.isArray(payments) || payments.length === 0) {
-                    return null;
-                }
-
-                const matches = payments.filter((payment) => {
-                    return payment
-                        && payment.sourceAccount === payload.sourceAccount
-                        && payment.destinationAccount === payload.destinationAccount
-                        && Number(payment.amount) === Number(payload.amount)
-                        && payment.currency === payload.currency;
-                });
-
-                if (matches.length === 0) {
-                    return null;
-                }
-
-                matches.sort((a, b) => {
-                    return normalizeDateValue(b.createdAt) - normalizeDateValue(a.createdAt);
-                });
-
+                const res = await fetch(PAYMENT_API_URL, { headers: { "Accept": "application/json" } });
+                if (!res.ok) return null;
+                const payments = await res.json();
+                if (!Array.isArray(payments) || !payments.length) return null;
+                const matches = payments.filter(p =>
+                    p && p.sourceAccount === payload.sourceAccount && p.destinationAccount === payload.destinationAccount &&
+                    Number(p.amount) === Number(payload.amount) && p.currency === payload.currency
+                );
+                if (!matches.length) return null;
+                matches.sort((a, b) => normalizeDateValue(b.createdAt) - normalizeDateValue(a.createdAt));
                 return matches[0];
-            } catch (error) {
-                return null;
-            }
+            } catch { return null; }
         }
 
         async function submitPayment(payload) {
@@ -507,82 +632,35 @@
                     },
                     body: JSON.stringify(payload)
                 });
-            } catch (networkError) {
-                throw new Error(
-                    "Cannot reach backend at " + PAYMENT_API_URL +
-                    ". Start the Spring Boot API and confirm it is listening on port 8080."
-                );
+            } catch {
+                throw new Error("Cannot reach the API at " + PAYMENT_API_URL + ". Ensure Spring Boot is running on port 8080.");
             }
-
-            let responseBody = null;
-            const responseType = response.headers.get("content-type") || "";
-
-            try {
-                if (responseType.includes("application/json")) {
-                    responseBody = await response.json();
-                } else {
-                    responseBody = await response.text();
-                }
-            } catch (error) {
-                responseBody = null;
-            }
-
+            let body = null;
+            const ct = response.headers.get("content-type") || "";
+            try { body = ct.includes("application/json") ? await response.json() : await response.text(); } catch { body = null; }
             if (!response.ok) {
-                const message = responseBody && typeof responseBody === "object" && responseBody.message
-                    ? responseBody.message
-                    : typeof responseBody === "string" && responseBody.trim().length > 0
-                        ? responseBody
-                    : "Payment creation failed. Please review the request and try again.";
-
-                if (response.status >= 500) {
-                    throw new Error(
-                        "Backend error (" + response.status + "). " +
-                        "Please check the Spring Boot console logs. " +
-                        "Details: " + message
-                    );
-                }
-
-                throw new Error(message);
+                const msg = (body && typeof body === "object" && body.message) ? body.message
+                    : (typeof body === "string" && body.trim()) ? body
+                    : "Payment creation failed. Please review and try again.";
+                if (response.status >= 500) throw new Error("Backend error (" + response.status + "): " + msg);
+                throw new Error(msg);
             }
-
-            if (typeof responseBody === "object" && responseBody !== null) {
-                return responseBody;
-            }
-
-            const matchedPayment = await fetchLatestMatchingPayment(payload);
-            if (matchedPayment) {
-                return matchedPayment;
-            }
-
-            return {
-                paymentId: "Not returned by backend",
-                status: typeof responseBody === "string" && responseBody.trim().length > 0
-                    ? responseBody
-                    : "CREATED"
-            };
+            if (typeof body === "object" && body !== null) return body;
+            const matched = await fetchLatestMatchingPayment(payload);
+            if (matched) return matched;
+            return { paymentId: "Not returned by backend", status: (typeof body === "string" && body.trim()) ? body : "CREATED" };
         }
 
-        fields.sourceAccount.addEventListener("input", () => {
-            normalizeAccountInput(fields.sourceAccount);
-        });
+        // ─── Event listeners ────────────────────────────────
+        fields.sourceAccount.addEventListener("input", () => { normalizeAccountInput(fields.sourceAccount); updateSummary(); });
+        fields.destinationAccount.addEventListener("input", () => { normalizeAccountInput(fields.destinationAccount); updateSummary(); });
+        fields.amount.addEventListener("input", () => { fields.amount.value = fields.amount.value.replace(/[^\d.]/g, ""); updateSummary(); });
+        fields.reference.addEventListener("input", () => { updateReferenceCount(); updateSummary(); });
+        fields.currency.addEventListener("change", updateSummary);
 
-        fields.destinationAccount.addEventListener("input", () => {
-            normalizeAccountInput(fields.destinationAccount);
-        });
-
-        fields.amount.addEventListener("input", () => {
-            if (fields.amount.value.length > 0) {
-                fields.amount.value = fields.amount.value.replace(/[^\d.]/g, "");
-            }
-        });
-
-        fields.reference.addEventListener("input", () => {
-            updateReferenceCount();
-        });
-
-        Object.keys(fields).forEach((fieldName) => {
-            fields[fieldName].addEventListener("blur", () => {
-                validateForm();
+        Object.keys(fields).forEach((n) => {
+            fields[n].addEventListener("input", () => {
+                if (fields[n].getAttribute("aria-invalid") === "true") setFieldError(n, "");
             });
         });
 
@@ -591,57 +669,60 @@
             setFieldError("idempotencyKey", "");
         });
 
-        fields.idempotencyKey.value = generateIdempotencyKey();
-        updateReferenceCount();
-
         modeCards.forEach((card) => {
             card.addEventListener("click", () => {
                 const radio = card.querySelector(".mode-radio");
                 selectedPaymentMode = radio.value;
                 modeCards.forEach((c) => c.classList.remove("is-selected"));
                 card.classList.add("is-selected");
-                formDetailsWrap.classList.add("revealed");
-                formDetailsWrap.removeAttribute("aria-hidden");
                 modeExtraGroups.forEach((g) => g.classList.remove("active"));
                 const target = document.getElementById("extra-" + selectedPaymentMode);
                 if (target) target.classList.add("active");
+                revealSection("mode-extra-section");
+                revealSection("payment-details-section");
+                revealSection("form-actions");
+                document.getElementById("summary-body").style.display = "block";
+                document.getElementById("summary-placeholder").style.display = "none";
+                updateSummary();
+                clearApiError();
             });
         });
 
         form.addEventListener("submit", async (event) => {
             event.preventDefault();
-            clearSuccess();
+            clearApiError();
             formStatus.textContent = "";
-
-            if (!validateForm()) {
-                showApiError("Please correct the highlighted fields before submitting the payment.");
-                return;
-            }
-
+            if (!validateForm()) { showApiError("Please correct the highlighted fields before submitting."); return; }
             const payload = buildPayload();
-
-            submitButton.disabled = true;
-            formStatus.textContent = "Submitting payment...";
-
+            setSubmitLoading(true);
+            formStatus.textContent = "Processing…";
             try {
                 const result = await submitPayment(payload);
-                showSuccess(result.paymentId || result.id, result.status || "CREATED");
-                formStatus.textContent = "Payment request submitted successfully.";
+                const paymentId = result.paymentId || result.id;
+                showSuccessScreen(paymentId, selectedPaymentMode, payload.amount, payload.currency, result.status || "CREATED");
+                startPolling(paymentId);
                 form.reset();
                 modeCards.forEach((c) => c.classList.remove("is-selected"));
-                formDetailsWrap.classList.remove("revealed");
-                formDetailsWrap.setAttribute("aria-hidden", "true");
                 modeExtraGroups.forEach((g) => g.classList.remove("active"));
+                hideSection("mode-extra-section"); hideSection("payment-details-section"); hideSection("form-actions");
+                document.getElementById("summary-body").style.display = "none";
+                document.getElementById("summary-placeholder").style.display = "block";
                 selectedPaymentMode = null;
                 fields.idempotencyKey.value = generateIdempotencyKey();
                 updateReferenceCount();
+                formStatus.textContent = "";
             } catch (error) {
-                showApiError(error.message || "Unexpected error while creating payment.");
+                showApiError(error.message || "Unexpected error. Please try again.");
                 formStatus.textContent = "Submission failed.";
             } finally {
-                submitButton.disabled = false;
+                setSubmitLoading(false);
             }
         });
+
+        // ─── Initialise ───────────────────────────────────────
+        fields.idempotencyKey.value = generateIdempotencyKey();
+        updateReferenceCount();
+        updateSummary();
     </script>
 </body>
 </html>
