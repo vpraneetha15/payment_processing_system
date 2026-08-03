@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Component
@@ -32,15 +33,25 @@ public class PaymentStatusScheduler {
         for (Payment payment : payments) {
             if (payment.getCreatedAt() == null) continue;
 
-            String status = payment.getStatus();
+            String status = payment.getStatus() == null ? "" : payment.getStatus().toUpperCase();
+            if ("COMPLETED".equals(status) || "FAILED".equals(status)) {
+                continue;
+            }
+
+            // Service-driven lifecycle already handled this payment, so scheduler must not mutate it.
+            Set<String> observedStatuses = paymentHistoryRepository.findDistinctStatusesByPaymentId(payment.getId());
+            if (observedStatuses.contains("SENT") || observedStatuses.contains("COMPLETED") || observedStatuses.contains("FAILED")) {
+                continue;
+            }
+
             long secondsElapsed = Duration.between(payment.getCreatedAt(), now).getSeconds();
 
             if ("CREATED".equals(status) && secondsElapsed >= 10) {
                 advanceStatus(payment, "VALIDATED", "Payment validated successfully");
             } else if ("VALIDATED".equals(status) && secondsElapsed >= 20) {
-                String finalStatus = Math.random() < 0.9 ? "SUCCESS" : "FAILED";
+                String finalStatus = Math.random() < 0.9 ? "COMPLETED" : "FAILED";
                 advanceStatus(payment, finalStatus,
-                        "SUCCESS".equals(finalStatus)
+                        "COMPLETED".equals(finalStatus)
                                 ? "Payment processed successfully"
                                 : "Payment processing failed");
             }

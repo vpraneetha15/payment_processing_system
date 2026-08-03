@@ -1,10 +1,10 @@
 package com.example.repository;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.BadSqlGrammarException;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Repository;
 
 import com.example.model.PaymentHistory;
@@ -19,56 +19,14 @@ public class PaymentHistoryRepository {
     }
 
     public int save(PaymentHistory paymentHistory) {
-
-        DataAccessException lastException;
-
-        try {
-            String sql = "insert into payment_history(id,payment_id,status,created_at,triggered_by,note) values(?,?,?,?,?,?)";
-            return jdbcTemplate.update(sql,
-                    paymentHistory.getId(),
-                    paymentHistory.getPaymentId(),
-                    paymentHistory.getStatus(),
-                    paymentHistory.getCreatedAt(),
-                    paymentHistory.getTriggeredBy(),
-                    paymentHistory.getNote());
-        } catch (DataAccessException ex1) {
-            lastException = ex1;
-        }
-
-        try {
-            String sql = "insert into payment_history(id,payment_id,status,`timestamp`,triggered_by,note) values(?,?,?,?,?,?)";
-            return jdbcTemplate.update(sql,
-                    paymentHistory.getId(),
-                    paymentHistory.getPaymentId(),
-                    paymentHistory.getStatus(),
-                    paymentHistory.getCreatedAt(),
-                    paymentHistory.getTriggeredBy(),
-                    paymentHistory.getNote());
-        } catch (DataAccessException ex2) {
-            lastException = ex2;
-        }
-
-        try {
-            String sql = "insert into payment_history(payment_id,status,created_at) values(?,?,?)";
-            return jdbcTemplate.update(sql,
-                    paymentHistory.getPaymentId(),
-                    paymentHistory.getStatus(),
-                    paymentHistory.getCreatedAt());
-        } catch (DataAccessException ex3) {
-            lastException = ex3;
-        }
-
-        try {
-            String sql = "insert into payment_history(payment_id,status,`timestamp`) values(?,?,?)";
-            return jdbcTemplate.update(sql,
-                    paymentHistory.getPaymentId(),
-                    paymentHistory.getStatus(),
-                    paymentHistory.getCreatedAt());
-        } catch (DataAccessException ex4) {
-            lastException = ex4;
-        }
-
-        throw lastException;
+        String sql = "insert into payment_history(id,payment_id,status,created_at,triggered_by,note) values(?,?,?,?,?,?)";
+        return jdbcTemplate.update(sql,
+                paymentHistory.getId(),
+                paymentHistory.getPaymentId(),
+                paymentHistory.getStatus(),
+                paymentHistory.getCreatedAt(),
+                paymentHistory.getTriggeredBy(),
+                paymentHistory.getNote());
     }
 
     public List<PaymentHistory> findAll() {
@@ -184,6 +142,38 @@ public class PaymentHistoryRepository {
         }
 
         return histories.get(0);
+    }
+
+    public List<PaymentHistory> findByPaymentId(String paymentId) {
+        String sql = """
+            select ph.*,
+                   (
+                       select coalesce(a.account_number, p.source_account)
+                       from payments p
+                       left join accounts a on a.account_number = p.source_account
+                       where p.id = ph.payment_id
+                       limit 1
+                   ) as account_number
+            from payment_history ph
+            where ph.payment_id=?
+            order by ph.created_at asc
+            """;
+
+        try {
+            return jdbcTemplate.query(sql,
+                    new BeanPropertyRowMapper<>(PaymentHistory.class),
+                    paymentId);
+        } catch (BadSqlGrammarException ex) {
+            String fallbackSql = "select * from payment_history where payment_id=? order by id asc";
+            return jdbcTemplate.query(fallbackSql,
+                    new BeanPropertyRowMapper<>(PaymentHistory.class),
+                    paymentId);
+        }
+    }
+
+    public Set<String> findDistinctStatusesByPaymentId(String paymentId) {
+        String sql = "select distinct upper(coalesce(status, '')) as status from payment_history where payment_id=?";
+        return Set.copyOf(jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("status"), paymentId));
     }
 
     public int update(PaymentHistory paymentHistory) {
