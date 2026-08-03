@@ -52,6 +52,12 @@ public class PaymentHistoryController {
 		return service.findById(id);
 	}
 
+	@GetMapping("/payment/{paymentId}")
+	public List<PaymentHistory> getHistoryByPaymentId(@PathVariable String paymentId) {
+
+		return service.findByPaymentId(paymentId);
+	}
+
 	@PutMapping
 	public String update(@RequestBody PaymentHistory paymentHistory) {
 

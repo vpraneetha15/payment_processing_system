@@ -32,6 +32,10 @@ public class PaymentHistoryService {
         return repository.findById(id);
     }
 
+    public List<PaymentHistory> findByPaymentId(String paymentId) {
+        return repository.findByPaymentId(paymentId);
+    }
+
     public int update(PaymentHistory paymentHistory) {
         return repository.update(paymentHistory);
     }

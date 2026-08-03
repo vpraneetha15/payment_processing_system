@@ -551,6 +551,7 @@
 
             return Array.from(set);
         })();
+        const PAYMENT_TIMELINE_ENDPOINT_CANDIDATES = HISTORY_ENDPOINT_CANDIDATES.map((endpoint) => endpoint + "/payment/");
         const REALTIME_INTERVAL_MS = 15000;
 
         const statusCardsEl = document.getElementById("statusCards");
@@ -843,10 +844,82 @@
             bindRowActions();
         }
 
+        function applyTimelineToPayment(payment, timelineEvents) {
+            if (!timelineEvents.length) {
+                return;
+            }
+
+            timelineEvents.sort((a, b) => {
+                const parsedA = parseTime(a.timestamp);
+                const parsedB = parseTime(b.timestamp);
+                const ta = parsedA ? parsedA.getTime() : 0;
+                const tb = parsedB ? parsedB.getTime() : 0;
+                return ta - tb;
+            });
+
+            for (let i = 0; i < timelineEvents.length; i++) {
+                const currentTs = parseTime(timelineEvents[i].timestamp);
+                const nextEvent = timelineEvents[i + 1] || null;
+                const nextTs = nextEvent ? parseTime(nextEvent.timestamp) : null;
+                timelineEvents[i].durationMs = currentTs && nextTs ? nextTs.getTime() - currentTs.getTime() : null;
+                timelineEvents[i].nextStatus = nextEvent ? nextEvent.status : null;
+            }
+
+            const first = timelineEvents[0];
+            const last = timelineEvents[timelineEvents.length - 1];
+            const firstTime = first ? parseTime(first.timestamp) : null;
+            const lastTime = last ? parseTime(last.timestamp) : null;
+
+            payment.accountNumber = first ? (first.accountNumber || payment.accountNumber || "-") : (payment.accountNumber || "-");
+            payment.latestStatus = last ? last.status : payment.latestStatus;
+            payment.startedAt = first ? first.timestamp : payment.startedAt;
+            payment.updatedAt = last ? last.timestamp : payment.updatedAt;
+            payment.eventsCount = timelineEvents.length;
+            payment.processingMs = firstTime && lastTime ? lastTime.getTime() - firstTime.getTime() : payment.processingMs;
+            payment.events = timelineEvents;
+            payment.failedEvent = [...timelineEvents].reverse().find((ev) => {
+                const st = (ev.status || "").toLowerCase();
+                return st === "failed" || st === "error" || st === "cancelled" || isErrorText(ev.note, ev.status);
+            }) || null;
+        }
+
+        async function refreshPaymentTimeline(paymentId) {
+            let response = null;
+            let lastError = null;
+
+            for (const base of PAYMENT_TIMELINE_ENDPOINT_CANDIDATES) {
+                const endpoint = base + encodeURIComponent(paymentId);
+                try {
+                    response = await fetch(endpoint);
+                    if (response.ok) {
+                        break;
+                    }
+                    lastError = new Error("API " + response.status + " at " + endpoint);
+                } catch (error) {
+                    lastError = error;
+                }
+            }
+
+            if (!response || !response.ok) {
+                throw lastError || new Error("No reachable payment timeline endpoint");
+            }
+
+            const rawTimeline = await response.json();
+            const timelineEvents = normalizeEvents(rawTimeline).filter((ev) => ev.paymentId === paymentId);
+            if (!timelineEvents.length) {
+                return;
+            }
+
+            const payment = allPayments.find((p) => p.paymentId === paymentId);
+            if (payment) {
+                applyTimelineToPayment(payment, timelineEvents);
+            }
+        }
+
         function bindRowActions() {
             const clickableRows = historyTableBody.querySelectorAll(".summary-row");
             clickableRows.forEach((row) => {
-                row.addEventListener("click", (event) => {
+                row.addEventListener("click", async (event) => {
                     const target = event.target;
                     const paymentId = row.getAttribute("data-id");
 
@@ -858,6 +931,11 @@
                         expandedPaymentId = null;
                     } else {
                         expandedPaymentId = paymentId;
+                        try {
+                            await refreshPaymentTimeline(paymentId);
+                        } catch (error) {
+                            console.warn("Could not refresh payment timeline for " + paymentId + ":", error.message);
+                        }
                     }
 
                     renderTable(filteredPayments);
