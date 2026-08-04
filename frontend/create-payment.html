@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Payment — Payment Processing System</title>
+    <title>Initiate Payment — Payment Processing System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -31,8 +31,8 @@
     <!-- ── Hero ──────────────────────────────────────── -->
     <div class="page-hero">
         <div class="hero-content">
-            <h1 class="hero-title">Create New Payment</h1>
-            <p class="hero-sub">Initiate a secure payment across supported channels and currencies</p>
+            <h1 class="hero-title">Initiate Payment</h1>
+            <p class="hero-sub">Create and track payment transactions across multiple methods and currencies.</p>
         </div>
         <span class="material-icons-outlined hero-deco" aria-hidden="true">payments</span>
     </div>
@@ -182,11 +182,14 @@
                                 </div>
                                 <div class="field">
                                     <label for="cardExpiry">Expiry Date</label>
-                                    <input id="cardExpiry" name="cardExpiry" type="text" maxlength="5" placeholder="MM/YY">
+                                    <input id="cardExpiry" name="cardExpiry" type="text" maxlength="5" placeholder="MM/YY" autocomplete="cc-exp">
+                                    <span id="cardExpiryHint" class="field-hint">Month/Year on front of card</span>
+                                    <span id="cardExpiryError" class="field-error" aria-live="polite"></span>
                                 </div>
                                 <div class="field">
                                     <label for="cardCvv">CVV</label>
-                                    <input id="cardCvv" name="cardCvv" type="text" inputmode="numeric" maxlength="4" placeholder="&bull;&bull;&bull;">
+                                    <input id="cardCvv" name="cardCvv" type="password" inputmode="numeric" maxlength="3" placeholder="&bull;&bull;&bull;" autocomplete="cc-csc">
+                                    <span class="field-hint">3-digit security code on the back</span>
                                 </div>
                             </div>
                         </div>
@@ -308,9 +311,9 @@
                                 </div>
 
                                 <div class="field field-full">
-                                    <label for="reference">Payment Reference <span class="required-mark">*</span></label>
+                                    <label for="reference">Payment Reference</label>
                                     <textarea id="reference" name="reference"
-                                        placeholder="e.g. Invoice #1234 – Q3 supplier payment" required
+                                        placeholder="e.g. Invoice #1234 – Q3 supplier payment"
                                         maxlength="140" rows="3"
                                         aria-describedby="referenceHint referenceError"></textarea>
                                     <div class="field-foot">
@@ -593,8 +596,35 @@
                 else if (!Number.isFinite(v) || v <= 0) { setFieldError("amount", "Amount must be greater than zero."); ok = false; }
             }
             if (!cur) { setFieldError("currency", "Please select a currency."); ok = false; }
-            if (!ref) { setFieldError("reference", "Payment reference is required."); ok = false; }
             if (!idk) { setFieldError("idempotencyKey", "Idempotency key is missing."); ok = false; }
+
+            // Card-mode extra validation
+            if (selectedPaymentMode === 'CARD') {
+                const expiry = document.getElementById('cardExpiry')?.value.trim() || '';
+                const errEl  = document.getElementById('cardExpiryError');
+                if (!expiry) {
+                    if (errEl) errEl.textContent = 'Expiry date is required.';
+                    ok = false;
+                } else if (expiry.length === 5) {
+                    const [mm, yy] = expiry.split('/');
+                    const month = parseInt(mm, 10);
+                    const year  = 2000 + parseInt(yy, 10);
+                    const expDate = new Date(year, month, 0);
+                    if (month < 1 || month > 12 || expDate < new Date()) {
+                        if (errEl) errEl.textContent = expDate < new Date() ? 'Card has expired.' : 'Invalid expiry date.';
+                        ok = false;
+                    }
+                } else {
+                    if (errEl) errEl.textContent = 'Enter expiry as MM/YY.';
+                    ok = false;
+                }
+                const cvv = document.getElementById('cardCvv')?.value.trim() || '';
+                if (cvv.length !== 3) {
+                    showApiError('CVV must be exactly 3 digits.');
+                    ok = false;
+                }
+            }
+
             return ok;
         }
 
@@ -714,7 +744,7 @@
 
 
 
-        
+
         async function updateConversionPreview() {
             const src = fields.sourceAccount.value.trim();
             const dst = fields.destinationAccount.value.trim();
@@ -750,7 +780,54 @@
                     'Currency conversion will be applied: ' + srcCurrency + ' \u2192 ' + dstCurrency;
             }
         }
+        // ─── Card Expiry: auto-format + future-date validation ─
+        const cardExpiryInput = document.getElementById('cardExpiry');
+        if (cardExpiryInput) {
+            cardExpiryInput.addEventListener('input', function (e) {
+                let val = this.value.replace(/\D/g, '').slice(0, 4);
+                if (val.length >= 3) val = val.slice(0, 2) + '/' + val.slice(2);
+                this.value = val;
+                const errEl = document.getElementById('cardExpiryError');
+                const hintEl = document.getElementById('cardExpiryHint');
+                if (val.length === 5) {
+                    const [mm, yy] = val.split('/');
+                    const month = parseInt(mm, 10);
+                    const year  = 2000 + parseInt(yy, 10);
+                    const now   = new Date();
+                    const expiry = new Date(year, month, 0); // last day of expiry month
+                    if (month < 1 || month > 12) {
+                        errEl.textContent = 'Invalid month (01-12)';
+                        hintEl.textContent = '';
+                    } else if (expiry < now) {
+                        errEl.textContent = 'Card has expired';
+                        hintEl.textContent = '';
+                    } else {
+                        errEl.textContent = '';
+                        hintEl.textContent = '\u2713 Valid until ' + mm + '/' + yy;
+                        hintEl.style.color = 'var(--green)';
+                    }
+                } else {
+                    errEl.textContent = '';
+                    hintEl.textContent = 'Month/Year on front of card';
+                    hintEl.style.color = '';
+                }
+            });
+            // Prevent backspace from skipping the slash
+            cardExpiryInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Backspace' && this.value.endsWith('/')) {
+                    this.value = this.value.slice(0, -1);
+                    e.preventDefault();
+                }
+            });
+        }
 
+        // ─── CVV: digits only ────────────────────────────────
+        const cardCvvInput = document.getElementById('cardCvv');
+        if (cardCvvInput) {
+            cardCvvInput.addEventListener('input', function () {
+                this.value = this.value.replace(/\D/g, '').slice(0, 3);
+            });
+        }
         // ─── Card Number Auto-Lookup ─────────────────────────
         const cardNumberInput = document.getElementById('cardNumber');
         if (cardNumberInput) {
