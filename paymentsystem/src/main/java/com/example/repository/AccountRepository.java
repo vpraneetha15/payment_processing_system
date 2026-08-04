@@ -2,10 +2,6 @@ package com.example.repository;
 
 import java.util.List;
 
-import jakarta.annotation.PostConstruct;
-
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -21,38 +17,19 @@ public class AccountRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    @PostConstruct
-    public void ensureEmailColumn() {
-        try {
-            jdbcTemplate.execute("alter table accounts add column email varchar(255) null");
-        } catch (Exception ex) {
-            // Column likely already exists, or the DB user lacks DDL privileges.
-        }
-    }
-
     public int save(Account account) {
 
         String sql =
-            "insert into accounts(account_number,account_name,balance,currency,email,active) values(?,?,?,?,?,?)";
+            "insert into accounts(account_number,account_name,balance,currency,active) values(?,?,?,?,?)";
 
-        try {
-            return jdbcTemplate.update(sql,
-                account.getAccountNumber(),
-                account.getAccountName(),
-                account.getBalance(),
-                account.getCurrency(),
-                account.getEmail(),
-                account.isActive());
-        } catch (BadSqlGrammarException ex) {
-            String fallbackSql =
-                "insert into accounts(account_number,account_name,balance,currency,active) values(?,?,?,?,?)";
-            return jdbcTemplate.update(fallbackSql,
-                account.getAccountNumber(),
-                account.getAccountName(),
-                account.getBalance(),
-                account.getCurrency(),
-                account.isActive());
-        }
+        return jdbcTemplate.update(sql,
+            account.getAccountNumber(),
+            account.getAccountName(),
+            account.getBalance() != null
+                    ? account.getBalance().setScale(2, java.math.RoundingMode.HALF_UP)
+                    : java.math.BigDecimal.ZERO,
+            account.getCurrency(),
+            account.isActive());
     }
 
     public List<Account> findAll() {
@@ -82,42 +59,14 @@ public class AccountRepository {
     public int update(Account account) {
 
         String sql =
-                "update accounts set account_name=?,balance=?,currency=?,email=?,active=? where account_number=?";
+                "update accounts set account_name=?,balance=?,currency=?,active=? where account_number=?";
 
-        try {
-            return jdbcTemplate.update(sql,
-                    account.getAccountName(),
-                    account.getBalance(),
-                    account.getCurrency(),
-                    account.getEmail(),
-                    account.isActive(),
-                    account.getAccountNumber());
-        } catch (BadSqlGrammarException ex) {
-            String fallbackSql =
-                    "update accounts set account_name=?,balance=?,currency=?,active=? where account_number=?";
-            return jdbcTemplate.update(fallbackSql,
-                    account.getAccountName(),
-                    account.getBalance(),
-                    account.getCurrency(),
-                    account.isActive(),
-                    account.getAccountNumber());
-        }
-    }
-
-    public String findEmailByAccountNumber(String accountNumber) {
-        String sql = "select email from accounts where account_number=?";
-        try {
-            return jdbcTemplate.query(sql, rs -> {
-                if (!rs.next()) {
-                    return null;
-                }
-                String email = rs.getString("email");
-                return (email == null || email.isBlank()) ? null : email;
-            }, accountNumber);
-        } catch (DataAccessException ex) {
-            // Accounts table or email column not available in this environment.
-            return null;
-        }
+        return jdbcTemplate.update(sql,
+                account.getAccountName(),
+                account.getBalance(),
+                account.getCurrency(),
+                account.isActive(),
+                account.getAccountNumber());
     }
 
     public int delete(String accountNumber) {
@@ -125,5 +74,61 @@ public class AccountRepository {
         String sql = "delete from accounts where account_number=?";
 
         return jdbcTemplate.update(sql, accountNumber);
+    }
+
+    /**
+     * Returns the account_number linked to the given card number (from user_cards),
+     * or null if not found / card is inactive.
+     */
+    public String findAccountNumberByCardNumber(String cardNumber) {
+        String sql = "select account_number from cards where card_number = ? and active = true limit 1";
+        List<String> rows = jdbcTemplate.queryForList(sql, String.class, cardNumber);
+        return rows.isEmpty() ? null : rows.get(0);
+    }
+
+    /**
+     * Returns the account_number linked to the given UPI ID (from user_upi),
+     * or null if not found / UPI is inactive.
+     */
+    public String findAccountNumberByUpiId(String upiId) {
+        String sql = "select account_number from upi_accounts where upi_id = ? and active = true limit 1";
+        List<String> rows = jdbcTemplate.queryForList(sql, String.class, upiId);
+        return rows.isEmpty() ? null : rows.get(0);
+    }
+
+    /**
+     * Returns the account_number whose mobile_number matches (from accounts),
+     * or null if not found / account is inactive.
+     */
+    public String findAccountNumberByMobile(String mobileNumber) {
+        String sql = "select account_number from accounts where mobile_number = ? and active = true limit 1";
+        List<String> rows = jdbcTemplate.queryForList(sql, String.class, mobileNumber);
+        return rows.isEmpty() ? null : rows.get(0);
+    }
+
+    /**
+     * Returns the email address linked to an account number, or null if the
+     * account doesn't exist or has no email column.
+     */
+    public String findEmailByAccountNumber(String accountNumber) {
+        if (accountNumber == null || accountNumber.isBlank()) return null;
+        try {
+            String sql = "select email from accounts where account_number = ? limit 1";
+            List<String> rows = jdbcTemplate.queryForList(sql, String.class, accountNumber);
+            return rows.isEmpty() ? null : rows.get(0);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the account_number linked to the given wallet identifier (from wallets),
+     * or null if not found / wallet is inactive.
+     */
+    public String findAccountNumberByWalletId(String walletIdentifier) {
+        if (walletIdentifier == null || walletIdentifier.isBlank()) return null;
+        String sql = "select account_number from wallets where wallet_identifier = ? and active = true limit 1";
+        List<String> rows = jdbcTemplate.queryForList(sql, String.class, walletIdentifier);
+        return rows.isEmpty() ? null : rows.get(0);
     }
 }

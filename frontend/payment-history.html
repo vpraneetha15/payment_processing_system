@@ -340,17 +340,65 @@
         .table-wrap {
             overflow: auto;
             max-height: 76vh;
+            padding: 8px;
+            border-radius: 14px;
+            background: linear-gradient(180deg, #f8fbff, #f3f8ff);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px 16px 16px;
+            border-top: 1px solid #e6f0fb;
+            background: linear-gradient(180deg, #fcfeff, #f7fbff);
+        }
+
+        .page-btn {
+            min-height: 34px;
+            min-width: 34px;
+            padding: 0 10px;
+            border: 1px solid #cfe2f6;
+            border-radius: 9px;
+            background: #ffffff;
+            color: #2a5078;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.14s ease, transform 0.14s ease;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: #edf5ff;
+            transform: translateY(-1px);
+        }
+
+        .page-btn.active {
+            background: #1363a3;
+            border-color: #1363a3;
+            color: #ffffff;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             min-width: 980px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #ffffff;
         }
 
         th,
         td {
-            padding: 11px 12px;
+            padding: 13px 14px;
             text-align: left;
             border-bottom: 1px solid #edf2fa;
             font-size: 0.88rem;
@@ -367,18 +415,43 @@
             text-transform: uppercase;
             letter-spacing: 0.04em;
             font-size: 0.74rem;
+            box-shadow: inset 0 -1px 0 #dbe9f8, 0 2px 6px rgba(18, 56, 95, 0.08);
+        }
+
+        th:first-child {
+            border-top-left-radius: 12px;
+        }
+
+        th:last-child {
+            border-top-right-radius: 12px;
         }
 
         tbody tr:nth-child(2n) {
             background: #fcfdff;
         }
 
-        .summary-row { cursor: pointer; }
-        .summary-row:hover { background: #eef6ff; }
+        .summary-row {
+            cursor: pointer;
+            transition: background 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .summary-row:hover {
+            background: #eef6ff;
+            transform: translateY(-1px);
+            box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.14);
+        }
 
         .summary-row.selected {
             background: #ecf5ff;
             box-shadow: inset 3px 0 0 var(--brand);
+        }
+
+        tbody tr:last-child td:first-child {
+            border-bottom-left-radius: 12px;
+        }
+
+        tbody tr:last-child td:last-child {
+            border-bottom-right-radius: 12px;
         }
 
         .summary-row.updated { animation: flash 1.4s ease; }
@@ -806,6 +879,30 @@
             text-align: center;
         }
 
+        .error-state {
+            color: #8f2231;
+            padding: 22px 16px;
+            text-align: center;
+            line-height: 1.45;
+        }
+
+        .retry-inline-btn {
+            margin-top: 10px;
+            border: 1px solid #f2b7bf;
+            background: #fff4f6;
+            color: #8f2231;
+            font-size: 0.8rem;
+            font-weight: 800;
+            border-radius: 9px;
+            min-height: 34px;
+            padding: 0 12px;
+            cursor: pointer;
+        }
+
+        .retry-inline-btn:hover {
+            background: #ffe9ed;
+        }
+
         body.modal-open {
             overflow: hidden;
         }
@@ -830,6 +927,63 @@
             display: flex;
         }
 
+        .confirm-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(7, 24, 43, 0.45);
+            backdrop-filter: blur(3px);
+        }
+
+        .confirm-overlay.open {
+            display: flex;
+        }
+
+        .confirm-box {
+            width: min(420px, 100%);
+            border-radius: 14px;
+            border: 1px solid #d6e6f8;
+            background: linear-gradient(180deg, #ffffff, #f8fcff);
+            box-shadow: 0 24px 55px rgba(12, 32, 55, 0.25);
+            padding: 16px;
+        }
+
+        .confirm-title {
+            margin: 0 0 12px;
+            color: #244a72;
+            font-size: 0.96rem;
+            font-weight: 800;
+            line-height: 1.4;
+        }
+
+        .confirm-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .confirm-btn {
+            min-height: 34px;
+            min-width: 74px;
+            border-radius: 9px;
+            border: 1px solid #cadff4;
+            background: #f1f7ff;
+            color: #274e76;
+            font-weight: 800;
+            font-size: 0.78rem;
+            cursor: pointer;
+        }
+
+        .confirm-btn.primary {
+            border-color: #1363a3;
+            background: #1363a3;
+            color: #fff;
+        }
+
         .modal-box {
             width: min(980px, 100%);
             max-height: 88vh;
@@ -852,9 +1006,25 @@
         }
 
         .modal-loading {
-            padding: 18px;
+            min-height: 260px;
+            padding: 26px 18px;
             display: grid;
-            gap: 12px;
+            gap: 10px;
+            align-content: center;
+            justify-items: center;
+            text-align: center;
+        }
+
+        .loading-emoji {
+            font-size: 2rem;
+            line-height: 1;
+            animation: bob 0.95s ease-in-out infinite;
+            filter: drop-shadow(0 5px 10px rgba(24, 71, 117, 0.22));
+        }
+
+        @keyframes bob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
         }
 
         .loading-badge {
@@ -1046,9 +1216,39 @@
             color: var(--text);
         }
 
+        :root[data-theme="dark"] .table-wrap {
+            background: linear-gradient(180deg, #13283f, #102236);
+        }
+
+        :root[data-theme="dark"] .pagination {
+            border-top-color: #26415d;
+            background: linear-gradient(180deg, #14283f, #112336);
+        }
+
+        :root[data-theme="dark"] .page-btn {
+            background: #18324c;
+            border-color: #2f5376;
+            color: #c7def5;
+        }
+
+        :root[data-theme="dark"] .page-btn:hover:not(:disabled) {
+            background: #204161;
+        }
+
+        :root[data-theme="dark"] .page-btn.active {
+            background: #56a8e5;
+            border-color: #56a8e5;
+            color: #07253e;
+        }
+
+        :root[data-theme="dark"] table {
+            background: #102236;
+        }
+
         :root[data-theme="dark"] th {
             background: linear-gradient(180deg, #18324c, #152b43);
             color: #b8d5f2;
+            box-shadow: inset 0 -1px 0 #26415d, 0 2px 6px rgba(2, 12, 22, 0.35);
         }
 
         :root[data-theme="dark"] td {
@@ -1062,6 +1262,10 @@
         :root[data-theme="dark"] .summary-row:hover,
         :root[data-theme="dark"] .summary-row.selected {
             background: rgba(86, 168, 229, 0.14);
+        }
+
+        :root[data-theme="dark"] .summary-row:hover {
+            box-shadow: inset 0 0 0 1px rgba(86, 168, 229, 0.28);
         }
 
         :root[data-theme="dark"] .modal-head {
@@ -1107,6 +1311,10 @@
             background: #3e1f2a;
             border-color: #6d3546;
             color: #ffd7de;
+        }
+
+        :root[data-theme="dark"] .loading-note {
+            color: #a8c1db;
         }
 
         :root[data-theme="dark"] .failed-box h3 {
@@ -1156,6 +1364,42 @@
             color: #ffd7de;
         }
 
+        :root[data-theme="dark"] .confirm-box {
+            border-color: #2a4663;
+            background: linear-gradient(180deg, #14283f, #112336);
+            box-shadow: 0 26px 58px rgba(1, 8, 16, 0.5);
+        }
+
+        :root[data-theme="dark"] .confirm-title {
+            color: #d6e9ff;
+        }
+
+        :root[data-theme="dark"] .confirm-btn {
+            border-color: #2f5376;
+            background: #17314b;
+            color: #c8def5;
+        }
+
+        :root[data-theme="dark"] .confirm-btn.primary {
+            border-color: #56a8e5;
+            background: #56a8e5;
+            color: #07253e;
+        }
+
+        :root[data-theme="dark"] .error-state {
+            color: #ffd7de;
+        }
+
+        :root[data-theme="dark"] .retry-inline-btn {
+            border-color: #84505f;
+            background: #3e1f2a;
+            color: #ffd7de;
+        }
+
+        :root[data-theme="dark"] .retry-inline-btn:hover {
+            background: #4c2633;
+        }
+
         @media (max-width: 1180px) {
             .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .toolbar { grid-template-columns: 1fr 1fr 1fr auto auto; }
@@ -1192,6 +1436,92 @@
             }
             .theme-toggle.is-dark .toggle-thumb {
                 transform: translateX(40px);
+            }
+
+            .table-wrap {
+                max-height: none;
+                overflow: visible;
+                padding: 8px;
+            }
+
+            .pagination {
+                justify-content: flex-start;
+                padding: 10px 10px 14px;
+            }
+
+            .page-btn {
+                min-height: 32px;
+                min-width: 32px;
+                font-size: 0.77rem;
+            }
+
+            table {
+                min-width: 0;
+                border-collapse: separate;
+                border-spacing: 0 10px;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tbody {
+                display: grid;
+                gap: 10px;
+            }
+
+            .summary-row {
+                display: block;
+                background: var(--card);
+                border: 1px solid var(--line);
+                border-radius: 12px;
+                padding: 8px 10px;
+                box-shadow: 0 8px 16px rgba(18, 44, 74, 0.08);
+            }
+
+            td {
+                display: grid;
+                grid-template-columns: 112px 1fr;
+                align-items: center;
+                gap: 8px;
+                border: 0;
+                padding: 6px 2px;
+                font-size: 0.82rem;
+            }
+
+            td::before {
+                content: attr(data-label);
+                color: var(--muted);
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                font-weight: 800;
+            }
+
+            td:last-child {
+                grid-template-columns: 1fr;
+            }
+
+            td:last-child::before {
+                display: none;
+            }
+
+            .action-btn {
+                width: 100%;
+                min-height: 36px;
+            }
+
+            .id {
+                max-width: none;
+            }
+
+            .loading,
+            .empty {
+                display: block;
+                border: 1px dashed var(--line);
+                border-radius: 12px;
+                background: var(--card);
+                margin: 6px;
             }
         }
     </style>
@@ -1263,6 +1593,7 @@
                     <tbody id="historyTableBody"></tbody>
                 </table>
             </div>
+            <nav id="paginationControls" class="pagination" aria-label="Payment history pagination"></nav>
         </section>
     </main>
 
@@ -1273,6 +1604,16 @@
                 <button id="detailModalClose" class="modal-close" type="button" aria-label="Close details">&times;</button>
             </header>
             <div id="detailModalContent"></div>
+        </section>
+    </div>
+
+    <div id="exportConfirmModal" class="confirm-overlay" aria-hidden="true">
+        <section class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="exportConfirmTitle">
+            <h3 id="exportConfirmTitle" class="confirm-title">Are you sure you want to export history?</h3>
+            <div class="confirm-actions">
+                <button id="exportConfirmNo" class="confirm-btn" type="button">NO</button>
+                <button id="exportConfirmYes" class="confirm-btn primary" type="button">YES</button>
+            </div>
         </section>
     </div>
 
@@ -1302,10 +1643,14 @@
         const exportBtn = document.getElementById("exportBtn");
         const themeToggleBtn = document.getElementById("themeToggleBtn");
         const historyTableBody = document.getElementById("historyTableBody");
+        const paginationControls = document.getElementById("paginationControls");
         const detailModal = document.getElementById("detailModal");
         const detailModalTitle = document.getElementById("detailModalTitle");
         const detailModalContent = document.getElementById("detailModalContent");
         const detailModalClose = document.getElementById("detailModalClose");
+        const exportConfirmModal = document.getElementById("exportConfirmModal");
+        const exportConfirmYes = document.getElementById("exportConfirmYes");
+        const exportConfirmNo = document.getElementById("exportConfirmNo");
         const themeToggleThumb = document.getElementById("themeToggleThumb");
         const THEME_STORAGE_KEY = "payment-history-theme";
 
@@ -1313,6 +1658,8 @@
         let filteredPayments = [];
         let activeModalPaymentId = null;
         let lastSignatureByPayment = {};
+        let currentPage = 1;
+        const rowsPerPage = 10;
         let detailViewMode = "detailed";
         let isModalHydrating = false;
         let modalLoadToken = 0;
@@ -1736,16 +2083,9 @@
         function loadingSkeletonHtml(paymentId) {
             return ""
                 + "<section class='modal-loading'>"
-                + "<span class='loading-badge'><span class='loading-spinner'></span>Loading transfer details</span>"
-                + "<p class='loading-note'>Preparing complete payment view for <strong>" + paymentId + "</strong>. Please wait a moment.</p>"
-                + "<div class='loading-grid'>"
-                + "<div class='skeleton'></div>"
-                + "<div class='skeleton'></div>"
-                + "<div class='skeleton'></div>"
-                + "<div class='skeleton tall'></div>"
-                + "<div class='skeleton tall'></div>"
-                + "<div class='skeleton tall'></div>"
-                + "</div>"
+                + "<div class='loading-emoji' aria-hidden='true'>⏳</div>"
+                + "<span class='loading-badge'><span class='loading-spinner'></span>Loading payment details</span>"
+                + "<p class='loading-note'>Fetching source and destination account information for <strong>" + paymentId + "</strong>.</p>"
                 + "</section>";
         }
 
@@ -1809,31 +2149,79 @@
             }
         }
 
-        function renderTable(payments) {
-            if (!payments.length) {
-                historyTableBody.innerHTML = "<tr><td colspan='8' class='empty'>No records for current filter.</td></tr>";
+        function renderPagination(totalItems) {
+            const totalPages = Math.max(1, Math.ceil(totalItems / rowsPerPage));
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+
+            if (totalItems === 0) {
+                paginationControls.innerHTML = "";
                 return;
             }
 
+            const parts = [];
+            parts.push("<button type='button' class='page-btn' data-page='" + (currentPage - 1) + "'" + (currentPage === 1 ? " disabled" : "") + ">&lt; Previous</button>");
+
+            for (let i = 1; i <= totalPages; i++) {
+                parts.push("<button type='button' class='page-btn" + (i === currentPage ? " active" : "") + "' data-page='" + i + "'>" + i + "</button>");
+            }
+
+            parts.push("<button type='button' class='page-btn' data-page='" + (currentPage + 1) + "'" + (currentPage === totalPages ? " disabled" : "") + ">Next &gt;</button>");
+            paginationControls.innerHTML = parts.join("");
+
+            const pageButtons = paginationControls.querySelectorAll("button[data-page]");
+            pageButtons.forEach((button) => {
+                button.addEventListener("click", () => {
+                    if (button.hasAttribute("disabled")) {
+                        return;
+                    }
+                    const nextPage = Number(button.getAttribute("data-page"));
+                    if (!Number.isFinite(nextPage) || nextPage < 1 || nextPage === currentPage) {
+                        return;
+                    }
+                    currentPage = nextPage;
+                    renderTable(filteredPayments);
+                });
+            });
+        }
+
+        function renderTable(payments) {
+            if (!payments.length) {
+                historyTableBody.innerHTML = "<tr><td colspan='8' class='empty'>📄 No payment history found<br>Try changing filters</td></tr>";
+                renderPagination(0);
+                return;
+            }
+
+            const totalPages = Math.max(1, Math.ceil(payments.length / rowsPerPage));
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const pagePayments = payments.slice(startIndex, endIndex);
+
             const rows = [];
-            for (const p of payments) {
+            for (const p of pagePayments) {
                 const selected = p.paymentId === activeModalPaymentId;
                 const summaryClass = "summary-row" + (selected ? " selected" : "") + (p.justUpdated ? " updated" : "");
                 rows.push(
                     "<tr class='" + summaryClass + "' data-id='" + p.paymentId + "'>"
-                    + "<td class='id'>" + p.paymentId + "</td>"
-                    + "<td class='id'>" + (p.accountNumber || "-") + "</td>"
-                    + "<td><span class='status-chip " + statusClass(p.latestStatus) + "'>" + p.latestStatus + "</span></td>"
-                    + "<td>" + p.eventsCount + "</td>"
-                    + "<td>" + formatDate(p.startedAt) + "</td>"
-                    + "<td>" + formatDate(p.updatedAt) + "</td>"
-                    + "<td>" + (p.processingMs == null ? "N/A" : durationText(p.processingMs).replace("Spent ", "")) + "</td>"
-                    + "<td><button type='button' class='action-btn' data-open='" + p.paymentId + "'>View</button></td>"
+                    + "<td class='id' data-label='Payment ID'>" + p.paymentId + "</td>"
+                    + "<td class='id' data-label='Account Number'>" + (p.accountNumber || "-") + "</td>"
+                    + "<td data-label='Latest Status'><span class='status-chip " + statusClass(p.latestStatus) + "'>" + p.latestStatus + "</span></td>"
+                    + "<td data-label='Events'>" + p.eventsCount + "</td>"
+                    + "<td data-label='Started At'>" + formatDate(p.startedAt) + "</td>"
+                    + "<td data-label='Last Updated'>" + formatDate(p.updatedAt) + "</td>"
+                    + "<td data-label='Processing Time'>" + (p.processingMs == null ? "N/A" : durationText(p.processingMs).replace("Spent ", "")) + "</td>"
+                    + "<td data-label='Action'><button type='button' class='action-btn' data-open='" + p.paymentId + "'>View</button></td>"
                     + "</tr>"
                 );
             }
 
             historyTableBody.innerHTML = rows.join("");
+            renderPagination(payments.length);
             bindRowActions();
         }
 
@@ -2116,13 +2504,25 @@
             URL.revokeObjectURL(url);
         }
 
+        function openExportConfirm() {
+            if (!filteredPayments.length) {
+                return;
+            }
+            exportConfirmModal.classList.add("open");
+            exportConfirmModal.setAttribute("aria-hidden", "false");
+        }
+
+        function closeExportConfirm() {
+            exportConfirmModal.classList.remove("open");
+            exportConfirmModal.setAttribute("aria-hidden", "true");
+        }
+
         async function loadHistory(isRealtimeTick) {
             if (!isRealtimeTick) {
                 historyTableBody.innerHTML = "<tr><td colspan='8' class='loading'>Loading payment history...</td></tr>";
             }
 
             let rawData = [];
-            let usingFallbackData = false;
             try {
                 let response = null;
                 let lastError = null;
@@ -2144,13 +2544,25 @@
                 }
 
                 rawData = await response.json();
-
-                // Inject one manual demo payment so UI behavior can be previewed quickly.
-                rawData = rawData.concat(getManualHistoryEntity());
             } catch (error) {
                 console.error("Failed to load payment history from backend:", error.message);
-                rawData = getManualHistoryEntity();
-                usingFallbackData = true;
+                historyTableBody.innerHTML = ""
+                    + "<tr><td colspan='8' class='error-state'>"
+                    + "⚠️ Unable to load payment history"
+                    + "<br>"
+                    + "<button type='button' id='retryLoadHistoryBtn' class='retry-inline-btn'>Try again</button>"
+                    + "</td></tr>";
+                const retryBtn = document.getElementById("retryLoadHistoryBtn");
+                if (retryBtn) {
+                    retryBtn.addEventListener("click", () => {
+                        loadHistory(false);
+                    });
+                }
+                statusCardsEl.innerHTML = "";
+                allPayments = [];
+                filteredPayments = [];
+                paginationControls.innerHTML = "";
+                return;
             }
 
             const events = normalizeEvents(rawData);
@@ -2164,10 +2576,6 @@
             allPayments = nextPayments;
             applyFilters();
 
-            if (usingFallbackData) {
-                console.warn("Backend unreachable. Showing hardcoded demo history entity.");
-            }
-
             if (activeModalPaymentId && detailModal.classList.contains("open")) {
                 const activePayment = allPayments.find((p) => p.paymentId === activeModalPaymentId);
                 if (activePayment) {
@@ -2180,11 +2588,30 @@
             }
         }
 
-        searchInput.addEventListener("input", applyFilters);
-        statusFilter.addEventListener("change", applyFilters);
-        dateRangeFilter.addEventListener("change", applyFilters);
+        searchInput.addEventListener("input", () => {
+            currentPage = 1;
+            applyFilters();
+        });
+        statusFilter.addEventListener("change", () => {
+            currentPage = 1;
+            applyFilters();
+        });
+        dateRangeFilter.addEventListener("change", () => {
+            currentPage = 1;
+            applyFilters();
+        });
         refreshBtn.addEventListener("click", () => loadHistory(false));
-        exportBtn.addEventListener("click", exportCsv);
+        exportBtn.addEventListener("click", openExportConfirm);
+        exportConfirmYes.addEventListener("click", () => {
+            closeExportConfirm();
+            exportCsv();
+        });
+        exportConfirmNo.addEventListener("click", closeExportConfirm);
+        exportConfirmModal.addEventListener("click", (event) => {
+            if (event.target === exportConfirmModal) {
+                closeExportConfirm();
+            }
+        });
         themeToggleBtn.addEventListener("click", () => {
             const currentTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
             const nextTheme = currentTheme === "dark" ? "light" : "dark";
@@ -2202,6 +2629,10 @@
             }
         });
         document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && exportConfirmModal.classList.contains("open")) {
+                closeExportConfirm();
+                return;
+            }
             if (event.key === "Escape" && detailModal.classList.contains("open")) {
                 closeDetailModal();
             }

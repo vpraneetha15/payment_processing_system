@@ -2,8 +2,11 @@ package com.example.service;
 
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
@@ -29,11 +32,19 @@ public class PaymentService {
 
 private static final List<String> SUPPORTED_CURRENCIES = List.of("USD", "EUR", "GBP", "INR");
 private static final BigDecimal MAX_AMOUNT = new BigDecimal("1000000");
-private static final BigDecimal SEED_BALANCE = new BigDecimal("500000");
+private static final BigDecimal SEED_BALANCE = new BigDecimal("9999.00");
 
 private static final int VALIDATION_FAILURE_PCT = 4;
 private static final int NETWORK_FAILURE_PCT = 5;
 private static final int PROCESSING_FAILURE_PCT = 3;
+
+/** Exchange rates relative to USD (1 USD = X units of currency). */
+private static final Map<String, Double> USD_RATES = Map.of(
+    "USD", 1.0,
+    "EUR", 0.92,
+    "GBP", 0.79,
+    "INR", 83.5
+);
 
 private final Random random = new Random();
 
@@ -79,6 +90,9 @@ return save(payment);
 
 public int save(Payment payment) {
 
+    // Pre-process validation (throws IllegalArgumentException with user-friendly message)
+    validatePaymentInput(payment);
+
     if (payment.getId() == null || payment.getId().isBlank()) {
         payment.setId(UUID.randomUUID().toString());
     }
@@ -89,6 +103,9 @@ public int save(Payment payment) {
 	if (payment.getCreatedAt() == null) {
 		payment.setCreatedAt(LocalDateTime.now());
 	}
+    if (payment.getCurrency() != null) {
+        payment.setCurrency(payment.getCurrency().toUpperCase());
+    }
 
 	ensureAccountExists(payment.getSourceAccount(), payment.getCurrency());
 	ensureAccountExists(payment.getDestinationAccount(), payment.getCurrency());
@@ -101,6 +118,37 @@ public int save(Payment payment) {
 
 	return rowsAffected;
 
+}
+
+private void validatePaymentInput(Payment payment) {
+    List<String> errors = new ArrayList<>();
+
+    if (payment.getAmount() <= 0) {
+        errors.add("Amount must be greater than zero");
+    } else if (payment.getAmount() > MAX_AMOUNT.doubleValue()) {
+        errors.add("Amount exceeds the maximum limit of " + MAX_AMOUNT);
+    }
+
+    if (payment.getCurrency() == null || payment.getCurrency().isBlank()) {
+        errors.add("Currency is required");
+    } else if (!SUPPORTED_CURRENCIES.contains(payment.getCurrency().toUpperCase())) {
+        errors.add("Currency must be one of: " + String.join(", ", SUPPORTED_CURRENCIES));
+    }
+
+    if (payment.getSourceAccount() == null || payment.getSourceAccount().isBlank()) {
+        errors.add("Source account is required");
+    }
+    if (payment.getDestinationAccount() == null || payment.getDestinationAccount().isBlank()) {
+        errors.add("Destination account is required");
+    }
+    if (payment.getSourceAccount() != null && payment.getDestinationAccount() != null
+            && payment.getSourceAccount().equalsIgnoreCase(payment.getDestinationAccount())) {
+        errors.add("Source and destination accounts cannot be the same");
+    }
+
+    if (!errors.isEmpty()) {
+        throw new IllegalArgumentException(String.join("; ", errors));
+    }
 }
 
 
@@ -196,34 +244,52 @@ private boolean hasInsufficientFunds(Payment payment, Account source) {
 		return false;
 	}
 
-	if (!payment.getCurrency().equalsIgnoreCase(source.getCurrency())) {
-		return false;
-	}
+	// Convert payment amount to source account currency for comparison
+	double requiredInSourceCurrency = convertAmount(payment.getAmount(),
+			payment.getCurrency(), source.getCurrency());
 
-	return source.getBalance().compareTo(BigDecimal.valueOf(payment.getAmount())) < 0;
+	return source.getBalance().compareTo(BigDecimal.valueOf(requiredInSourceCurrency)) < 0;
 
 }
 
 
 private void settleFunds(Payment payment, Account source) {
 
-	if (source != null && payment.getCurrency() != null
-			&& payment.getCurrency().equalsIgnoreCase(source.getCurrency())) {
-
-		BigDecimal updatedBalance = source.getBalance().subtract(BigDecimal.valueOf(payment.getAmount()));
+	if (source != null && source.getCurrency() != null && payment.getCurrency() != null) {
+		// Convert payment amount into source account's currency before debiting
+		double debitAmount = convertAmount(payment.getAmount(),
+				payment.getCurrency(), source.getCurrency());
+		BigDecimal updatedBalance = source.getBalance()
+				.subtract(BigDecimal.valueOf(debitAmount).setScale(2, RoundingMode.HALF_UP));
 		source.setBalance(updatedBalance.max(BigDecimal.ZERO));
 		accountRepository.update(source);
 	}
 
 	Account destination = accountRepository.findById(payment.getDestinationAccount());
-	if (destination != null && payment.getCurrency() != null
-			&& payment.getCurrency().equalsIgnoreCase(destination.getCurrency())) {
-
-		BigDecimal updatedBalance = destination.getBalance().add(BigDecimal.valueOf(payment.getAmount()));
+	if (destination != null && destination.getCurrency() != null && payment.getCurrency() != null) {
+		// Convert payment amount into destination account's currency before crediting
+		double creditAmount = convertAmount(payment.getAmount(),
+				payment.getCurrency(), destination.getCurrency());
+		BigDecimal updatedBalance = destination.getBalance()
+				.add(BigDecimal.valueOf(creditAmount).setScale(2, RoundingMode.HALF_UP));
 		destination.setBalance(updatedBalance);
 		accountRepository.update(destination);
 	}
 
+}
+
+/**
+ * Converts an amount from one currency to another using fixed exchange rates.
+ * Conversion is done through a USD base: amount * (fromRate / toRate).
+ */
+public double convertAmount(double amount, String fromCurrency, String toCurrency) {
+	if (fromCurrency == null || toCurrency == null) return amount;
+	if (fromCurrency.equalsIgnoreCase(toCurrency)) return amount;
+	Double fromRate = USD_RATES.get(fromCurrency.toUpperCase());
+	Double toRate   = USD_RATES.get(toCurrency.toUpperCase());
+	if (fromRate == null || toRate == null) return amount;
+	return BigDecimal.valueOf(amount * fromRate / toRate)
+			.setScale(2, RoundingMode.HALF_UP).doubleValue();
 }
 
 

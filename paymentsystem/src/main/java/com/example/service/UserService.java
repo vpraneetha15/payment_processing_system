@@ -187,6 +187,9 @@ public class UserService {
         if (request.getOpeningBalance() == null || request.getOpeningBalance().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Opening balance must be 0 or more");
         }
+        if (request.getOpeningBalance().compareTo(new BigDecimal("9999999.99")) > 0) {
+            throw new IllegalArgumentException("Opening balance cannot exceed 9,999,999.99");
+        }
         if (isBlank(request.getPreferredCurrency())) {
             throw new IllegalArgumentException("Currency required");
         }
@@ -251,15 +254,13 @@ public class UserService {
 
     private String normalizeCardType(String cardType) {
         if (isBlank(cardType)) {
-            return "Debit Card";
+            return "Debit";
         }
-
         String value = cardType.trim();
-        if (!"Debit Card".equalsIgnoreCase(value) && !"Credit Card".equalsIgnoreCase(value)) {
-            throw new IllegalArgumentException("Card type must be Debit Card or Credit Card");
-        }
-
-        return "debit card".equalsIgnoreCase(value) ? "Debit Card" : "Credit Card";
+        // Accept both short form (Debit/Credit) and long form (Debit Card/Credit Card)
+        if (value.toLowerCase().startsWith("debit")) return "Debit";
+        if (value.toLowerCase().startsWith("credit")) return "Credit";
+        throw new IllegalArgumentException("Card type must be Debit or Credit");
     }
 
     private String normalizeCurrency(String currency) {

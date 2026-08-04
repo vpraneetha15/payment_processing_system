@@ -2,6 +2,8 @@ package com.example.model;
 
 import java.time.LocalDateTime;
 
+import org.jspecify.annotations.Nullable;
+
 public class Payment {
 
     private String id;
@@ -12,6 +14,7 @@ public class Payment {
     private String status;
     private LocalDateTime createdAt;
     private String errorCode;
+    private String paymentMode;
 
     public Payment() {
     }
@@ -95,6 +98,19 @@ public class Payment {
 
     public void setErrorCode(String errorCode) {
         this.errorCode = errorCode;
+    }
+
+    public String getPaymentMode1() {
+        return paymentMode;
+    }
+
+    public void setPaymentMode(String paymentMode) {
+        this.paymentMode = paymentMode;
+    }
+
+    public @Nullable Object getPaymentMode() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getPaymentMode'");
     }
 
 }
