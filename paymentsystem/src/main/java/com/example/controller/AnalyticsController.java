@@ -2,6 +2,7 @@ package com.example.controller;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,7 +30,7 @@ public class AnalyticsController {
     }
 
     @GetMapping("/overview")
-    public AnalyticsOverviewDTO getOverview(
+    public ResponseEntity<AnalyticsOverviewDTO> getOverview(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String currency,
             @RequestParam(required = false) String errorCode,
@@ -39,11 +40,11 @@ public class AnalyticsController {
             @RequestParam(required = false) Double maxAmount) {
 
         PaymentFilter filter = service.buildFilter(status, currency, errorCode, from, to, minAmount, maxAmount);
-        return service.getOverview(filter);
+        return ResponseEntity.ok(service.getOverview(filter));
     }
 
     @GetMapping("/status-distribution")
-    public List<StatusCountDTO> getStatusDistribution(
+    public ResponseEntity<List<StatusCountDTO>> getStatusDistribution(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String currency,
             @RequestParam(required = false) String errorCode,
@@ -53,11 +54,11 @@ public class AnalyticsController {
             @RequestParam(required = false) Double maxAmount) {
 
         PaymentFilter filter = service.buildFilter(status, currency, errorCode, from, to, minAmount, maxAmount);
-        return service.getStatusDistribution(filter);
+        return ResponseEntity.ok(service.getStatusDistribution(filter));
     }
 
     @GetMapping("/error-codes")
-    public List<ErrorCodeCountDTO> getErrorCodeBreakdown(
+    public ResponseEntity<List<ErrorCodeCountDTO>> getErrorCodeBreakdown(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String currency,
             @RequestParam(required = false) String errorCode,
@@ -67,11 +68,11 @@ public class AnalyticsController {
             @RequestParam(required = false) Double maxAmount) {
 
         PaymentFilter filter = service.buildFilter(status, currency, errorCode, from, to, minAmount, maxAmount);
-        return service.getErrorCodeBreakdown(filter);
+        return ResponseEntity.ok(service.getErrorCodeBreakdown(filter));
     }
 
     @GetMapping("/currency-volume")
-    public List<CurrencyVolumeDTO> getCurrencyVolume(
+    public ResponseEntity<List<CurrencyVolumeDTO>> getCurrencyVolume(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String currency,
             @RequestParam(required = false) String errorCode,
@@ -81,11 +82,11 @@ public class AnalyticsController {
             @RequestParam(required = false) Double maxAmount) {
 
         PaymentFilter filter = service.buildFilter(status, currency, errorCode, from, to, minAmount, maxAmount);
-        return service.getCurrencyVolume(filter);
+        return ResponseEntity.ok(service.getCurrencyVolume(filter));
     }
 
     @GetMapping("/trend")
-    public List<TrendPointDTO> getTrend(
+    public ResponseEntity<List<TrendPointDTO>> getTrend(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String currency,
             @RequestParam(required = false) String errorCode,
@@ -95,11 +96,11 @@ public class AnalyticsController {
             @RequestParam(required = false) Double maxAmount) {
 
         PaymentFilter filter = service.buildFilter(status, currency, errorCode, from, to, minAmount, maxAmount);
-        return service.getTrend(filter);
+        return ResponseEntity.ok(service.getTrend(filter));
     }
 
     @GetMapping("/payments")
-    public List<Payment> getFilteredPayments(
+    public ResponseEntity<List<Payment>> getFilteredPayments(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String currency,
             @RequestParam(required = false) String errorCode,
@@ -110,6 +111,6 @@ public class AnalyticsController {
             @RequestParam(defaultValue = "200") int limit) {
 
         PaymentFilter filter = service.buildFilter(status, currency, errorCode, from, to, minAmount, maxAmount);
-        return service.getFilteredPayments(filter, limit);
+        return ResponseEntity.ok(service.getFilteredPayments(filter, limit));
     }
 }
