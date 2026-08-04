@@ -1213,6 +1213,81 @@
             .theme-toggle.is-dark .toggle-thumb {
                 transform: translateX(40px);
             }
+
+            .table-wrap {
+                max-height: none;
+                overflow: visible;
+                padding: 8px;
+            }
+
+            table {
+                min-width: 0;
+                border-collapse: separate;
+                border-spacing: 0 10px;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tbody {
+                display: grid;
+                gap: 10px;
+            }
+
+            .summary-row {
+                display: block;
+                background: var(--card);
+                border: 1px solid var(--line);
+                border-radius: 12px;
+                padding: 8px 10px;
+                box-shadow: 0 8px 16px rgba(18, 44, 74, 0.08);
+            }
+
+            td {
+                display: grid;
+                grid-template-columns: 112px 1fr;
+                align-items: center;
+                gap: 8px;
+                border: 0;
+                padding: 6px 2px;
+                font-size: 0.82rem;
+            }
+
+            td::before {
+                content: attr(data-label);
+                color: var(--muted);
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                font-weight: 800;
+            }
+
+            td:last-child {
+                grid-template-columns: 1fr;
+            }
+
+            td:last-child::before {
+                display: none;
+            }
+
+            .action-btn {
+                width: 100%;
+                min-height: 36px;
+            }
+
+            .id {
+                max-width: none;
+            }
+
+            .loading,
+            .empty {
+                display: block;
+                border: 1px dashed var(--line);
+                border-radius: 12px;
+                background: var(--card);
+                margin: 6px;
+            }
         }
     </style>
 </head>
@@ -1834,14 +1909,14 @@
                 const summaryClass = "summary-row" + (selected ? " selected" : "") + (p.justUpdated ? " updated" : "");
                 rows.push(
                     "<tr class='" + summaryClass + "' data-id='" + p.paymentId + "'>"
-                    + "<td class='id'>" + p.paymentId + "</td>"
-                    + "<td class='id'>" + (p.accountNumber || "-") + "</td>"
-                    + "<td><span class='status-chip " + statusClass(p.latestStatus) + "'>" + p.latestStatus + "</span></td>"
-                    + "<td>" + p.eventsCount + "</td>"
-                    + "<td>" + formatDate(p.startedAt) + "</td>"
-                    + "<td>" + formatDate(p.updatedAt) + "</td>"
-                    + "<td>" + (p.processingMs == null ? "N/A" : durationText(p.processingMs).replace("Spent ", "")) + "</td>"
-                    + "<td><button type='button' class='action-btn' data-open='" + p.paymentId + "'>View</button></td>"
+                    + "<td class='id' data-label='Payment ID'>" + p.paymentId + "</td>"
+                    + "<td class='id' data-label='Account Number'>" + (p.accountNumber || "-") + "</td>"
+                    + "<td data-label='Latest Status'><span class='status-chip " + statusClass(p.latestStatus) + "'>" + p.latestStatus + "</span></td>"
+                    + "<td data-label='Events'>" + p.eventsCount + "</td>"
+                    + "<td data-label='Started At'>" + formatDate(p.startedAt) + "</td>"
+                    + "<td data-label='Last Updated'>" + formatDate(p.updatedAt) + "</td>"
+                    + "<td data-label='Processing Time'>" + (p.processingMs == null ? "N/A" : durationText(p.processingMs).replace("Spent ", "")) + "</td>"
+                    + "<td data-label='Action'><button type='button' class='action-btn' data-open='" + p.paymentId + "'>View</button></td>"
                     + "</tr>"
                 );
             }
