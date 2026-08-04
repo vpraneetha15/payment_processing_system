@@ -38,6 +38,10 @@ public class PaymentController {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", "INVALID_ACCOUNT",
                              "message", "Invalid account details. Ensure source and destination accounts exist."));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "PAYMENT_ERROR",
+                             "message", ex.getMessage() != null ? ex.getMessage() : "Unexpected error during payment processing"));
         }
     }
 

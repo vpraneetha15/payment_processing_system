@@ -113,7 +113,12 @@ public int save(Payment payment) {
 	int rowsAffected = repository.save(payment);
 	if (rowsAffected > 0) {
 		saveHistoryEntry(payment);
-		simulateProcessing(payment);
+		try {
+			simulateProcessing(payment);
+		} catch (Exception ex) {
+			// Processing failure must not roll back the created payment
+			markFailed(payment, "PROCESSING_ERROR", "Unexpected error: " + ex.getMessage());
+		}
 	}
 
 	return rowsAffected;
@@ -255,24 +260,26 @@ private boolean hasInsufficientFunds(Payment payment, Account source) {
 
 private void settleFunds(Payment payment, Account source) {
 
-	if (source != null && source.getCurrency() != null && payment.getCurrency() != null) {
+	if (source != null && source.getCurrency() != null && payment.getCurrency() != null
+			&& source.getBalance() != null) {
 		// Convert payment amount into source account's currency before debiting
 		double debitAmount = convertAmount(payment.getAmount(),
 				payment.getCurrency(), source.getCurrency());
 		BigDecimal updatedBalance = source.getBalance()
 				.subtract(BigDecimal.valueOf(debitAmount).setScale(2, RoundingMode.HALF_UP));
-		source.setBalance(updatedBalance.max(BigDecimal.ZERO));
+		source.setBalance(updatedBalance.max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP));
 		accountRepository.update(source);
 	}
 
 	Account destination = accountRepository.findById(payment.getDestinationAccount());
-	if (destination != null && destination.getCurrency() != null && payment.getCurrency() != null) {
+	if (destination != null && destination.getCurrency() != null && payment.getCurrency() != null
+			&& destination.getBalance() != null) {
 		// Convert payment amount into destination account's currency before crediting
 		double creditAmount = convertAmount(payment.getAmount(),
 				payment.getCurrency(), destination.getCurrency());
 		BigDecimal updatedBalance = destination.getBalance()
 				.add(BigDecimal.valueOf(creditAmount).setScale(2, RoundingMode.HALF_UP));
-		destination.setBalance(updatedBalance);
+		destination.setBalance(updatedBalance.setScale(2, RoundingMode.HALF_UP));
 		accountRepository.update(destination);
 	}
 

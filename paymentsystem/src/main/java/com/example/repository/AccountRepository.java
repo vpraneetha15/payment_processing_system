@@ -87,11 +87,12 @@ public class AccountRepository {
     }
 
     /**
-     * Returns the account_number linked to the given UPI ID (from user_upi),
-     * or null if not found / UPI is inactive.
+     * Returns the account_number linked to the given UPI ID (from upi_accounts).
+     * No active filter — there is no deactivation flow for UPI IDs.
+     * Case-insensitive match to handle mixed-case entries.
      */
     public String findAccountNumberByUpiId(String upiId) {
-        String sql = "select account_number from upi_accounts where upi_id = ? and active = true limit 1";
+        String sql = "select account_number from upi_accounts where lower(upi_id) = lower(?) limit 1";
         List<String> rows = jdbcTemplate.queryForList(sql, String.class, upiId);
         return rows.isEmpty() ? null : rows.get(0);
     }
