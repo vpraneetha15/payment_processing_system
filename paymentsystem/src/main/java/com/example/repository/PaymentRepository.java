@@ -29,15 +29,19 @@ public class PaymentRepository {
         try {
             jdbcTemplate.execute("alter table payments add column error_code varchar(50) null");
         } catch (Exception ex) {
-            // Column likely already exists, or the DB user lacks DDL privileges.
-            // Analytics queries fall back gracefully when the column is missing.
+            // Column likely already exists – ignore.
+        }
+        try {
+            jdbcTemplate.execute("alter table payments add column payment_mode varchar(30) null");
+        } catch (Exception ex) {
+            // Column likely already exists – ignore.
         }
     }
 
     public int save(Payment payment) {
 
         String sql =
-            "insert into payments(id,amount,currency,source_account,destination_account,status,error_code,created_at) values(?,?,?,?,?,?,?,?)";
+            "insert into payments(id,amount,currency,source_account,destination_account,status,error_code,payment_mode,created_at) values(?,?,?,?,?,?,?,?,?)";
 
         try {
             return jdbcTemplate.update(sql,
@@ -48,6 +52,7 @@ public class PaymentRepository {
                     payment.getDestinationAccount(),
                     payment.getStatus(),
                     payment.getErrorCode(),
+                    payment.getPaymentMode(),
                     payment.getCreatedAt());
         } catch (BadSqlGrammarException ex) {
             String fallbackSql =

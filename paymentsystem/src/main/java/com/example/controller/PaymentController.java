@@ -31,6 +31,9 @@ public class PaymentController {
         try {
             service.save(payment);
             return ResponseEntity.status(HttpStatus.CREATED).body(payment);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "VALIDATION_ERROR", "message", ex.getMessage()));
         } catch (DataIntegrityViolationException ex) {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", "INVALID_ACCOUNT",
@@ -81,5 +84,39 @@ public class PaymentController {
                 .body(Map.of("error", "PAYMENT_NOT_FOUND", "message", "Payment not found", "id", id));
         }
         return ResponseEntity.ok(Map.of("message", "Payment deleted successfully", "id", id));
+    }
+
+    /**
+     * Returns a currency conversion preview.
+     * Example: GET /payments/conversion-preview?from=USD&to=INR&amount=100
+     */
+    @GetMapping("/conversion-preview")
+    public ResponseEntity<?> getConversionPreview(
+            @RequestParam String from,
+            @RequestParam String to,
+            @RequestParam(defaultValue = "0") double amount) {
+
+        List<String> supported = List.of("USD", "EUR", "GBP", "INR");
+        if (!supported.contains(from.toUpperCase())) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "UNSUPPORTED_CURRENCY", "message", "Unsupported source currency: " + from));
+        }
+        if (!supported.contains(to.toUpperCase())) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "UNSUPPORTED_CURRENCY", "message", "Unsupported target currency: " + to));
+        }
+        if (amount <= 0) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "INVALID_AMOUNT", "message", "Amount must be greater than zero"));
+        }
+
+        double converted = service.convertAmount(amount, from, to);
+        return ResponseEntity.ok(Map.of(
+            "from", from.toUpperCase(),
+            "to", to.toUpperCase(),
+            "originalAmount", amount,
+            "convertedAmount", converted,
+            "sameCurrency", from.equalsIgnoreCase(to)
+        ));
     }
 }

@@ -40,5 +40,17 @@ public class AccountService {
 
 		return repository.delete(accountNumber);
 	}
+
+	public String findAccountByCardNumber(String cardNumber) {
+		return repository.findAccountNumberByCardNumber(cardNumber);
+	}
+
+	public String findAccountByUpiId(String upiId) {
+		return repository.findAccountNumberByUpiId(upiId);
+	}
+
+	public String findAccountByMobile(String mobileNumber) {
+		return repository.findAccountNumberByMobile(mobileNumber);
+	}
 }
 

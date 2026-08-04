@@ -12,6 +12,7 @@ public class Payment {
     private String status;
     private LocalDateTime createdAt;
     private String errorCode;
+    private String paymentMode;
 
     public Payment() {
     }
@@ -95,6 +96,14 @@ public class Payment {
 
     public void setErrorCode(String errorCode) {
         this.errorCode = errorCode;
+    }
+
+    public String getPaymentMode() {
+        return paymentMode;
+    }
+
+    public void setPaymentMode(String paymentMode) {
+        this.paymentMode = paymentMode;
     }
 
 }

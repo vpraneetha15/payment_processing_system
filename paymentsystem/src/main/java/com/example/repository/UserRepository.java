@@ -29,16 +29,16 @@ public class UserRepository {
 
     @PostConstruct
     public void ensureAuxiliaryTables() {
+        // Tables upi_accounts, cards, wallets are managed externally.
+        // These CREATE IF NOT EXISTS statements are safe fallbacks only.
         try {
             jdbcTemplate.execute("""
-                    create table if not exists user_upi (
-                        account_number varchar(30) primary key,
-                        upi_id varchar(120) not null unique,
-                        status varchar(20) not null default 'ACTIVE',
-                        created_at timestamp default current_timestamp,
+                    create table if not exists upi_accounts (
+                        upi_id varchar(100) primary key,
+                        account_number varchar(30) not null,
+                        active boolean default true,
                         constraint fk_upi_account foreign key (account_number)
                             references accounts(account_number)
-                            on delete cascade
                     )
                     """);
         } catch (Exception ignored) {
@@ -46,17 +46,15 @@ public class UserRepository {
 
         try {
             jdbcTemplate.execute("""
-                    create table if not exists user_cards (
-                        id bigint primary key auto_increment,
+                    create table if not exists cards (
+                        card_id int primary key auto_increment,
                         account_number varchar(30) not null,
-                        card_number varchar(16) not null unique,
-                        card_type varchar(20) not null,
-                        card_balance decimal(12,2) not null,
-                        active boolean not null default true,
-                        created_at timestamp default current_timestamp,
+                        card_number varchar(20) unique not null,
+                        card_type enum('Debit','Credit'),
+                        balance decimal(12,2),
+                        active boolean default true,
                         constraint fk_card_account foreign key (account_number)
                             references accounts(account_number)
-                            on delete cascade
                     )
                     """);
         } catch (Exception ignored) {
@@ -64,16 +62,14 @@ public class UserRepository {
 
         try {
             jdbcTemplate.execute("""
-                    create table if not exists user_wallets (
-                        id bigint primary key auto_increment,
+                    create table if not exists wallets (
+                        wallet_id int primary key auto_increment,
                         account_number varchar(30) not null,
-                        wallet_provider varchar(40) not null,
-                        wallet_id varchar(120) not null unique,
-                        active boolean not null default true,
-                        created_at timestamp default current_timestamp,
+                        provider varchar(50),
+                        wallet_identifier varchar(100) unique,
+                        active boolean default true,
                         constraint fk_wallet_account foreign key (account_number)
                             references accounts(account_number)
-                            on delete cascade
                     )
                     """);
         } catch (Exception ignored) {
@@ -92,9 +88,9 @@ public class UserRepository {
                        a.active as active,
                        a.created_at as createdAt,
                        u.upi_id as upiId,
-                       u.status as upiStatus
+                       case when u.active then 'ACTIVE' else 'INACTIVE' end as upiStatus
                 from accounts a
-                left join user_upi u on u.account_number = a.account_number
+                left join upi_accounts u on u.account_number = a.account_number
                 order by a.created_at desc
                 """;
 
@@ -112,9 +108,9 @@ public class UserRepository {
                            a.active as active,
                            a.created_at as createdAt,
                            u.upi_id as upiId,
-                           u.status as upiStatus
+                           case when u.active then 'ACTIVE' else 'INACTIVE' end as upiStatus
                     from accounts a
-                    left join user_upi u on u.account_number = a.account_number
+                    left join upi_accounts u on u.account_number = a.account_number
                     order by a.created_at desc
                     """;
             try {
@@ -131,9 +127,9 @@ public class UserRepository {
                                a.active as active,
                                null as createdAt,
                                u.upi_id as upiId,
-                               u.status as upiStatus
+                               case when u.active then 'ACTIVE' else 'INACTIVE' end as upiStatus
                         from accounts a
-                        left join user_upi u on u.account_number = a.account_number
+                        left join upi_accounts u on u.account_number = a.account_number
                         order by a.account_number desc
                         """;
                 try {
@@ -184,9 +180,9 @@ public class UserRepository {
                        a.active as active,
                        a.created_at as createdAt,
                        u.upi_id as upiId,
-                       u.status as upiStatus
+                       case when u.active then 'ACTIVE' else 'INACTIVE' end as upiStatus
                 from accounts a
-                left join user_upi u on u.account_number = a.account_number
+                left join upi_accounts u on u.account_number = a.account_number
                 where a.account_number = ?
                 """;
 
@@ -206,9 +202,9 @@ public class UserRepository {
                            a.active as active,
                            a.created_at as createdAt,
                            u.upi_id as upiId,
-                           u.status as upiStatus
+                           case when u.active then 'ACTIVE' else 'INACTIVE' end as upiStatus
                     from accounts a
-                    left join user_upi u on u.account_number = a.account_number
+                    left join upi_accounts u on u.account_number = a.account_number
                     where a.account_number = ?
                     """;
             try {
@@ -225,9 +221,9 @@ public class UserRepository {
                                a.active as active,
                                null as createdAt,
                                u.upi_id as upiId,
-                               u.status as upiStatus
+                               case when u.active then 'ACTIVE' else 'INACTIVE' end as upiStatus
                         from accounts a
-                        left join user_upi u on u.account_number = a.account_number
+                        left join upi_accounts u on u.account_number = a.account_number
                         where a.account_number = ?
                         """;
                 try {
@@ -332,7 +328,9 @@ public class UserRepository {
                     user.getFullName(),
                     user.getEmail(),
                     user.getMobileNumber(),
-                    user.getOpeningBalance(),
+                    user.getOpeningBalance() != null
+                            ? user.getOpeningBalance().setScale(2, java.math.RoundingMode.HALF_UP)
+                            : java.math.BigDecimal.ZERO,
                     user.getPreferredCurrency(),
                     user.getNotes(),
                     user.isActive(),
@@ -342,7 +340,9 @@ public class UserRepository {
             return jdbcTemplate.update(fallbackSql,
                     user.getAccountNumber(),
                     user.getFullName(),
-                    user.getOpeningBalance(),
+                    user.getOpeningBalance() != null
+                            ? user.getOpeningBalance().setScale(2, java.math.RoundingMode.HALF_UP)
+                            : java.math.BigDecimal.ZERO,
                     user.getPreferredCurrency(),
                     user.isActive());
         }
@@ -388,22 +388,22 @@ public class UserRepository {
 
     public int insertUpi(String accountNumber, String upiId, String status, LocalDateTime createdAt) {
         String sql = """
-                insert into user_upi(account_number, upi_id, status, created_at)
-                values(?,?,?,?)
+                insert into upi_accounts(upi_id, account_number, active)
+                values(?,?,?)
                 """;
-
-        return jdbcTemplate.update(sql, accountNumber, upiId, status, Timestamp.valueOf(createdAt));
+        boolean active = status == null || status.equalsIgnoreCase("ACTIVE");
+        return jdbcTemplate.update(sql, upiId, accountNumber, active);
     }
 
     public boolean existsCardNumber(String cardNumber) {
-        String sql = "select count(*) from user_cards where card_number = ?";
+        String sql = "select count(*) from cards where card_number = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, cardNumber);
         return count != null && count > 0;
     }
 
     public int insertCard(String accountNumber, String cardNumber, String cardType, BigDecimal cardBalance, boolean active) {
         String sql = """
-                insert into user_cards(account_number, card_number, card_type, card_balance, active)
+                insert into cards(account_number, card_number, card_type, balance, active)
                 values(?,?,?,?,?)
                 """;
 
@@ -412,30 +412,29 @@ public class UserRepository {
 
     public List<UserCard> findCardsByAccount(String accountNumber) {
         String sql = """
-                select id,
+                select card_id as id,
                        account_number as accountNumber,
                        card_number as cardNumber,
                        card_type as cardType,
-                       card_balance as cardBalance,
-                       active,
-                       created_at as createdAt
-                from user_cards
+                       balance as cardBalance,
+                       active
+                from cards
                 where account_number = ?
-                order by created_at desc
+                order by card_id desc
                 """;
 
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(UserCard.class), accountNumber);
     }
 
     public boolean existsWalletId(String walletId) {
-        String sql = "select count(*) from user_wallets where wallet_id = ?";
+        String sql = "select count(*) from wallets where wallet_identifier = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, walletId);
         return count != null && count > 0;
     }
 
     public int insertWallet(String accountNumber, String walletProvider, String walletId, boolean active) {
         String sql = """
-                insert into user_wallets(account_number, wallet_provider, wallet_id, active)
+                insert into wallets(account_number, provider, wallet_identifier, active)
                 values(?,?,?,?)
                 """;
 
@@ -444,15 +443,14 @@ public class UserRepository {
 
     public List<UserWallet> findWalletsByAccount(String accountNumber) {
         String sql = """
-                select id,
+                select wallet_id as id,
                        account_number as accountNumber,
-                       wallet_provider as walletProvider,
-                       wallet_id as walletId,
-                       active,
-                       created_at as createdAt
-                from user_wallets
+                       provider as walletProvider,
+                       wallet_identifier as walletId,
+                       active
+                from wallets
                 where account_number = ?
-                order by created_at desc
+                order by wallet_id desc
                 """;
 
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(UserWallet.class), accountNumber);

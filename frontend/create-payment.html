@@ -143,8 +143,8 @@
                                 <input type="radio" name="paymentMode" id="mode-bank" value="BANK_TRANSFER" class="mode-radio">
                                 <span class="mode-check material-icons-outlined" aria-hidden="true">check</span>
                                 <span class="mode-icon card-green"><span class="material-icons-outlined">account_balance</span></span>
-                                <span class="mode-name">Bank Transfer</span>
-                                <span class="mode-sub">SWIFT · SEPA · IFSC</span>
+                                <span class="mode-name">Account Transfer</span>
+                                <span class="mode-sub">Account · NEFT · RTGS</span>
                             </label>
 
                             <label class="mode-card" for="mode-wallet">
@@ -177,7 +177,7 @@
                             <div class="form-grid">
                                 <div class="field field-full">
                                     <label for="cardNumber">Card Number</label>
-                                    <input id="cardNumber" name="cardNumber" type="text" inputmode="numeric" maxlength="19" placeholder="1234  5678  9012  3456">
+                                    <input id="cardNumber" name="cardNumber" type="text" inputmode="numeric" maxlength="19" placeholder="1234 5678 9012 3456">
                                     <span class="field-hint">16-digit number on the front of your card</span>
                                 </div>
                                 <div class="field">
@@ -194,18 +194,18 @@
                         <div class="card form-card mode-extra-group" id="extra-BANK_TRANSFER">
                             <div class="card-header">
                                 <span class="mode-icon card-green" style="width:38px;height:38px"><span class="material-icons-outlined" style="font-size:20px">account_balance</span></span>
-                                <div><h2 class="card-title">Bank Details</h2><p class="card-sub">Provide the beneficiary bank information</p></div>
+                                <div><h2 class="card-title">Account Transfer Details</h2><p class="card-sub">Enter the source and destination account numbers below</p></div>
                             </div>
                             <div class="form-grid">
                                 <div class="field">
-                                    <label for="bankName">Bank Name</label>
-                                    <input id="bankName" name="bankName" type="text" maxlength="60" placeholder="e.g. HDFC Bank">
-                                    <span class="field-hint">Name of the destination bank</span>
+                                    <label for="transferBankName">Bank / Institution Name</label>
+                                    <input id="transferBankName" name="transferBankName" type="text" maxlength="60" placeholder="e.g. HDFC Bank">
+                                    <span class="field-hint">Optional: name of the receiving institution</span>
                                 </div>
                                 <div class="field">
-                                    <label for="routingCode">SWIFT / IFSC Code</label>
-                                    <input id="routingCode" name="routingCode" type="text" maxlength="20" placeholder="e.g. HDFCINBB">
-                                    <span class="field-hint">Bank routing or SWIFT/BIC code</span>
+                                    <label for="transferCode">NEFT / RTGS / IFSC Code</label>
+                                    <input id="transferCode" name="transferCode" type="text" maxlength="20" placeholder="e.g. HDFC0001234">
+                                    <span class="field-hint">Optional: bank routing or IFSC code</span>
                                 </div>
                             </div>
                         </div>
@@ -237,17 +237,30 @@
                         <div class="card form-card mode-extra-group" id="extra-MOBILE_PAYMENT">
                             <div class="card-header">
                                 <span class="mode-icon card-orange" style="width:38px;height:38px"><span class="material-icons-outlined" style="font-size:20px">smartphone</span></span>
-                                <div><h2 class="card-title">Mobile Payment Details</h2><p class="card-sub">Enter your mobile payment information</p></div>
+                                <div><h2 class="card-title">Mobile Payment Details</h2><p class="card-sub">UPI / QR / NFC payment information</p></div>
                             </div>
                             <div class="form-grid">
-                                <div class="field">
-                                    <label for="upiId">UPI ID</label>
-                                    <input id="upiId" name="upiId" type="text" maxlength="60" placeholder="e.g. name@upi">
-                                    <span class="field-hint">Registered UPI virtual payment address</span>
+                                <div class="field field-full">
+                                    <label for="senderUpiId">Your (Sender) UPI ID <span class="required-mark">*</span></label>
+                                    <input id="senderUpiId" name="senderUpiId" type="text" maxlength="80" placeholder="e.g. yourname@upi">
+                                    <span id="senderUpiStatus" class="field-hint">Enter your registered UPI ID — source account will be resolved automatically</span>
                                 </div>
                                 <div class="field">
-                                    <label for="mobilePhone">Mobile Number</label>
-                                    <input id="mobilePhone" name="mobilePhone" type="tel" maxlength="20" placeholder="e.g. +44 7911 123456">
+                                    <label for="upiReceiveBy">Send Money Via</label>
+                                    <select id="upiReceiveBy" name="upiReceiveBy">
+                                        <option value="UPI_ID">Receiver UPI ID</option>
+                                        <option value="MOBILE">Receiver Mobile Number</option>
+                                    </select>
+                                </div>
+                                <div class="field" id="receiverUpiIdField">
+                                    <label for="receiverUpiId">Receiver UPI ID <span class="required-mark">*</span></label>
+                                    <input id="receiverUpiId" name="receiverUpiId" type="text" maxlength="80" placeholder="e.g. receiver@upi">
+                                    <span id="receiverUpiStatus" class="field-hint">Destination account will be resolved automatically</span>
+                                </div>
+                                <div class="field" id="receiverMobileField" style="display:none">
+                                    <label for="receiverMobile">Receiver Mobile Number <span class="required-mark">*</span></label>
+                                    <input id="receiverMobile" name="receiverMobile" type="tel" maxlength="20" placeholder="e.g. +91 9876543210">
+                                    <span id="receiverMobileStatus" class="field-hint">Destination account will be resolved automatically</span>
                                 </div>
                             </div>
                         </div>
@@ -376,6 +389,14 @@
                     </div>
                 </div>
 
+                <div id="conversion-preview" class="card conversion-preview-card" style="display:none" aria-live="polite">
+                    <div style="display:flex;align-items:center;gap:0.5rem">
+                        <span class="material-icons-outlined" style="font-size:16px;color:var(--amber)">currency_exchange</span>
+                        <span style="font-size:0.82rem;font-weight:600;color:var(--text-2)">Auto Currency Conversion</span>
+                    </div>
+                    <p id="conv-text" style="font-size:0.8rem;color:var(--muted);margin-top:0.35rem"></p>
+                </div>
+
                 <div class="card tips-card">
                     <h4 class="tips-heading">
                         <span class="material-icons-outlined" style="font-size:16px;color:#f59e0b">lightbulb</span>
@@ -401,6 +422,7 @@
         const PAYMENT_API_URL = API_BASE_URL.replace(/\/$/, "") + "/payments";
 
         // ─── DOM ────────────────────────────────────────────────
+        const ACCOUNTS_API_URL = API_BASE_URL.replace(/\/$/, "") + "/accounts";
         const form = document.getElementById("create-payment-form");
         const apiError = document.getElementById("api-error");
         const formStatus = document.getElementById("form-status");
@@ -475,9 +497,9 @@
         // ─── Live Payment Summary ────────────────────────────
         const MODE_LABELS = {
             CARD: "Credit / Debit Card",
-            BANK_TRANSFER: "Bank Transfer",
+            BANK_TRANSFER: "Account Transfer",
             DIGITAL_WALLET: "Digital Wallet",
-            MOBILE_PAYMENT: "Mobile Payment"
+            MOBILE_PAYMENT: "Mobile Payment (UPI)"
         };
         function updateSummary() {
             const source = fields.sourceAccount.value.trim();
@@ -651,12 +673,189 @@
             return { paymentId: "Not returned by backend", status: (typeof body === "string" && body.trim()) ? body : "CREATED" };
         }
 
+        // ─── Account Lookup Helpers ──────────────────────────
+        let lookupDebounceTimers = {};
+
+        function debounce(fn, delay, key) {
+            if (lookupDebounceTimers[key]) clearTimeout(lookupDebounceTimers[key]);
+            lookupDebounceTimers[key] = setTimeout(fn, delay);
+        }
+
+        function setLookupStatus(el, type, msg) {
+            if (!el) return;
+            el.textContent = msg;
+            el.style.color = type === 'success' ? 'var(--green)' : type === 'error' ? 'var(--red)' : 'var(--muted)';
+        }
+
+        async function lookupAndFill(url, targetField, statusEl, emptyMsg) {
+            try {
+                const res = await fetch(url, { headers: { Accept: 'application/json' } });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    setLookupStatus(statusEl, 'error', err.message || emptyMsg);
+                    return;
+                }
+                const data = await res.json();
+                if (data.accountNumber) {
+                    targetField.value = data.accountNumber.toUpperCase();
+                    setLookupStatus(statusEl, 'success',
+                        '\u2713 Account resolved: ' + data.accountNumber +
+                        (data.currency ? ' (' + data.currency + ')' : ''));
+                    targetField.dispatchEvent(new Event('input'));
+                    updateConversionPreview();
+                }
+            } catch {
+                setLookupStatus(statusEl, 'error', 'Lookup failed — check server connection');
+            }
+        }
+
+        // ─── Currency Conversion Preview ────────────────────
+        let srcCurrency = null;
+        let dstCurrency = null;
+
+        async function fetchAccountCurrency(accountNumber) {
+            if (!accountNumber) return null;
+            try {
+                const res = await fetch(ACCOUNTS_API_URL + '/' + encodeURIComponent(accountNumber),
+                    { headers: { Accept: 'application/json' } });
+                if (!res.ok) return null;
+                const data = await res.json();
+                return data.currency || null;
+            } catch { return null; }
+        }
+
+        async function updateConversionPreview() {
+            const src = fields.sourceAccount.value.trim();
+            const dst = fields.destinationAccount.value.trim();
+            const amt = parseFloat(fields.amount.value);
+            const convEl = document.getElementById('conversion-preview');
+            if (!convEl) return;
+            if (!src || !dst || src === dst) { convEl.style.display = 'none'; return; }
+            srcCurrency = await fetchAccountCurrency(src);
+            dstCurrency = await fetchAccountCurrency(dst);
+            if (!srcCurrency || !dstCurrency || srcCurrency === dstCurrency) {
+                convEl.style.display = 'none'; return;
+            }
+            convEl.style.display = 'flex';
+            if (Number.isFinite(amt) && amt > 0) {
+                const paymentCurrency = fields.currency.value || srcCurrency;
+                try {
+                    const res = await fetch(
+                        PAYMENT_API_URL + '/conversion-preview?from=' + paymentCurrency +
+                        '&to=' + dstCurrency + '&amount=' + amt,
+                        { headers: { Accept: 'application/json' } });
+                    if (res.ok) {
+                        const d = await res.json();
+                        document.getElementById('conv-text').textContent =
+                            amt.toFixed(2) + ' ' + paymentCurrency + ' \u2192 ' +
+                            parseFloat(d.convertedAmount).toFixed(2) + ' ' + dstCurrency +
+                            ' (destination will receive converted amount)';
+                    }
+                } catch {}
+            } else {
+                document.getElementById('conv-text').textContent =
+                    'Currency conversion will be applied: ' + srcCurrency + ' \u2192 ' + dstCurrency;
+            }
+        }
+
+        // ─── Card Number Auto-Lookup ─────────────────────────
+        const cardNumberInput = document.getElementById('cardNumber');
+        if (cardNumberInput) {
+            cardNumberInput.addEventListener('input', function () {
+                // Format: add single space every 4 digits (1234 5678 9012 3456 = 19 chars, fits maxlength=19)
+                let raw = this.value.replace(/\D/g, '').slice(0, 16);
+                this.value = raw.match(/.{1,4}/g)?.join(' ') || raw;
+                if (raw.length === 16) {
+                    debounce(() => {
+                        const statusEl = document.querySelector('#extra-CARD .field-hint');
+                        lookupAndFill(
+                            ACCOUNTS_API_URL + '/by-card/' + encodeURIComponent(raw),
+                            fields.sourceAccount,
+                            statusEl,
+                            'Card not registered in the system'
+                        );
+                    }, 400, 'card');
+                }
+            });
+        }
+
+        // ─── UPI Sender/Receiver Lookups ─────────────────────
+        const senderUpiInput   = document.getElementById('senderUpiId');
+        const receiverUpiInput = document.getElementById('receiverUpiId');
+        const receiverMobInput = document.getElementById('receiverMobile');
+        const upiReceiveBy     = document.getElementById('upiReceiveBy');
+        const receiverUpiField  = document.getElementById('receiverUpiIdField');
+        const receiverMobField  = document.getElementById('receiverMobileField');
+
+        if (senderUpiInput) {
+            senderUpiInput.addEventListener('input', function () {
+                const val = this.value.trim();
+                const statusEl = document.getElementById('senderUpiStatus');
+                if (!val.includes('@')) {
+                    setLookupStatus(statusEl, 'info', 'Enter your registered UPI ID — source account will be resolved automatically');
+                    return;
+                }
+                debounce(() => lookupAndFill(
+                    ACCOUNTS_API_URL + '/by-upi/' + encodeURIComponent(val),
+                    fields.sourceAccount,
+                    statusEl,
+                    'UPI ID not registered in the system'
+                ), 600, 'senderUpi');
+            });
+        }
+
+        if (receiverUpiInput) {
+            receiverUpiInput.addEventListener('input', function () {
+                const val = this.value.trim();
+                const statusEl = document.getElementById('receiverUpiStatus');
+                if (!val.includes('@')) {
+                    setLookupStatus(statusEl, 'info', 'Destination account will be resolved automatically');
+                    return;
+                }
+                debounce(() => lookupAndFill(
+                    ACCOUNTS_API_URL + '/by-upi/' + encodeURIComponent(val),
+                    fields.destinationAccount,
+                    statusEl,
+                    'Receiver UPI ID not registered in the system'
+                ), 600, 'receiverUpi');
+            });
+        }
+
+        if (receiverMobInput) {
+            receiverMobInput.addEventListener('input', function () {
+                const val = this.value.trim();
+                const statusEl = document.getElementById('receiverMobileStatus');
+                const digits = val.replace(/\D/g, '');
+                if (digits.length < 7) {
+                    setLookupStatus(statusEl, 'info', 'Destination account will be resolved automatically');
+                    return;
+                }
+                debounce(() => lookupAndFill(
+                    ACCOUNTS_API_URL + '/by-mobile/' + encodeURIComponent(val),
+                    fields.destinationAccount,
+                    statusEl,
+                    'No account linked to this mobile number'
+                ), 700, 'receiverMobile');
+            });
+        }
+
+        if (upiReceiveBy) {
+            upiReceiveBy.addEventListener('change', function () {
+                const byUpi = this.value === 'UPI_ID';
+                receiverUpiField.style.display = byUpi ? '' : 'none';
+                receiverMobField.style.display  = byUpi ? 'none' : '';
+                // Clear destination when switching mode
+                fields.destinationAccount.value = '';
+                updateSummary();
+            });
+        }
+
         // ─── Event listeners ────────────────────────────────
-        fields.sourceAccount.addEventListener("input", () => { normalizeAccountInput(fields.sourceAccount); updateSummary(); });
-        fields.destinationAccount.addEventListener("input", () => { normalizeAccountInput(fields.destinationAccount); updateSummary(); });
-        fields.amount.addEventListener("input", () => { fields.amount.value = fields.amount.value.replace(/[^\d.]/g, ""); updateSummary(); });
+        fields.sourceAccount.addEventListener("input", () => { normalizeAccountInput(fields.sourceAccount); updateSummary(); updateConversionPreview(); });
+        fields.destinationAccount.addEventListener("input", () => { normalizeAccountInput(fields.destinationAccount); updateSummary(); updateConversionPreview(); });
+        fields.amount.addEventListener("input", () => { fields.amount.value = fields.amount.value.replace(/[^\d.]/g, ""); updateSummary(); updateConversionPreview(); });
         fields.reference.addEventListener("input", () => { updateReferenceCount(); updateSummary(); });
-        fields.currency.addEventListener("change", updateSummary);
+        fields.currency.addEventListener("change", () => { updateSummary(); updateConversionPreview(); });
 
         Object.keys(fields).forEach((n) => {
             fields[n].addEventListener("input", () => {

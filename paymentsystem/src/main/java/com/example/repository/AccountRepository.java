@@ -25,7 +25,9 @@ public class AccountRepository {
         return jdbcTemplate.update(sql,
             account.getAccountNumber(),
             account.getAccountName(),
-            account.getBalance(),
+            account.getBalance() != null
+                    ? account.getBalance().setScale(2, java.math.RoundingMode.HALF_UP)
+                    : java.math.BigDecimal.ZERO,
             account.getCurrency(),
             account.isActive());
     }
@@ -72,5 +74,35 @@ public class AccountRepository {
         String sql = "delete from accounts where account_number=?";
 
         return jdbcTemplate.update(sql, accountNumber);
+    }
+
+    /**
+     * Returns the account_number linked to the given card number (from user_cards),
+     * or null if not found / card is inactive.
+     */
+    public String findAccountNumberByCardNumber(String cardNumber) {
+        String sql = "select account_number from cards where card_number = ? and active = true limit 1";
+        List<String> rows = jdbcTemplate.queryForList(sql, String.class, cardNumber);
+        return rows.isEmpty() ? null : rows.get(0);
+    }
+
+    /**
+     * Returns the account_number linked to the given UPI ID (from user_upi),
+     * or null if not found / UPI is inactive.
+     */
+    public String findAccountNumberByUpiId(String upiId) {
+        String sql = "select account_number from upi_accounts where upi_id = ? and active = true limit 1";
+        List<String> rows = jdbcTemplate.queryForList(sql, String.class, upiId);
+        return rows.isEmpty() ? null : rows.get(0);
+    }
+
+    /**
+     * Returns the account_number whose mobile_number matches (from accounts),
+     * or null if not found / account is inactive.
+     */
+    public String findAccountNumberByMobile(String mobileNumber) {
+        String sql = "select account_number from accounts where mobile_number = ? and active = true limit 1";
+        List<String> rows = jdbcTemplate.queryForList(sql, String.class, mobileNumber);
+        return rows.isEmpty() ? null : rows.get(0);
     }
 }

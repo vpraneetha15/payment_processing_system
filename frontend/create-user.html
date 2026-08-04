@@ -96,6 +96,14 @@
                     </label>
 
                     <label>
+                        Card Type
+                        <select id="cardType">
+                            <option value="Debit">Debit</option>
+                            <option value="Credit">Credit</option>
+                        </select>
+                    </label>
+
+                    <label>
                         Card Balance
                         <input type="number" id="cardBalance" min="0" step="0.01" value="0">
                         <small class="error" id="cardBalanceError"></small>
@@ -405,7 +413,7 @@
 
             return {
                 cardNumber,
-                cardType: "Debit Card",
+                cardType: document.getElementById("cardType").value,
                 cardBalance
             };
         }

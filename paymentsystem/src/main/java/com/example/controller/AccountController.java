@@ -69,4 +69,63 @@ public class AccountController {
         }
         return ResponseEntity.ok(Map.of("message", "Account deleted successfully", "accountNumber", accountNumber));
     }
+
+    /** Resolve account number from a registered card number. */
+    @GetMapping("/by-card/{cardNumber}")
+    public ResponseEntity<?> findByCard(@PathVariable String cardNumber) {
+        String clean = cardNumber.replaceAll("[\\s\\-]", "");
+        if (clean.length() < 13 || clean.length() > 19) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "INVALID_CARD", "message", "Card number must be 13-19 digits"));
+        }
+        String accountNumber = service.findAccountByCardNumber(clean);
+        if (accountNumber == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "CARD_NOT_FOUND", "message", "No active account linked to this card number"));
+        }
+        Account account = service.findById(accountNumber);
+        return ResponseEntity.ok(Map.of(
+            "accountNumber", accountNumber,
+            "currency", account != null && account.getCurrency() != null ? account.getCurrency() : ""
+        ));
+    }
+
+    /** Resolve account number from a registered UPI ID. */
+    @GetMapping("/by-upi/{upiId}")
+    public ResponseEntity<?> findByUpi(@PathVariable String upiId) {
+        if (upiId == null || upiId.isBlank() || !upiId.contains("@")) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "INVALID_UPI", "message", "UPI ID must be in the format name@provider"));
+        }
+        String accountNumber = service.findAccountByUpiId(upiId);
+        if (accountNumber == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "UPI_NOT_FOUND", "message", "No active account linked to UPI ID: " + upiId));
+        }
+        Account account = service.findById(accountNumber);
+        return ResponseEntity.ok(Map.of(
+            "accountNumber", accountNumber,
+            "currency", account != null && account.getCurrency() != null ? account.getCurrency() : ""
+        ));
+    }
+
+    /** Resolve account number from a registered mobile number. */
+    @GetMapping("/by-mobile/{mobileNumber}")
+    public ResponseEntity<?> findByMobile(@PathVariable String mobileNumber) {
+        String clean = mobileNumber.replaceAll("[\\s\\-\\(\\)\\+]", "");
+        if (clean.length() < 7 || clean.length() > 15) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "INVALID_MOBILE", "message", "Mobile number must be 7-15 digits"));
+        }
+        String accountNumber = service.findAccountByMobile(mobileNumber);
+        if (accountNumber == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "MOBILE_NOT_FOUND", "message", "No active account linked to mobile: " + mobileNumber));
+        }
+        Account account = service.findById(accountNumber);
+        return ResponseEntity.ok(Map.of(
+            "accountNumber", accountNumber,
+            "currency", account != null && account.getCurrency() != null ? account.getCurrency() : ""
+        ));
+    }
 }
