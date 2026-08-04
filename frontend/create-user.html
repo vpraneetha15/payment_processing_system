@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payments Console | Create User</title>
+    <title>Payments Console | Customer Onboarding</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
             <span class="brand-dot"></span>
             <div>
                 <p class="brand-kicker">Payments Processing System</p>
-                <h1>Create User</h1>
+                <h1>Customer Onboarding</h1>
             </div>
         </div>
         <nav class="top-links" aria-label="Primary">
@@ -30,36 +30,44 @@
 
     <main class="layout">
         <section class="card card-form" aria-labelledby="form-title">
-            <h2 id="form-title">User Onboarding Form</h2>
+            <h2 id="form-title">Create User</h2>
 
             <div class="system-values" aria-live="polite">
-                <p><strong>Generated Account Number:</strong> <span id="generatedAccountNumber">-</span> <button type="button" id="copyAccountBtn" class="btn-mini">Copy</button></p>
-                <p><strong>Selected Opening Balance:</strong> <span id="generatedOpeningBalance">-</span></p>
+                <p><strong>Account Number:</strong> <span id="generatedAccountNumber">Generated in backend on create</span></p>
+                <p><strong>Status:</strong> ACTIVE</p>
+                <p><strong>UPI ID:</strong> <span id="generatedUpi">Generated on create</span></p>
             </div>
 
             <form id="createUserForm" novalidate>
+                <h3 class="section-title">Section 1: Personal Information</h3>
                 <div class="grid">
                     <label>
                         Full Name
-                        <input type="text" id="fullName" name="fullName" placeholder="e.g., Alex Morgan" maxlength="80" required>
+                        <input type="text" id="fullName" maxlength="80" required>
                         <small class="error" id="fullNameError"></small>
                     </label>
 
                     <label>
                         Email
-                        <input type="email" id="email" name="email" placeholder="name@example.com" maxlength="120" required>
+                        <input type="email" id="email" maxlength="120" required>
                         <small class="error" id="emailError"></small>
                     </label>
 
                     <label>
+                        Mobile Number
+                        <input type="text" id="mobileNumber" maxlength="10" inputmode="numeric" required>
+                        <small class="error" id="mobileNumberError"></small>
+                    </label>
+
+                    <label>
                         Opening Balance
-                        <input type="number" id="openingBalance" name="openingBalance" placeholder="0.00" min="0" step="0.01" required>
+                        <input type="number" id="openingBalance" min="0" step="0.01" required>
                         <small class="error" id="openingBalanceError"></small>
                     </label>
 
                     <label>
                         Preferred Currency
-                        <select id="preferredCurrency" name="preferredCurrency" required>
+                        <select id="preferredCurrency" required>
                             <option value="">Select currency</option>
                             <option value="USD">USD</option>
                             <option value="EUR">EUR</option>
@@ -71,26 +79,77 @@
 
                     <label class="grid-span-2">
                         Notes (Optional)
-                        <textarea id="notes" name="notes" rows="4" maxlength="240" placeholder="Add context for access setup, shift timing, or responsibilities."></textarea>
+                        <textarea id="notes" rows="3" maxlength="240"></textarea>
+                    </label>
+                </div>
+
+                <div class="actions left-actions quick-actions">
+                    <button type="button" id="addCardBtn" class="btn btn-ghost">Add Card</button>
+                    <button type="button" id="addWalletBtn" class="btn btn-ghost">Add Wallet</button>
+                </div>
+
+                <div id="cardFieldsSection" class="grid conditional-fields is-hidden">
+                    <label>
+                        Card Number
+                        <input type="text" id="cardNumber" maxlength="16" inputmode="numeric" placeholder="16 digits">
+                        <small class="error" id="cardNumberError"></small>
+                    </label>
+
+                    <label>
+                        Card Balance
+                        <input type="number" id="cardBalance" min="0" step="0.01" value="0">
+                        <small class="error" id="cardBalanceError"></small>
+                    </label>
+                </div>
+
+                <div id="walletFieldsSection" class="grid conditional-fields is-hidden">
+                    <label>
+                        Wallet Provider
+                        <select id="walletProvider">
+                            <option value="">Select provider</option>
+                            <option value="Google Pay">Google Pay</option>
+                            <option value="PhonePe">PhonePe</option>
+                            <option value="Paytm">Paytm</option>
+                            <option value="Amazon Pay">Amazon Pay</option>
+                            <option value="Apple Pay">Apple Pay</option>
+                        </select>
+                        <small class="error" id="walletProviderError"></small>
+                    </label>
+
+                    <label>
+                        Wallet ID
+                        <input type="text" id="walletId" maxlength="120" placeholder="wallet id">
+                        <small class="error" id="walletIdError"></small>
                     </label>
                 </div>
 
                 <div class="switches">
                     <label class="switch-row">
-                        <input type="checkbox" id="isActive" name="isActive" checked disabled>
-                        <span>Active user (default on create)</span>
+                        <input type="checkbox" id="isActive" checked disabled>
+                        <span>Active User (default)</span>
                     </label>
                 </div>
 
                 <label class="terms-row">
-                    <input type="checkbox" id="terms" name="terms" required>
-                    <span>I confirm the details are accurate for system onboarding.</span>
+                    <input type="checkbox" id="terms" required>
+                    <span>I confirm the details are accurate.</span>
                 </label>
                 <small class="error" id="termsError"></small>
 
+                <div class="list-split">
+                    <div>
+                        <h4 class="mini-title">Cards Added (<span id="cardCount">0</span>)</h4>
+                        <ul id="cardsDraftList" class="simple-list"></ul>
+                    </div>
+                    <div>
+                        <h4 class="mini-title">Wallets Added (<span id="walletCount">0</span>)</h4>
+                        <ul id="walletsDraftList" class="simple-list"></ul>
+                    </div>
+                </div>
+
                 <div class="actions">
                     <button type="button" id="clearBtn" class="btn btn-ghost">Clear</button>
-                    <button type="submit" class="btn btn-primary">Create User</button>
+                    <button type="submit" id="createBtn" class="btn btn-primary">Create User</button>
                 </div>
             </form>
         </section>
@@ -99,19 +158,23 @@
             <section class="card">
                 <h2>Live Preview</h2>
                 <div class="preview" id="previewCard">
-                    <p class="preview-name">New User</p>
-                    <p class="preview-line">Account No: <span id="previewAccountNumber">-</span></p>
+                    <p class="preview-name" id="previewName">New User</p>
+                    <p class="preview-line">Account No: <span id="previewAccountNumber">Will be generated</span></p>
                     <p class="preview-line">Email: <span id="previewEmail">-</span></p>
+                    <p class="preview-line">Mobile: <span id="previewMobile">-</span></p>
                     <p class="preview-line">Currency: <span id="previewCurrency">-</span></p>
                     <p class="preview-line">Opening Balance: <span id="previewBalance">-</span></p>
+                    <p class="preview-line">Default UPI: <span id="previewUpi">Will be generated</span></p>
+                    <p class="preview-line">Cards: <span id="previewCards">0</span></p>
+                    <p class="preview-line">Wallets: <span id="previewWallets">0</span></p>
                     <p class="preview-line">Status: <span id="previewStatus">Active</span></p>
                 </div>
             </section>
 
             <section class="card">
                 <div class="card-head">
-                    <h2>Recently Added Users <span id="userCount" class="count-pill">0</span></h2>
-                    <button id="clearUsersBtn" class="btn-link" type="button">Refresh</button>
+                    <h2>Recent Users <span id="userCount" class="count-pill">0</span></h2>
+                    <button id="refreshUsersBtn" class="btn-link" type="button">Refresh</button>
                 </div>
                 <input type="search" id="userSearch" class="search-input" placeholder="Search by account, name or email">
                 <ul id="userList" class="user-list" aria-live="polite"></ul>
@@ -129,488 +192,719 @@
             </div>
             <div class="modal-grid">
                 <p><strong>Account Number:</strong> <span id="modalAccountNumber">-</span></p>
-                <p><strong>Name:</strong> <span id="modalName">-</span></p>
-                <p><strong>Email:</strong> <span id="modalEmail">-</span></p>
-                <p><strong>Currency:</strong> <span id="modalCurrency">-</span></p>
+                <p><strong>Name:</strong> <input id="modalName" class="modal-input"></p>
+                <p><strong>Email:</strong> <input id="modalEmail" class="modal-input"></p>
+                <p><strong>Mobile:</strong> <input id="modalMobile" class="modal-input"></p>
+                <p><strong>Currency:</strong>
+                    <select id="modalCurrency" class="modal-input">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                        <option value="INR">INR</option>
+                    </select>
+                </p>
                 <p><strong>Opening Balance:</strong> <span id="modalBalance">-</span></p>
-                <p><strong>Status:</strong> <span id="modalStatus">-</span></p>
+                <p><strong>UPI ID:</strong> <span id="modalUpi">-</span></p>
+                <p><strong>Status:</strong> <label class="status-inline"><input type="checkbox" id="modalActive"> Active</label></p>
                 <p><strong>Created At:</strong> <span id="modalCreatedAt">-</span></p>
-                <p><strong>Notes:</strong> <span id="modalNotes">-</span></p>
+                <p class="modal-span-2"><strong>Notes:</strong> <textarea id="modalNotes" class="modal-input" rows="2"></textarea></p>
+                <p class="modal-span-2"><strong>Cards:</strong> <span id="modalCards">-</span></p>
+                <p class="modal-span-2"><strong>Wallets:</strong> <span id="modalWallets">-</span></p>
+            </div>
+            <div class="actions">
+                <button type="button" id="deactivateBtn" class="btn btn-ghost">Set Inactive</button>
+                <button type="button" id="saveUserBtn" class="btn btn-primary">Save Changes</button>
             </div>
         </div>
     </div>
 
-        <script>
-            const apiBaseUrl = "http://localhost:8080";
-            const accountPrefix = "ACC";
-            const accountDigits = 3;
+    <script>
+        const apiBaseUrl = "http://localhost:8080";
 
-            const form = document.getElementById("createUserForm");
-            const clearBtn = document.getElementById("clearBtn");
-            const clearUsersBtn = document.getElementById("clearUsersBtn");
-            const userList = document.getElementById("userList");
-            const userSearch = document.getElementById("userSearch");
-            const userCountEl = document.getElementById("userCount");
-            const toast = document.getElementById("toast");
-            const generatedAccountNumberEl = document.getElementById("generatedAccountNumber");
-            const copyAccountBtn = document.getElementById("copyAccountBtn");
-            const generatedOpeningBalanceEl = document.getElementById("generatedOpeningBalance");
-            const submitBtn = form.querySelector("button[type='submit']");
-            const userModal = document.getElementById("userModal");
-            const closeModalBtn = document.getElementById("closeModalBtn");
+        const form = document.getElementById("createUserForm");
+        const createBtn = document.getElementById("createBtn");
+        const clearBtn = document.getElementById("clearBtn");
+        const addCardBtn = document.getElementById("addCardBtn");
+        const addWalletBtn = document.getElementById("addWalletBtn");
+        const refreshUsersBtn = document.getElementById("refreshUsersBtn");
+        const toast = document.getElementById("toast");
 
-            let currentGeneratedAccountNumber = "";
-            let accountsCache = [];
-            const userMetaKey = "pps_user_meta";
+        const userSearch = document.getElementById("userSearch");
+        const userList = document.getElementById("userList");
+        const userCountEl = document.getElementById("userCount");
 
-            const fieldIds = ["fullName", "email", "openingBalance", "preferredCurrency", "terms"];
+        const cardsDraftList = document.getElementById("cardsDraftList");
+        const walletsDraftList = document.getElementById("walletsDraftList");
+        const cardCountEl = document.getElementById("cardCount");
+        const walletCountEl = document.getElementById("walletCount");
+        const cardFieldsSection = document.getElementById("cardFieldsSection");
+        const walletFieldsSection = document.getElementById("walletFieldsSection");
 
-            const previewMap = {
-                fullName: document.getElementById("previewCard").querySelector(".preview-name"),
-                accountNumber: document.getElementById("previewAccountNumber"),
-                email: document.getElementById("previewEmail"),
-                preferredCurrency: document.getElementById("previewCurrency"),
-                openingBalance: document.getElementById("previewBalance"),
-                isActive: document.getElementById("previewStatus")
+        const userModal = document.getElementById("userModal");
+        const closeModalBtn = document.getElementById("closeModalBtn");
+        const saveUserBtn = document.getElementById("saveUserBtn");
+        const deactivateBtn = document.getElementById("deactivateBtn");
+
+        let usersCache = [];
+        let cardsDraft = [];
+        let walletsDraft = [];
+        let selectedUserAccount = null;
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 2200);
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/\"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function formatDate(value) {
+            if (!value) {
+                return "-";
+            }
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                return "-";
+            }
+            return date.toLocaleString();
+        }
+
+        function formatBalance(currency, amount) {
+            const symbolMap = { USD: "$", EUR: "€", GBP: "£", INR: "₹" };
+            if (!currency) {
+                return "-";
+            }
+            return `${symbolMap[currency] || ""}${Number(amount || 0).toFixed(2)} ${currency}`;
+        }
+
+        function getAccountNumberRank(accountNumber) {
+            const match = String(accountNumber || "").match(/(\d+)$/);
+            return match ? Number.parseInt(match[1], 10) : 0;
+        }
+
+        function getRecentRank(user) {
+            const createdAt = user?.createdAt || user?.created_at;
+            const createdTime = createdAt ? new Date(createdAt).getTime() : Number.NaN;
+            if (Number.isFinite(createdTime)) {
+                return createdTime;
+            }
+            return 0;
+        }
+
+        function sortUsersLatestFirst(users) {
+            return [...users].sort((a, b) => {
+                const byRecent = getRecentRank(b) - getRecentRank(a);
+                if (byRecent !== 0) {
+                    return byRecent;
+                }
+                return getAccountNumberRank(b?.accountNumber) - getAccountNumberRank(a?.accountNumber);
+            });
+        }
+
+        function setError(id, message) {
+            const el = document.getElementById(id + "Error");
+            if (el) {
+                el.textContent = message || "";
+            }
+        }
+
+        function clearErrors() {
+            ["fullName", "email", "mobileNumber", "openingBalance", "preferredCurrency", "terms", "cardNumber", "cardBalance", "walletProvider", "walletId"].forEach((id) => setError(id, ""));
+        }
+
+        function normalizeDigits(text) {
+            return String(text || "").replace(/\D/g, "");
+        }
+
+        function isValidEmail(email) {
+            return /^\S+@\S+\.\S+$/.test(String(email || "").trim());
+        }
+
+        function validateForm() {
+            clearErrors();
+            let valid = true;
+
+            const fullName = document.getElementById("fullName").value.trim();
+            const email = document.getElementById("email").value.trim().toLowerCase();
+            const mobile = normalizeDigits(document.getElementById("mobileNumber").value);
+            const openingBalance = Number.parseFloat(document.getElementById("openingBalance").value || "0");
+            const currency = document.getElementById("preferredCurrency").value;
+            const terms = document.getElementById("terms").checked;
+
+            if (!fullName) {
+                setError("fullName", "Name required");
+                valid = false;
+            }
+            if (!email) {
+                setError("email", "Email required");
+                valid = false;
+            } else if (!isValidEmail(email)) {
+                setError("email", "Invalid email format");
+                valid = false;
+            } else if (usersCache.some((user) => String(user.email || "").toLowerCase() === email)) {
+                setError("email", "Email unique: this email already exists");
+                valid = false;
+            }
+
+            if (!mobile) {
+                setError("mobileNumber", "Mobile number required");
+                valid = false;
+            } else if (!/^\d{10}$/.test(mobile)) {
+                setError("mobileNumber", "Mobile number should contain 10 digits");
+                valid = false;
+            } else if (usersCache.some((user) => String(user.mobileNumber || "") === mobile)) {
+                setError("mobileNumber", "Mobile number unique: this mobile already exists");
+                valid = false;
+            }
+
+            if (!Number.isFinite(openingBalance) || openingBalance < 0) {
+                setError("openingBalance", "Opening balance >= 0");
+                valid = false;
+            }
+            if (!currency) {
+                setError("preferredCurrency", "Currency required");
+                valid = false;
+            }
+            if (!terms) {
+                setError("terms", "Confirmation required");
+                valid = false;
+            }
+
+            return valid;
+        }
+
+        function validateCardDraft() {
+            setError("cardNumber", "");
+            setError("cardBalance", "");
+            const cardNumber = normalizeDigits(document.getElementById("cardNumber").value);
+            const cardBalance = Number.parseFloat(document.getElementById("cardBalance").value || "0");
+
+            if (!cardNumber) {
+                setError("cardNumber", "Card number required");
+                return null;
+            }
+            if (!/^\d{16}$/.test(cardNumber)) {
+                setError("cardNumber", "Card number must contain 16 digits");
+                return null;
+            }
+            if (cardsDraft.some((card) => card.cardNumber === cardNumber)) {
+                setError("cardNumber", "Card number unique: already added");
+                return null;
+            }
+            if (!Number.isFinite(cardBalance) || cardBalance < 0) {
+                setError("cardBalance", "Card balance >= 0");
+                return null;
+            }
+
+            return {
+                cardNumber,
+                cardType: "Debit Card",
+                cardBalance
+            };
+        }
+
+        function showCardFields() {
+            cardFieldsSection.classList.remove("is-hidden");
+            walletFieldsSection.classList.add("is-hidden");
+            addCardBtn.textContent = "Save Card";
+            addWalletBtn.textContent = "Add Wallet";
+        }
+
+        function showWalletFields() {
+            walletFieldsSection.classList.remove("is-hidden");
+            cardFieldsSection.classList.add("is-hidden");
+            addWalletBtn.textContent = "Save Wallet";
+            addCardBtn.textContent = "Add Card";
+        }
+
+        function hideConditionalFields() {
+            cardFieldsSection.classList.add("is-hidden");
+            walletFieldsSection.classList.add("is-hidden");
+            addCardBtn.textContent = "Add Card";
+            addWalletBtn.textContent = "Add Wallet";
+            setError("cardNumber", "");
+            setError("cardBalance", "");
+            setError("walletProvider", "");
+            setError("walletId", "");
+        }
+
+        function validateWalletDraft() {
+            setError("walletProvider", "");
+            setError("walletId", "");
+
+            const walletProvider = document.getElementById("walletProvider").value;
+            const walletId = document.getElementById("walletId").value.trim();
+
+            if (!walletProvider) {
+                setError("walletProvider", "Wallet provider required");
+                return null;
+            }
+            if (!walletId) {
+                setError("walletId", "Wallet ID required");
+                return null;
+            }
+            if (walletsDraft.some((wallet) => wallet.walletId.toLowerCase() === walletId.toLowerCase())) {
+                setError("walletId", "Wallet ID unique: already added");
+                return null;
+            }
+
+            return { walletProvider, walletId };
+        }
+
+        function renderDraftLists() {
+            cardCountEl.textContent = String(cardsDraft.length);
+            walletCountEl.textContent = String(walletsDraft.length);
+
+            cardsDraftList.innerHTML = cardsDraft.length
+                ? cardsDraft.map((card, index) => `<li>${escapeHtml(card.cardType)} - ${escapeHtml(card.cardNumber)} - ${escapeHtml(String(card.cardBalance))} <button type="button" class="user-action" data-remove-card="${index}">Remove</button></li>`).join("")
+                : "<li>No cards added</li>";
+
+            walletsDraftList.innerHTML = walletsDraft.length
+                ? walletsDraft.map((wallet, index) => `<li>${escapeHtml(wallet.walletProvider)} - ${escapeHtml(wallet.walletId)} <button type="button" class="user-action" data-remove-wallet="${index}">Remove</button></li>`).join("")
+                : "<li>No wallets added</li>";
+
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const fullName = document.getElementById("fullName").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const mobile = normalizeDigits(document.getElementById("mobileNumber").value);
+            const currency = document.getElementById("preferredCurrency").value;
+            const openingBalance = Number.parseFloat(document.getElementById("openingBalance").value || "0");
+
+            document.getElementById("previewName").textContent = fullName || "New User";
+            document.getElementById("previewEmail").textContent = email || "-";
+            document.getElementById("previewMobile").textContent = mobile || "-";
+            document.getElementById("previewCurrency").textContent = currency || "-";
+            document.getElementById("previewBalance").textContent = currency ? formatBalance(currency, openingBalance) : "-";
+            document.getElementById("previewCards").textContent = String(cardsDraft.length);
+            document.getElementById("previewWallets").textContent = String(walletsDraft.length);
+        }
+
+        function setLoading(isLoading) {
+            createBtn.disabled = isLoading;
+            createBtn.textContent = isLoading ? "Creating..." : "Create User";
+            createBtn.classList.toggle("is-loading", isLoading);
+        }
+
+        async function fetchUsers() {
+            const response = await fetch(`${apiBaseUrl}/users`);
+            if (!response.ok) {
+                throw new Error("Failed to fetch users");
+            }
+            const responseBody = await response.json();
+            usersCache = sortUsersLatestFirst(Array.isArray(responseBody) ? responseBody : []);
+            renderUsers();
+        }
+
+        function renderUsers() {
+            usersCache = sortUsersLatestFirst(usersCache);
+            const query = userSearch.value.trim().toLowerCase();
+            const filtered = usersCache.filter((user) => {
+                if (!query) {
+                    return true;
+                }
+                return String(user.accountNumber || "").toLowerCase().includes(query)
+                    || String(user.fullName || "").toLowerCase().includes(query)
+                    || String(user.email || "").toLowerCase().includes(query);
+            });
+
+            const filteredSorted = sortUsersLatestFirst(filtered);
+
+            userCountEl.textContent = String(usersCache.length);
+
+            if (!filtered.length) {
+                userList.innerHTML = "<li>No users found.</li>";
+                return;
+            }
+
+            userList.innerHTML = filteredSorted.slice(0, 5).map((user) => `
+                <li>
+                    <div class="line-1">
+                        <span>${escapeHtml(user.accountNumber)} - ${escapeHtml(user.fullName)}</span>
+                        <span class="${user.active ? "badge" : "badge inactive"}">${user.active ? "Active" : "Inactive"}</span>
+                    </div>
+                    <div class="line-2">${escapeHtml(user.preferredCurrency || "-")} | ${escapeHtml(user.upiId || "-")}</div>
+                    <div class="user-actions-row">
+                        <button type="button" class="user-action" data-user="${escapeHtml(user.accountNumber)}">View Details</button>
+                    </div>
+                </li>
+            `).join("");
+        }
+
+        async function createUser(payload) {
+            const response = await fetch(`${apiBaseUrl}/users`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(body.message || "User creation failed");
+            }
+            return body;
+        }
+
+        async function addCard(accountNumber, payload) {
+            const response = await fetch(`${apiBaseUrl}/users/${encodeURIComponent(accountNumber)}/cards`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) {
+                const body = await response.json().catch(() => ({}));
+                throw new Error(body.message || "Card creation failed");
+            }
+        }
+
+        async function addWallet(accountNumber, payload) {
+            const response = await fetch(`${apiBaseUrl}/users/${encodeURIComponent(accountNumber)}/wallets`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) {
+                const body = await response.json().catch(() => ({}));
+                throw new Error(body.message || "Wallet creation failed");
+            }
+        }
+
+        async function loadUserDetails(accountNumber) {
+            const [userResponse, cardsResponse, walletsResponse] = await Promise.all([
+                fetch(`${apiBaseUrl}/users/${encodeURIComponent(accountNumber)}`),
+                fetch(`${apiBaseUrl}/users/${encodeURIComponent(accountNumber)}/cards`),
+                fetch(`${apiBaseUrl}/users/${encodeURIComponent(accountNumber)}/wallets`)
+            ]);
+
+            if (!userResponse.ok) {
+                throw new Error("Could not load user details");
+            }
+
+            const user = await userResponse.json();
+            const cards = cardsResponse.ok ? await cardsResponse.json() : [];
+            const wallets = walletsResponse.ok ? await walletsResponse.json() : [];
+
+            selectedUserAccount = accountNumber;
+            document.getElementById("modalAccountNumber").textContent = user.accountNumber || "-";
+            document.getElementById("modalName").value = user.fullName || "";
+            document.getElementById("modalEmail").value = user.email || "";
+            document.getElementById("modalMobile").value = user.mobileNumber || "";
+            document.getElementById("modalCurrency").value = user.preferredCurrency || "USD";
+            document.getElementById("modalBalance").textContent = formatBalance(user.preferredCurrency, user.openingBalance);
+            document.getElementById("modalUpi").textContent = user.upiId || "-";
+            document.getElementById("modalActive").checked = Boolean(user.active);
+            document.getElementById("modalCreatedAt").textContent = formatDate(user.createdAt);
+            document.getElementById("modalNotes").value = user.notes || "";
+            document.getElementById("modalCards").textContent = Array.isArray(cards) && cards.length
+                ? cards.map((card) => `${card.cardType} (${card.cardNumber})`).join(", ")
+                : "-";
+            document.getElementById("modalWallets").textContent = Array.isArray(wallets) && wallets.length
+                ? wallets.map((wallet) => `${wallet.walletProvider} (${wallet.walletId})`).join(", ")
+                : "-";
+
+            userModal.classList.add("show");
+            userModal.setAttribute("aria-hidden", "false");
+        }
+
+        async function saveUserUpdates() {
+            if (!selectedUserAccount) {
+                return;
+            }
+            const payload = {
+                fullName: document.getElementById("modalName").value.trim(),
+                email: document.getElementById("modalEmail").value.trim(),
+                mobileNumber: normalizeDigits(document.getElementById("modalMobile").value),
+                preferredCurrency: document.getElementById("modalCurrency").value,
+                notes: document.getElementById("modalNotes").value.trim(),
+                active: document.getElementById("modalActive").checked
             };
 
-            function showToast(message) {
-                toast.textContent = message;
-                toast.classList.add("show");
-                window.setTimeout(() => {
-                    toast.classList.remove("show");
-                }, 2200);
+            const response = await fetch(`${apiBaseUrl}/users/${encodeURIComponent(selectedUserAccount)}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(body.message || "Update failed");
             }
 
-            function setError(id, message) {
-                const el = document.getElementById(`${id}Error`);
-                if (el) {
-                    el.textContent = message;
+            showToast("User updated successfully.");
+            await fetchUsers();
+        }
+
+        async function setUserStatus(active) {
+            if (!selectedUserAccount) {
+                return;
+            }
+
+            const response = await fetch(`${apiBaseUrl}/users/${encodeURIComponent(selectedUserAccount)}/status`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ active })
+            });
+
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(body.message || "Status update failed");
+            }
+
+            showToast(active ? "User activated." : "User set to inactive.");
+            await fetchUsers();
+            await loadUserDetails(selectedUserAccount);
+        }
+
+        function resetForm() {
+            form.reset();
+            cardsDraft = [];
+            walletsDraft = [];
+            clearErrors();
+            hideConditionalFields();
+            renderDraftLists();
+            updatePreview();
+            updateCreateEnabled();
+        }
+
+        function updateCreateEnabled() {
+            createBtn.disabled = !validateFormPreviewOnly();
+        }
+
+        function validateFormPreviewOnly() {
+            const fullName = document.getElementById("fullName").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const mobile = normalizeDigits(document.getElementById("mobileNumber").value);
+            const openingBalance = Number.parseFloat(document.getElementById("openingBalance").value || "0");
+            const currency = document.getElementById("preferredCurrency").value;
+            const terms = document.getElementById("terms").checked;
+            if (!fullName) return false;
+            if (!email || !isValidEmail(email)) return false;
+            if (!/^\d{10}$/.test(mobile)) return false;
+            if (!Number.isFinite(openingBalance) || openingBalance < 0) return false;
+            if (!currency) return false;
+            if (!terms) return false;
+            return true;
+        }
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (!validateForm()) {
+                showToast("Please fix validation errors.");
+                return;
+            }
+
+            const payload = {
+                fullName: document.getElementById("fullName").value.trim(),
+                email: document.getElementById("email").value.trim(),
+                mobileNumber: normalizeDigits(document.getElementById("mobileNumber").value),
+                openingBalance: Number.parseFloat(document.getElementById("openingBalance").value || "0"),
+                preferredCurrency: document.getElementById("preferredCurrency").value,
+                notes: document.getElementById("notes").value.trim(),
+                active: true
+            };
+
+            setLoading(true);
+            try {
+                const createdUser = await createUser(payload);
+
+                for (const card of cardsDraft) {
+                    await addCard(createdUser.accountNumber, card);
                 }
-            }
 
-            function clearErrors() {
-                fieldIds.forEach((id) => setError(id, ""));
-            }
-
-            function formatBalance(currency, amount) {
-                if (!currency) {
-                    return "-";
+                for (const wallet of walletsDraft) {
+                    await addWallet(createdUser.accountNumber, wallet);
                 }
-                const symbolMap = {
-                    INR: "₹",
-                    USD: "$",
-                    EUR: "€",
-                    GBP: "£"
-                };
-                const symbol = symbolMap[String(currency).toUpperCase()] || "";
-                return `${symbol}${Number(amount).toFixed(2)} ${currency}`;
-            }
 
-            function getUserMeta() {
+                document.getElementById("generatedAccountNumber").textContent = createdUser.accountNumber;
+                document.getElementById("generatedUpi").textContent = createdUser.upiId || "-";
+                document.getElementById("previewAccountNumber").textContent = createdUser.accountNumber;
+                document.getElementById("previewUpi").textContent = createdUser.upiId || "-";
+
+                showToast(`User created: ${createdUser.accountNumber}`);
+
                 try {
-                    const raw = localStorage.getItem(userMetaKey);
-                    return raw ? JSON.parse(raw) : {};
+                    await fetchUsers();
                 } catch (_error) {
-                    return {};
+                    usersCache = [createdUser, ...usersCache.filter((u) => u.accountNumber !== createdUser.accountNumber)];
+                    usersCache = sortUsersLatestFirst(usersCache);
+                    renderUsers();
+                    showToast("User created, but unable to fetch latest users right now.");
                 }
-            }
 
-            function saveUserMeta(meta) {
-                localStorage.setItem(userMetaKey, JSON.stringify(meta));
-            }
-
-            function escapeHtml(text) {
-                const map = {
-                    "&": "&amp;",
-                    "<": "&lt;",
-                    ">": "&gt;",
-                    '"': "&quot;",
-                    "'": "&#039;"
-                };
-                return String(text).replace(/[&<>"']/g, (char) => map[char]);
-            }
-
-            function getNextAccountNumber(accounts) {
-                const maxFromAccounts = accounts.reduce((max, account) => {
-                    const value = String(account.accountNumber || "").trim();
-                    const pattern = new RegExp(`^${accountPrefix}(\\d{${accountDigits}})$`);
-                    const match = value.match(pattern);
-                    if (!match) {
-                        return max;
-                    }
-
-                    const numeric = Number(match[1]);
-                    return Number.isNaN(numeric) ? max : Math.max(max, numeric);
-                }, 0);
-
-                const nextNumber = maxFromAccounts + 1;
-                return `${accountPrefix}${String(nextNumber).padStart(accountDigits, "0")}`;
-            }
-
-            function regenerateAccountNumber() {
-                currentGeneratedAccountNumber = getNextAccountNumber(accountsCache);
-                generatedAccountNumberEl.textContent = currentGeneratedAccountNumber;
-            }
-
-            function formatCreatedAt(value) {
-                if (!value) {
-                    return "-";
+                try {
+                    await loadUserDetails(createdUser.accountNumber);
+                } catch (_error) {
+                    showToast("User created. Could not open details popup.");
                 }
-                const d = new Date(value);
-                if (Number.isNaN(d.getTime())) {
-                    return "-";
-                }
-                return d.toLocaleString();
+
+                resetForm();
+            } catch (error) {
+                showToast(error.message || "User creation failed.");
+            } finally {
+                setLoading(false);
+                updateCreateEnabled();
+            }
+        });
+
+        addCardBtn.addEventListener("click", () => {
+            if (cardFieldsSection.classList.contains("is-hidden")) {
+                showCardFields();
+                return;
             }
 
-            function openUserModal(account) {
-                const createdAt = account.createdAt || account.created_at;
-                document.getElementById("modalAccountNumber").textContent = account.accountNumber || "-";
-                document.getElementById("modalName").textContent = account.accountName || "-";
-                document.getElementById("modalEmail").textContent = account.email || "-";
-                document.getElementById("modalCurrency").textContent = account.currency || "-";
-                document.getElementById("modalBalance").textContent = formatBalance(account.currency, account.balance || 0);
-                document.getElementById("modalStatus").textContent = account.active ? "Active" : "Inactive";
-                document.getElementById("modalCreatedAt").textContent = formatCreatedAt(createdAt);
-                document.getElementById("modalNotes").textContent = account.notes || "-";
-                userModal.classList.add("show");
-                userModal.setAttribute("aria-hidden", "false");
+            const card = validateCardDraft();
+            if (!card) {
+                return;
+            }
+            cardsDraft.push(card);
+            document.getElementById("cardNumber").value = "";
+            document.getElementById("cardBalance").value = "0";
+            hideConditionalFields();
+            renderDraftLists();
+            showToast("Card added to draft list.");
+        });
+
+        addWalletBtn.addEventListener("click", () => {
+            if (walletFieldsSection.classList.contains("is-hidden")) {
+                showWalletFields();
+                return;
             }
 
-            function closeUserModal() {
+            const wallet = validateWalletDraft();
+            if (!wallet) {
+                return;
+            }
+            walletsDraft.push(wallet);
+            document.getElementById("walletProvider").value = "";
+            document.getElementById("walletId").value = "";
+            hideConditionalFields();
+            renderDraftLists();
+            showToast("Wallet added to draft list.");
+        });
+
+        cardsDraftList.addEventListener("click", (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLElement)) {
+                return;
+            }
+            const indexValue = target.getAttribute("data-remove-card");
+            if (indexValue == null) {
+                return;
+            }
+            const index = Number(indexValue);
+            if (Number.isInteger(index) && index >= 0 && index < cardsDraft.length) {
+                cardsDraft.splice(index, 1);
+                renderDraftLists();
+            }
+        });
+
+        walletsDraftList.addEventListener("click", (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLElement)) {
+                return;
+            }
+            const indexValue = target.getAttribute("data-remove-wallet");
+            if (indexValue == null) {
+                return;
+            }
+            const index = Number(indexValue);
+            if (Number.isInteger(index) && index >= 0 && index < walletsDraft.length) {
+                walletsDraft.splice(index, 1);
+                renderDraftLists();
+            }
+        });
+
+        userList.addEventListener("click", async (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLElement)) {
+                return;
+            }
+            const accountNumber = target.getAttribute("data-user");
+            if (!accountNumber) {
+                return;
+            }
+
+            try {
+                await loadUserDetails(accountNumber);
+            } catch (error) {
+                showToast(error.message || "Unable to load user details.");
+            }
+        });
+
+        saveUserBtn.addEventListener("click", async () => {
+            try {
+                await saveUserUpdates();
+            } catch (error) {
+                showToast(error.message || "Update failed.");
+            }
+        });
+
+        deactivateBtn.addEventListener("click", async () => {
+            try {
+                await setUserStatus(false);
+            } catch (error) {
+                showToast(error.message || "Could not change status.");
+            }
+        });
+
+        closeModalBtn.addEventListener("click", () => {
+            userModal.classList.remove("show");
+            userModal.setAttribute("aria-hidden", "true");
+        });
+
+        userModal.addEventListener("click", (event) => {
+            if (event.target === userModal) {
                 userModal.classList.remove("show");
                 userModal.setAttribute("aria-hidden", "true");
             }
+        });
 
-            function refreshPreview() {
-                const fullName = document.getElementById("fullName").value.trim();
-                const email = document.getElementById("email").value.trim();
-                const preferredCurrency = document.getElementById("preferredCurrency").value;
-                const balanceInput = document.getElementById("openingBalance").value;
-                const balance = balanceInput === "" ? 0 : Number.parseFloat(balanceInput);
-                const safeBalance = Number.isNaN(balance) ? 0 : balance;
-
-                generatedOpeningBalanceEl.textContent = formatBalance(preferredCurrency, safeBalance);
-                previewMap.fullName.textContent = fullName || "New User";
-                previewMap.accountNumber.textContent = currentGeneratedAccountNumber || "-";
-                previewMap.email.textContent = email || "-";
-                previewMap.preferredCurrency.textContent = preferredCurrency || "-";
-                previewMap.openingBalance.textContent = formatBalance(preferredCurrency, safeBalance);
-                previewMap.isActive.textContent = "Active";
+        refreshUsersBtn.addEventListener("click", async () => {
+            try {
+                await fetchUsers();
+                showToast("User list refreshed.");
+            } catch (_error) {
+                showToast("Failed to refresh users.");
             }
+        });
 
-            function renderUserList() {
-                const query = userSearch.value.trim().toLowerCase();
-                const filtered = accountsCache.filter((account) => {
-                    if (!query) {
-                        return true;
-                    }
-                    return String(account.accountNumber || "").toLowerCase().includes(query)
-                        || String(account.accountName || "").toLowerCase().includes(query)
-                        || String(account.email || "").toLowerCase().includes(query);
-                });
+        clearBtn.addEventListener("click", () => {
+            resetForm();
+            showToast("Form cleared.");
+        });
 
-                userCountEl.textContent = String(accountsCache.length);
-
-                if (!filtered.length) {
-                    userList.innerHTML = "<li>No users/accounts found in database yet.</li>";
-                    return;
+        ["input", "change"].forEach((eventName) => {
+            form.addEventListener(eventName, (event) => {
+                if (event.target && event.target.id === "mobileNumber") {
+                    event.target.value = normalizeDigits(event.target.value).slice(0, 10);
                 }
-
-                const latest = filtered.slice(0, 5);
-
-                userList.innerHTML = latest
-                    .map((account) => {
-                        const badgeClass = account.active ? "badge" : "badge inactive";
-                        const badgeText = account.active ? "Active" : "Inactive";
-
-                        return `
-                            <li>
-                                <div class="line-1">
-                                    <span>${escapeHtml(account.accountName)} (${escapeHtml(account.accountNumber)})</span>
-                                    <span class="${badgeClass}">${badgeText}</span>
-                                </div>
-                                <div class="line-2">${escapeHtml(account.email || "No email")}</div>
-                                <div class="line-2">${formatBalance(account.currency, account.balance)}</div>
-                                <div class="user-actions-row">
-                                    <button type="button" class="user-action" data-copy="${escapeHtml(account.accountNumber)}">Copy Account</button>
-                                    <button type="button" class="user-action" data-view="${escapeHtml(account.accountNumber)}">View Details</button>
-                                </div>
-                            </li>
-                        `;
-                    })
-                    .join("");
-            }
-
-            async function fetchAccounts() {
-                const response = await fetch(`${apiBaseUrl}/accounts`);
-                if (!response.ok) {
-                    throw new Error(`Failed to load accounts (${response.status})`);
-                }
-
-                const data = await response.json();
-                const accountList = Array.isArray(data) ? data : [];
-                const metaMap = getUserMeta();
-                accountsCache = accountList.map((account) => {
-                    const meta = metaMap[account.accountNumber] || {};
-                    return {
-                        ...account,
-                        email: meta.email || "",
-                        notes: meta.notes || "",
-                        createdAt: account.createdAt || account.created_at || meta.createdAt || ""
-                    };
-                });
-                regenerateAccountNumber();
-                renderUserList();
-                refreshPreview();
-                updateCreateButtonState();
-            }
-
-            function formToRequestPayload() {
-                const preferredCurrency = document.getElementById("preferredCurrency").value;
-                const balanceValue = document.getElementById("openingBalance").value;
-                const parsedBalance = Number.parseFloat(balanceValue || "0");
-
-                return {
-                    accountNumber: currentGeneratedAccountNumber,
-                    accountName: document.getElementById("fullName").value.trim(),
-                    balance: Number.isNaN(parsedBalance) ? 0 : parsedBalance,
-                    currency: preferredCurrency,
-                    active: true
-                };
-            }
-
-            function validate(payload) {
-                let isValid = true;
-
-                if (!payload.accountName || payload.accountName.trim().length < 3) {
-                    setError("fullName", "Name required (minimum 3 characters).");
-                    isValid = false;
-                }
-
-                const email = document.getElementById("email").value.trim();
-                if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-                    setError("email", "Invalid email.");
-                    isValid = false;
-                }
-
-                const duplicateEmail = accountsCache.some((account) =>
-                    String(account.email || "").toLowerCase() === email.toLowerCase()
-                );
-                if (email && duplicateEmail) {
-                    setError("email", "Email already exists.");
-                    isValid = false;
-                }
-
-                if (!payload.currency) {
-                    setError("preferredCurrency", "Currency required.");
-                    isValid = false;
-                }
-
-                if (Number.isNaN(payload.balance) || payload.balance < 0) {
-                    setError("openingBalance", "Balance cannot be negative.");
-                    isValid = false;
-                }
-
-                const termsAccepted = document.getElementById("terms").checked;
-                if (!termsAccepted) {
-                    setError("terms", "Please confirm details before creating user.");
-                    isValid = false;
-                }
-
-                return isValid;
-            }
-
-            function isFormSubmittable() {
-                const payload = formToRequestPayload();
-                const email = document.getElementById("email").value.trim();
-                const termsAccepted = document.getElementById("terms").checked;
-                if (!payload.accountName || payload.accountName.trim().length < 3) {
-                    return false;
-                }
-                if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-                    return false;
-                }
-                const duplicateEmail = accountsCache.some((account) =>
-                    String(account.email || "").toLowerCase() === email.toLowerCase()
-                );
-                if (duplicateEmail) {
-                    return false;
-                }
-                if (!payload.currency) {
-                    return false;
-                }
-                if (Number.isNaN(payload.balance) || payload.balance < 0) {
-                    return false;
-                }
-                if (!termsAccepted) {
-                    return false;
-                }
-                return true;
-            }
-
-            function updateCreateButtonState() {
-                submitBtn.disabled = !isFormSubmittable();
-            }
-
-            function setLoadingState(isLoading) {
-                submitBtn.disabled = isLoading;
-                submitBtn.textContent = isLoading ? "Creating..." : "Create User";
-                submitBtn.classList.toggle("is-loading", isLoading);
-            }
-
-            function resetForm() {
-                form.reset();
-                document.getElementById("isActive").checked = true;
-                clearErrors();
-                refreshPreview();
-                updateCreateButtonState();
-            }
-
-            async function createAccount(payload) {
-                const response = await fetch(`${apiBaseUrl}/accounts`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    const text = await response.text();
-                    throw new Error(text || `Create failed (${response.status})`);
-                }
-            }
-
-            form.addEventListener("submit", async (event) => {
-                event.preventDefault();
-                clearErrors();
-
-                const payload = formToRequestPayload();
-                if (!validate(payload)) {
-                    showToast("Please fix form errors.");
-                    return;
-                }
-
-                setLoadingState(true);
-
-                try {
-                    await createAccount(payload);
-
-                    const meta = getUserMeta();
-                    meta[payload.accountNumber] = {
-                        email: document.getElementById("email").value.trim(),
-                        notes: document.getElementById("notes").value.trim(),
-                        createdAt: new Date().toISOString()
-                    };
-                    saveUserMeta(meta);
-
-                    await fetchAccounts();
-                    const created = accountsCache.find((account) => account.accountNumber === payload.accountNumber)
-                        || {
-                            accountNumber: payload.accountNumber,
-                            accountName: payload.accountName,
-                            email: meta[payload.accountNumber].email,
-                            notes: meta[payload.accountNumber].notes,
-                            currency: payload.currency,
-                            balance: payload.balance,
-                            active: true,
-                            createdAt: meta[payload.accountNumber].createdAt
-                        };
-                    resetForm();
-                    showToast(`User created: ${payload.accountNumber}`);
-                    openUserModal(created);
-                } catch (_error) {
-                    await fetchAccounts().catch(() => {});
-                    showToast("Create failed. Check backend/API and try again.");
-                } finally {
-                    setLoadingState(false);
-                    updateCreateButtonState();
-                }
+                updatePreview();
+                updateCreateEnabled();
             });
+        });
 
-            clearBtn.addEventListener("click", () => {
-                resetForm();
-                showToast("Form cleared.");
-            });
+        userSearch.addEventListener("input", renderUsers);
 
-            clearUsersBtn.addEventListener("click", async () => {
-                try {
-                    await fetchAccounts();
-                    showToast("Refreshed from database.");
-                } catch (_error) {
-                    showToast("Could not refresh. Backend may be offline.");
-                }
-            });
-
-            copyAccountBtn.addEventListener("click", async () => {
-                if (!currentGeneratedAccountNumber) {
-                    return;
-                }
-                try {
-                    await navigator.clipboard.writeText(currentGeneratedAccountNumber);
-                    showToast(`Copied: ${currentGeneratedAccountNumber}`);
-                } catch (_error) {
-                    showToast("Copy failed. Please copy manually.");
-                }
-            });
-
-            userList.addEventListener("click", async (event) => {
-                const target = event.target;
-                if (!(target instanceof HTMLElement)) {
-                    return;
-                }
-
-                const copyNumber = target.getAttribute("data-copy");
-                if (copyNumber) {
-                    try {
-                        await navigator.clipboard.writeText(copyNumber);
-                        showToast(`Copied: ${copyNumber}`);
-                    } catch (_error) {
-                        showToast("Copy failed. Please copy manually.");
-                    }
-                    return;
-                }
-
-                const viewNumber = target.getAttribute("data-view");
-                if (viewNumber) {
-                    const account = accountsCache.find((item) => item.accountNumber === viewNumber);
-                    if (account) {
-                        openUserModal(account);
-                    }
-                }
-            });
-
-            closeModalBtn.addEventListener("click", closeUserModal);
-            userModal.addEventListener("click", (event) => {
-                if (event.target === userModal) {
-                    closeUserModal();
-                }
-            });
-
-            ["input", "change"].forEach((eventName) => {
-                form.addEventListener(eventName, () => {
-                    refreshPreview();
-                    updateCreateButtonState();
-                });
-            });
-
-            userSearch.addEventListener("input", renderUserList);
-
-            (async function init() {
-                try {
-                    await fetchAccounts();
-                    showToast("Connected to backend.");
-                } catch (_error) {
-                    accountsCache = [];
-                    regenerateAccountNumber();
-                    renderUserList();
-                    refreshPreview();
-                    updateCreateButtonState();
-                    showToast("Backend offline. Start paymentsystem on port 8080.");
-                }
-            })();
-        </script>
+        (async function init() {
+            renderDraftLists();
+            updatePreview();
+            updateCreateEnabled();
+            try {
+                await fetchUsers();
+                showToast("Connected to /users API.");
+            } catch (_error) {
+                showToast("Backend /users APIs are not reachable yet.");
+            }
+        })();
+    </script>
 </body>
 </html>
