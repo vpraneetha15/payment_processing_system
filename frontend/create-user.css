@@ -29,6 +29,10 @@ body {
   overflow-x: hidden;
 }
 
+body.modal-open {
+  overflow: hidden;
+}
+
 .bg-shape {
   position: fixed;
   border-radius: 999px;
@@ -518,18 +522,28 @@ textarea {
 }
 
 .modal-card {
-  width: min(680px, 100%);
+  width: min(760px, 100%);
   background: #fff;
-  border-radius: 16px;
+  border-radius: 18px;
   border: 1px solid #d6e2ee;
-  box-shadow: 0 20px 50px rgba(7, 23, 37, 0.24);
-  padding: 16px;
+  box-shadow: 0 24px 54px rgba(7, 23, 37, 0.22);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .modal-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #dde8f2;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .modal-head h3 {
@@ -537,11 +551,59 @@ textarea {
   font-family: "Space Grotesk", sans-serif;
 }
 
+.modal-content {
+  padding: 14px 18px 18px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+  height: 0;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #edf3f8;
+  border-radius: 999px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #c3d5e6;
+  border-radius: 999px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #abc2d8;
+}
+
+.detail-section {
+  margin: 0;
+  border: 1px solid #deebf4;
+  border-radius: 12px;
+  background: #fbfdff;
+  padding: 12px;
+}
+
+.detail-section + .detail-section {
+  margin-top: 14px;
+}
+
+.detail-title {
+  margin: 0 0 10px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.98rem;
+  color: #183a54;
+}
+
 .modal-grid {
-  margin-top: 12px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.modal-grid-single {
+  grid-template-columns: 1fr;
 }
 
 .modal-grid p {
@@ -566,6 +628,13 @@ textarea {
   grid-column: span 2;
 }
 
+.modal-actions {
+  margin-top: 0;
+  padding: 12px 18px 16px;
+  border-top: 1px solid #dde8f2;
+  background: #fff;
+}
+
 .status-inline {
   display: inline-flex;
   align-items: center;
@@ -573,7 +642,7 @@ textarea {
 }
 
 .manage-section {
-  margin-top: 14px;
+  margin-top: 0;
   border: 1px solid #dfe9f3;
   border-radius: 12px;
   background: #fbfdff;
@@ -613,7 +682,8 @@ textarea {
   border: 1px solid #dce7f1;
   border-radius: 10px;
   background: #fff;
-  padding: 10px;
+  padding: 12px;
+  box-shadow: 0 8px 18px rgba(10, 35, 54, 0.06);
 }
 
 .manage-meta {
@@ -683,6 +753,17 @@ textarea {
 
   .modal-grid {
     grid-template-columns: 1fr;
+  }
+
+  .modal-card {
+    max-height: 90vh;
+  }
+
+  .modal-head,
+  .modal-content,
+  .modal-actions {
+    padding-left: 14px;
+    padding-right: 14px;
   }
 
   .manage-item,

@@ -198,92 +198,111 @@
                 <h3 id="modalTitle">User Details</h3>
                 <button type="button" id="closeModalBtn" class="btn-link">Close</button>
             </div>
-            <div class="modal-grid">
-                <p><strong>Account Number:</strong> <span id="modalAccountNumber" class="copy-value" data-copy-label="Account Number" title="Click to copy">-</span></p>
-                <p><strong>Name:</strong> <input id="modalName" class="modal-input"></p>
-                <p><strong>Email:</strong> <input id="modalEmail" class="modal-input"></p>
-                <p><strong>Mobile:</strong> <input id="modalMobile" class="modal-input"></p>
-                <p><strong>Currency:</strong>
-                    <select id="modalCurrency" class="modal-input">
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="GBP">GBP</option>
-                        <option value="INR">INR</option>
-                    </select>
-                </p>
-                <p><strong>Opening Balance:</strong> <span id="modalBalance">-</span></p>
-                <p><strong>UPI ID:</strong> <span id="modalUpi" class="copy-value" data-copy-label="UPI ID" title="Click to copy">-</span></p>
-                <p><strong>Status:</strong> <label class="status-inline"><input type="checkbox" id="modalActive"> Active</label></p>
-                <p><strong>Created At:</strong> <span id="modalCreatedAt">-</span></p>
-                <p class="modal-span-2"><strong>Notes:</strong> <textarea id="modalNotes" class="modal-input" rows="2"></textarea></p>
+            <div class="modal-content">
+                <section class="detail-section">
+                    <h4 class="detail-title">Personal Information</h4>
+                    <div class="modal-grid">
+                        <p><strong>Name:</strong> <input id="modalName" class="modal-input"></p>
+                        <p><strong>Email:</strong> <input id="modalEmail" class="modal-input"></p>
+                        <p><strong>Mobile:</strong> <input id="modalMobile" class="modal-input"></p>
+                        <p class="modal-span-2"><strong>Notes:</strong> <textarea id="modalNotes" class="modal-input" rows="2"></textarea></p>
+                    </div>
+                </section>
+
+                <section class="detail-section">
+                    <h4 class="detail-title">Account Information</h4>
+                    <div class="modal-grid">
+                        <p><strong>Account Number:</strong> <span id="modalAccountNumber" class="copy-value" data-copy-label="Account Number" title="Click to copy">-</span></p>
+                        <p><strong>Currency:</strong>
+                            <select id="modalCurrency" class="modal-input">
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="INR">INR</option>
+                            </select>
+                        </p>
+                        <p><strong>Opening Balance:</strong> <span id="modalBalance">-</span></p>
+                        <p><strong>Status:</strong> <label class="status-inline"><input type="checkbox" id="modalActive"> Active</label></p>
+                        <p class="modal-span-2"><strong>Created At:</strong> <span id="modalCreatedAt">-</span></p>
+                    </div>
+                </section>
+
+                <section class="detail-section">
+                    <h4 class="detail-title">UPI Information</h4>
+                    <div class="modal-grid modal-grid-single">
+                        <p><strong>UPI ID:</strong> <span id="modalUpi" class="copy-value" data-copy-label="UPI ID" title="Click to copy">-</span></p>
+                    </div>
+                </section>
+
+                <section class="manage-section detail-section">
+                    <div class="manage-head">
+                        <h4 class="detail-title">Cards</h4>
+                        <button type="button" id="openAddCardModalBtn" class="user-action">Add New Card</button>
+                    </div>
+                    <div id="modalCardsEmpty" class="manage-empty">No cards added yet.</div>
+                    <div id="modalCardsList" class="manage-list"></div>
+                    <div id="modalCardEditor" class="manage-editor is-hidden">
+                        <div class="manage-form-grid">
+                            <label>
+                                Card Number
+                                <input id="modalCardNumber" class="modal-input" maxlength="16" inputmode="numeric">
+                                <small class="error" id="modalCardNumberError"></small>
+                            </label>
+                            <label>
+                                Card Type
+                                <select id="modalCardType" class="modal-input">
+                                    <option value="Debit">Debit</option>
+                                    <option value="Credit">Credit</option>
+                                </select>
+                            </label>
+                            <label>
+                                Card Balance
+                                <input id="modalCardBalance" class="modal-input" type="number" min="0" step="0.01">
+                                <small class="error" id="modalCardBalanceError"></small>
+                            </label>
+                        </div>
+                        <div class="actions">
+                            <button type="button" id="cancelCardEditBtn" class="btn btn-ghost">Cancel</button>
+                            <button type="button" id="saveCardBtn" class="btn btn-primary">Save Card</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="manage-section detail-section">
+                    <div class="manage-head">
+                        <h4 class="detail-title">Wallets</h4>
+                        <button type="button" id="openAddWalletModalBtn" class="user-action">Add Wallet</button>
+                    </div>
+                    <div id="modalWalletsEmpty" class="manage-empty">No wallets added yet.</div>
+                    <div id="modalWalletsList" class="manage-list"></div>
+                    <div id="modalWalletEditor" class="manage-editor is-hidden">
+                        <div class="manage-form-grid">
+                            <label>
+                                Wallet Provider
+                                <select id="modalWalletProvider" class="modal-input">
+                                    <option value="">Select provider</option>
+                                    <option value="Google Pay">Google Pay</option>
+                                    <option value="PhonePe">PhonePe</option>
+                                    <option value="Paytm">Paytm</option>
+                                    <option value="Amazon Pay">Amazon Pay</option>
+                                    <option value="Apple Pay">Apple Pay</option>
+                                </select>
+                                <small class="error" id="modalWalletProviderError"></small>
+                            </label>
+                            <label>
+                                Wallet ID
+                                <input id="modalWalletId" class="modal-input" maxlength="120">
+                                <small class="error" id="modalWalletIdError"></small>
+                            </label>
+                        </div>
+                        <div class="actions">
+                            <button type="button" id="cancelWalletEditBtn" class="btn btn-ghost">Cancel</button>
+                            <button type="button" id="saveWalletBtn" class="btn btn-primary">Save Wallet</button>
+                        </div>
+                    </div>
+                </section>
             </div>
-            <section class="manage-section">
-                <div class="manage-head">
-                    <h4>Cards</h4>
-                    <button type="button" id="openAddCardModalBtn" class="user-action">Add New Card</button>
-                </div>
-                <div id="modalCardsEmpty" class="manage-empty">No cards added yet.</div>
-                <div id="modalCardsList" class="manage-list"></div>
-                <div id="modalCardEditor" class="manage-editor is-hidden">
-                    <div class="manage-form-grid">
-                        <label>
-                            Card Number
-                            <input id="modalCardNumber" class="modal-input" maxlength="16" inputmode="numeric">
-                            <small class="error" id="modalCardNumberError"></small>
-                        </label>
-                        <label>
-                            Card Type
-                            <select id="modalCardType" class="modal-input">
-                                <option value="Debit">Debit</option>
-                                <option value="Credit">Credit</option>
-                            </select>
-                        </label>
-                        <label>
-                            Card Balance
-                            <input id="modalCardBalance" class="modal-input" type="number" min="0" step="0.01">
-                            <small class="error" id="modalCardBalanceError"></small>
-                        </label>
-                    </div>
-                    <div class="actions">
-                        <button type="button" id="cancelCardEditBtn" class="btn btn-ghost">Cancel</button>
-                        <button type="button" id="saveCardBtn" class="btn btn-primary">Save Card</button>
-                    </div>
-                </div>
-            </section>
-            <section class="manage-section">
-                <div class="manage-head">
-                    <h4>Wallets</h4>
-                    <button type="button" id="openAddWalletModalBtn" class="user-action">Add Wallet</button>
-                </div>
-                <div id="modalWalletsEmpty" class="manage-empty">No wallets added yet.</div>
-                <div id="modalWalletsList" class="manage-list"></div>
-                <div id="modalWalletEditor" class="manage-editor is-hidden">
-                    <div class="manage-form-grid">
-                        <label>
-                            Wallet Provider
-                            <select id="modalWalletProvider" class="modal-input">
-                                <option value="">Select provider</option>
-                                <option value="Google Pay">Google Pay</option>
-                                <option value="PhonePe">PhonePe</option>
-                                <option value="Paytm">Paytm</option>
-                                <option value="Amazon Pay">Amazon Pay</option>
-                                <option value="Apple Pay">Apple Pay</option>
-                            </select>
-                            <small class="error" id="modalWalletProviderError"></small>
-                        </label>
-                        <label>
-                            Wallet ID
-                            <input id="modalWalletId" class="modal-input" maxlength="120">
-                            <small class="error" id="modalWalletIdError"></small>
-                        </label>
-                    </div>
-                    <div class="actions">
-                        <button type="button" id="cancelWalletEditBtn" class="btn btn-ghost">Cancel</button>
-                        <button type="button" id="saveWalletBtn" class="btn btn-primary">Save Wallet</button>
-                    </div>
-                </div>
-            </section>
-            <div class="actions">
+            <div class="actions modal-actions">
                 <button type="button" id="deactivateBtn" class="btn btn-ghost">Set Inactive</button>
                 <button type="button" id="saveUserBtn" class="btn btn-primary">Save Changes</button>
             </div>
@@ -313,6 +332,7 @@
         const walletFieldsSection = document.getElementById("walletFieldsSection");
 
         const userModal = document.getElementById("userModal");
+        const modalContent = userModal.querySelector(".modal-content");
         const closeModalBtn = document.getElementById("closeModalBtn");
         const saveUserBtn = document.getElementById("saveUserBtn");
         const deactivateBtn = document.getElementById("deactivateBtn");
@@ -338,6 +358,21 @@
         let modalWalletsCache = [];
         let editingCardId = null;
         let editingWalletId = null;
+
+        function showUserModal() {
+            userModal.classList.add("show");
+            userModal.setAttribute("aria-hidden", "false");
+            document.body.classList.add("modal-open");
+            if (modalContent) {
+                modalContent.scrollTop = 0;
+            }
+        }
+
+        function hideUserModal() {
+            userModal.classList.remove("show");
+            userModal.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("modal-open");
+        }
 
         function showToast(message) {
             toast.textContent = message;
@@ -974,8 +1009,7 @@
             resetModalCardEditor();
             resetModalWalletEditor();
 
-            userModal.classList.add("show");
-            userModal.setAttribute("aria-hidden", "false");
+            showUserModal();
         }
 
         async function saveUserUpdates() {
@@ -1270,8 +1304,7 @@
                 return;
             }
             if (event.target === userModal) {
-                userModal.classList.remove("show");
-                userModal.setAttribute("aria-hidden", "true");
+                hideUserModal();
                 return;
             }
             const editCardId = target.getAttribute("data-edit-card");
@@ -1340,8 +1373,7 @@
         });
 
         closeModalBtn.addEventListener("click", () => {
-            userModal.classList.remove("show");
-            userModal.setAttribute("aria-hidden", "true");
+            hideUserModal();
         });
 
         refreshUsersBtn.addEventListener("click", async () => {
