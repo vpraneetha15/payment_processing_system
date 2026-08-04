@@ -105,4 +105,20 @@ public class AccountRepository {
         List<String> rows = jdbcTemplate.queryForList(sql, String.class, mobileNumber);
         return rows.isEmpty() ? null : rows.get(0);
     }
+
+    /**
+     * Returns the email address linked to an account number, or null if the
+     * account doesn't exist or has no email column.
+     */
+    public String findEmailByAccountNumber(String accountNumber) {
+        if (accountNumber == null || accountNumber.isBlank()) return null;
+        try {
+            String sql = "select email from accounts where account_number = ? limit 1";
+            List<String> rows = jdbcTemplate.queryForList(sql, String.class, accountNumber);
+            return rows.isEmpty() ? null : rows.get(0);
+        } catch (Exception ex) {
+            // email column may not exist in older schema versions
+            return null;
+        }
+    }
 }
