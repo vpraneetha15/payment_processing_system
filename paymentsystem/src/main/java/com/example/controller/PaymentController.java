@@ -1,22 +1,18 @@
 package com.example.controller;
 
-
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.CrossOrigin;
-
 
 import com.example.dto.CurrencyAmountDTO;
 import com.example.dto.PaymentSummaryDTO;
 import com.example.model.Payment;
 import com.example.service.PaymentService;
-
-
 
 @RestController
 @RequestMapping("/payments")
@@ -24,88 +20,66 @@ import com.example.service.PaymentService;
 @CrossOrigin(origins = "*")
 public class PaymentController {
 
+    private final PaymentService service;
 
+    public PaymentController(PaymentService service) {
+        this.service = service;
+    }
 
-private final PaymentService service;
+    @PostMapping
+    public ResponseEntity<?> save(@RequestBody Payment payment) {
+        try {
+            service.save(payment);
+            return ResponseEntity.status(HttpStatus.CREATED).body(payment);
+        } catch (DataIntegrityViolationException ex) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "INVALID_ACCOUNT",
+                             "message", "Invalid account details. Ensure source and destination accounts exist."));
+        }
+    }
 
+    @GetMapping
+    public ResponseEntity<List<Payment>> getPayments() {
+        return ResponseEntity.ok(service.findAll());
+    }
 
+    @GetMapping("/summary")
+    public ResponseEntity<PaymentSummaryDTO> getPaymentSummary() {
+        return ResponseEntity.ok(service.getSummary());
+    }
 
-public PaymentController(PaymentService service){
+    @GetMapping("/amount-by-currency")
+    public ResponseEntity<List<CurrencyAmountDTO>> getAmountByCurrency() {
+        return ResponseEntity.ok(service.getAmountByCurrency());
+    }
 
-this.service=service;
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getPayment(@PathVariable String id) {
+        Payment payment = service.findById(id);
+        if (payment == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "PAYMENT_NOT_FOUND", "message", "Payment not found", "id", id));
+        }
+        return ResponseEntity.ok(payment);
+    }
 
-}
+    @PutMapping
+    public ResponseEntity<?> update(@RequestBody Payment payment) {
+        int rows = service.update(payment);
+        if (rows == 0) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "PAYMENT_NOT_FOUND", "message", "Payment not found", "id", payment.getId()));
+        }
+        return ResponseEntity.ok(payment);
+    }
 
-
-
-@PostMapping
-public ResponseEntity<?> save(
-@RequestBody Payment payment){
-
-try {
-service.save(payment);
-return ResponseEntity.status(HttpStatus.CREATED).body(payment);
-} catch (DataIntegrityViolationException ex) {
-return ResponseEntity.badRequest().body(
-	"Invalid account details. Ensure source and destination account numbers exist.");
-}
-
-}
-
-
-
-
-@GetMapping
-public List<Payment> getPayments(){
-
-return service.findAll();
-
-}
-
-
-@GetMapping("/summary")
-public PaymentSummaryDTO getPaymentSummary(){
-
-return service.getSummary();
-
-}
-
-
-@GetMapping("/amount-by-currency")
-public List<CurrencyAmountDTO> getAmountByCurrency(){
-
-return service.getAmountByCurrency();
-}
-
-
-
-@GetMapping("/{id}")
-public Payment getPayment(
-@PathVariable String id){
-
-return service.findById(id);
-
-}
-
-
-@PutMapping
-public String update(@RequestBody Payment payment) {
-
-service.update(payment);
-
-return "Updated Successfully";
-
-}
-
-
-@DeleteMapping("/{id}")
-public String delete(@PathVariable String id) {
-
-service.delete(id);
-
-return "Deleted Successfully";
-
-}
-
-
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable String id) {
+        int rows = service.delete(id);
+        if (rows == 0) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "PAYMENT_NOT_FOUND", "message", "Payment not found", "id", id));
+        }
+        return ResponseEntity.ok(Map.of("message", "Payment deleted successfully", "id", id));
+    }
 }
