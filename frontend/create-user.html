@@ -216,9 +216,73 @@
                 <p><strong>Status:</strong> <label class="status-inline"><input type="checkbox" id="modalActive"> Active</label></p>
                 <p><strong>Created At:</strong> <span id="modalCreatedAt">-</span></p>
                 <p class="modal-span-2"><strong>Notes:</strong> <textarea id="modalNotes" class="modal-input" rows="2"></textarea></p>
-                <p class="modal-span-2"><strong>Cards:</strong> <span id="modalCards">-</span></p>
-                <p class="modal-span-2"><strong>Wallets:</strong> <span id="modalWallets">-</span></p>
             </div>
+            <section class="manage-section">
+                <div class="manage-head">
+                    <h4>Cards</h4>
+                    <button type="button" id="openAddCardModalBtn" class="user-action">Add New Card</button>
+                </div>
+                <div id="modalCardsEmpty" class="manage-empty">No cards added yet.</div>
+                <div id="modalCardsList" class="manage-list"></div>
+                <div id="modalCardEditor" class="manage-editor is-hidden">
+                    <div class="manage-form-grid">
+                        <label>
+                            Card Number
+                            <input id="modalCardNumber" class="modal-input" maxlength="16" inputmode="numeric">
+                            <small class="error" id="modalCardNumberError"></small>
+                        </label>
+                        <label>
+                            Card Type
+                            <select id="modalCardType" class="modal-input">
+                                <option value="Debit">Debit</option>
+                                <option value="Credit">Credit</option>
+                            </select>
+                        </label>
+                        <label>
+                            Card Balance
+                            <input id="modalCardBalance" class="modal-input" type="number" min="0" step="0.01">
+                            <small class="error" id="modalCardBalanceError"></small>
+                        </label>
+                    </div>
+                    <div class="actions">
+                        <button type="button" id="cancelCardEditBtn" class="btn btn-ghost">Cancel</button>
+                        <button type="button" id="saveCardBtn" class="btn btn-primary">Save Card</button>
+                    </div>
+                </div>
+            </section>
+            <section class="manage-section">
+                <div class="manage-head">
+                    <h4>Wallets</h4>
+                    <button type="button" id="openAddWalletModalBtn" class="user-action">Add Wallet</button>
+                </div>
+                <div id="modalWalletsEmpty" class="manage-empty">No wallets added yet.</div>
+                <div id="modalWalletsList" class="manage-list"></div>
+                <div id="modalWalletEditor" class="manage-editor is-hidden">
+                    <div class="manage-form-grid">
+                        <label>
+                            Wallet Provider
+                            <select id="modalWalletProvider" class="modal-input">
+                                <option value="">Select provider</option>
+                                <option value="Google Pay">Google Pay</option>
+                                <option value="PhonePe">PhonePe</option>
+                                <option value="Paytm">Paytm</option>
+                                <option value="Amazon Pay">Amazon Pay</option>
+                                <option value="Apple Pay">Apple Pay</option>
+                            </select>
+                            <small class="error" id="modalWalletProviderError"></small>
+                        </label>
+                        <label>
+                            Wallet ID
+                            <input id="modalWalletId" class="modal-input" maxlength="120">
+                            <small class="error" id="modalWalletIdError"></small>
+                        </label>
+                    </div>
+                    <div class="actions">
+                        <button type="button" id="cancelWalletEditBtn" class="btn btn-ghost">Cancel</button>
+                        <button type="button" id="saveWalletBtn" class="btn btn-primary">Save Wallet</button>
+                    </div>
+                </div>
+            </section>
             <div class="actions">
                 <button type="button" id="deactivateBtn" class="btn btn-ghost">Set Inactive</button>
                 <button type="button" id="saveUserBtn" class="btn btn-primary">Save Changes</button>
@@ -252,12 +316,28 @@
         const closeModalBtn = document.getElementById("closeModalBtn");
         const saveUserBtn = document.getElementById("saveUserBtn");
         const deactivateBtn = document.getElementById("deactivateBtn");
+        const modalCardsList = document.getElementById("modalCardsList");
+        const modalCardsEmpty = document.getElementById("modalCardsEmpty");
+        const modalWalletsList = document.getElementById("modalWalletsList");
+        const modalWalletsEmpty = document.getElementById("modalWalletsEmpty");
+        const modalCardEditor = document.getElementById("modalCardEditor");
+        const modalWalletEditor = document.getElementById("modalWalletEditor");
+        const openAddCardModalBtn = document.getElementById("openAddCardModalBtn");
+        const openAddWalletModalBtn = document.getElementById("openAddWalletModalBtn");
+        const saveCardBtn = document.getElementById("saveCardBtn");
+        const saveWalletBtn = document.getElementById("saveWalletBtn");
+        const cancelCardEditBtn = document.getElementById("cancelCardEditBtn");
+        const cancelWalletEditBtn = document.getElementById("cancelWalletEditBtn");
 
         let usersCache = [];
         let cardsDraft = [];
         let walletsDraft = [];
         let selectedUserAccount = null;
         const createdAtOverrideMap = new Map();
+        let modalCardsCache = [];
+        let modalWalletsCache = [];
+        let editingCardId = null;
+        let editingWalletId = null;
 
         function showToast(message) {
             toast.textContent = message;
@@ -291,6 +371,18 @@
                 return "-";
             }
             return `${symbolMap[currency] || ""}${Number(amount || 0).toFixed(2)} ${currency}`;
+        }
+
+        function maskCardNumber(cardNumber) {
+            const digits = normalizeDigits(cardNumber);
+            if (digits.length < 4) {
+                return digits || "-";
+            }
+            return `**** **** **** ${digits.slice(-4)}`;
+        }
+
+        function escapeAttribute(value) {
+            return escapeHtml(value).replace(/`/g, "");
         }
 
         function getAccountNumberRank(accountNumber) {
@@ -456,7 +548,7 @@
 
             return {
                 cardNumber,
-                cardType: document.getElementById("cardType").value,
+                cardType: "Debit",
                 cardBalance
             };
         }
@@ -648,6 +740,7 @@
                 const body = await response.json().catch(() => ({}));
                 throw new Error(body.message || "Card creation failed");
             }
+            return response.json().catch(() => ({}));
         }
 
         async function addWallet(accountNumber, payload) {
@@ -660,6 +753,192 @@
                 const body = await response.json().catch(() => ({}));
                 throw new Error(body.message || "Wallet creation failed");
             }
+            return response.json().catch(() => ({}));
+        }
+
+        async function updateCard(accountNumber, cardId, payload) {
+            const response = await fetch(`${apiBaseUrl}/users/${encodeURIComponent(accountNumber)}/cards/${cardId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(body.message || "Card update failed");
+            }
+            return body;
+        }
+
+        async function updateCardStatus(accountNumber, cardId, active) {
+            const response = await fetch(`${apiBaseUrl}/users/${encodeURIComponent(accountNumber)}/cards/${cardId}/status`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ active })
+            });
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(body.message || "Card status update failed");
+            }
+            return body;
+        }
+
+        async function updateWallet(accountNumber, walletId, payload) {
+            const response = await fetch(`${apiBaseUrl}/users/${encodeURIComponent(accountNumber)}/wallets/${walletId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(body.message || "Wallet update failed");
+            }
+            return body;
+        }
+
+        async function updateWalletStatus(accountNumber, walletId, active) {
+            const response = await fetch(`${apiBaseUrl}/users/${encodeURIComponent(accountNumber)}/wallets/${walletId}/status`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ active })
+            });
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(body.message || "Wallet status update failed");
+            }
+            return body;
+        }
+
+        function resetModalCardEditor() {
+            editingCardId = null;
+            document.getElementById("modalCardNumber").value = "";
+            document.getElementById("modalCardType").value = "Debit";
+            document.getElementById("modalCardBalance").value = "0";
+            setError("modalCardNumber", "");
+            setError("modalCardBalance", "");
+            modalCardEditor.classList.add("is-hidden");
+            saveCardBtn.textContent = "Save Card";
+        }
+
+        function resetModalWalletEditor() {
+            editingWalletId = null;
+            document.getElementById("modalWalletProvider").value = "";
+            document.getElementById("modalWalletId").value = "";
+            setError("modalWalletProvider", "");
+            setError("modalWalletId", "");
+            modalWalletEditor.classList.add("is-hidden");
+            saveWalletBtn.textContent = "Save Wallet";
+        }
+
+        function openModalCardEditor(card) {
+            editingCardId = card?.id ?? null;
+            document.getElementById("modalCardNumber").value = card?.cardNumber || "";
+            document.getElementById("modalCardType").value = card?.cardType || "Debit";
+            document.getElementById("modalCardBalance").value = card?.cardBalance ?? "0";
+            setError("modalCardNumber", "");
+            setError("modalCardBalance", "");
+            saveCardBtn.textContent = editingCardId ? "Update Card" : "Save Card";
+            modalCardEditor.classList.remove("is-hidden");
+        }
+
+        function openModalWalletEditor(wallet) {
+            editingWalletId = wallet?.id ?? null;
+            document.getElementById("modalWalletProvider").value = wallet?.walletProvider || "";
+            document.getElementById("modalWalletId").value = wallet?.walletId || "";
+            setError("modalWalletProvider", "");
+            setError("modalWalletId", "");
+            saveWalletBtn.textContent = editingWalletId ? "Update Wallet" : "Save Wallet";
+            modalWalletEditor.classList.remove("is-hidden");
+        }
+
+        function renderModalCards() {
+            modalCardsEmpty.style.display = modalCardsCache.length ? "none" : "block";
+            modalCardsList.innerHTML = modalCardsCache.map((card) => `
+                <div class="manage-item">
+                    <div>
+                        <strong>${escapeHtml(maskCardNumber(card.cardNumber))}</strong>
+                        <div class="manage-meta">${escapeHtml(card.cardType || "-")} | ${escapeHtml(String(card.cardBalance ?? "0"))} | <span class="${card.active ? "badge" : "badge inactive"}">${card.active ? "Active" : "Inactive"}</span></div>
+                    </div>
+                    <div class="manage-actions">
+                        <button type="button" class="user-action" data-edit-card="${card.id}">Edit</button>
+                        <button type="button" class="user-action" data-toggle-card="${card.id}" data-next-active="${card.active ? "false" : "true"}">${card.active ? "Deactivate" : "Activate"}</button>
+                        <button type="button" class="user-action" data-remove-card-modal="${card.id}">Remove</button>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function renderModalWallets() {
+            modalWalletsEmpty.style.display = modalWalletsCache.length ? "none" : "block";
+            modalWalletsList.innerHTML = modalWalletsCache.map((wallet) => `
+                <div class="manage-item">
+                    <div>
+                        <strong>${escapeHtml(wallet.walletProvider || "-")}</strong>
+                        <div class="manage-meta">${escapeHtml(wallet.walletId || "-")} | <span class="${wallet.active ? "badge" : "badge inactive"}">${wallet.active ? "Active" : "Inactive"}</span></div>
+                    </div>
+                    <div class="manage-actions">
+                        <button type="button" class="user-action" data-edit-wallet="${wallet.id}">Edit</button>
+                        <button type="button" class="user-action" data-toggle-wallet="${wallet.id}" data-next-active="${wallet.active ? "false" : "true"}">${wallet.active ? "Deactivate" : "Activate"}</button>
+                        <button type="button" class="user-action" data-remove-wallet-modal="${wallet.id}">Remove</button>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        async function refreshModalAssets(accountNumber) {
+            const [cardsResponse, walletsResponse] = await Promise.all([
+                fetch(`${apiBaseUrl}/users/${encodeURIComponent(accountNumber)}/cards`),
+                fetch(`${apiBaseUrl}/users/${encodeURIComponent(accountNumber)}/wallets`)
+            ]);
+            modalCardsCache = cardsResponse.ok ? await cardsResponse.json() : [];
+            modalWalletsCache = walletsResponse.ok ? await walletsResponse.json() : [];
+            renderModalCards();
+            renderModalWallets();
+        }
+
+        function validateModalCardForm() {
+            setError("modalCardNumber", "");
+            setError("modalCardBalance", "");
+            const cardNumber = normalizeDigits(document.getElementById("modalCardNumber").value);
+            const cardBalance = Number.parseFloat(document.getElementById("modalCardBalance").value || "0");
+            if (!/^\d{16}$/.test(cardNumber)) {
+                setError("modalCardNumber", "Card number must contain exactly 16 digits.");
+                return null;
+            }
+            const duplicateCard = modalCardsCache.some((card) => card.id !== editingCardId && card.cardNumber === cardNumber);
+            if (duplicateCard) {
+                setError("modalCardNumber", "Card number already exists.");
+                return null;
+            }
+            if (!Number.isFinite(cardBalance) || cardBalance < 0) {
+                setError("modalCardBalance", "Card balance must be greater than or equal to 0.");
+                return null;
+            }
+            return {
+                cardNumber,
+                cardType: document.getElementById("modalCardType").value,
+                cardBalance
+            };
+        }
+
+        function validateModalWalletForm() {
+            setError("modalWalletProvider", "");
+            setError("modalWalletId", "");
+            const walletProvider = document.getElementById("modalWalletProvider").value;
+            const walletId = document.getElementById("modalWalletId").value.trim();
+            if (!walletProvider) {
+                setError("modalWalletProvider", "Wallet provider is required.");
+                return null;
+            }
+            if (!walletId) {
+                setError("modalWalletId", "Wallet ID is required.");
+                return null;
+            }
+            const duplicateWallet = modalWalletsCache.some((wallet) => wallet.id !== editingWalletId && String(wallet.walletId || "").toLowerCase() === walletId.toLowerCase());
+            if (duplicateWallet) {
+                setError("modalWalletId", "Wallet ID already exists.");
+                return null;
+            }
+            return { walletProvider, walletId };
         }
 
         async function loadUserDetails(accountNumber) {
@@ -688,12 +967,12 @@
             document.getElementById("modalActive").checked = Boolean(user.active);
             document.getElementById("modalCreatedAt").textContent = formatDate(user.createdAt);
             document.getElementById("modalNotes").value = user.notes || "";
-            document.getElementById("modalCards").textContent = Array.isArray(cards) && cards.length
-                ? cards.map((card) => `${card.cardType} (${card.cardNumber})`).join(", ")
-                : "-";
-            document.getElementById("modalWallets").textContent = Array.isArray(wallets) && wallets.length
-                ? wallets.map((wallet) => `${wallet.walletProvider} (${wallet.walletId})`).join(", ")
-                : "-";
+            modalCardsCache = Array.isArray(cards) ? cards : [];
+            modalWalletsCache = Array.isArray(wallets) ? wallets : [];
+            renderModalCards();
+            renderModalWallets();
+            resetModalCardEditor();
+            resetModalWalletEditor();
 
             userModal.classList.add("show");
             userModal.setAttribute("aria-hidden", "false");
@@ -934,6 +1213,124 @@
             }
         });
 
+        openAddCardModalBtn.addEventListener("click", () => openModalCardEditor());
+        openAddWalletModalBtn.addEventListener("click", () => openModalWalletEditor());
+        cancelCardEditBtn.addEventListener("click", resetModalCardEditor);
+        cancelWalletEditBtn.addEventListener("click", resetModalWalletEditor);
+
+        saveCardBtn.addEventListener("click", async () => {
+            if (!selectedUserAccount) {
+                return;
+            }
+            const payload = validateModalCardForm();
+            if (!payload) {
+                return;
+            }
+            try {
+                if (editingCardId) {
+                    await updateCard(selectedUserAccount, editingCardId, payload);
+                    showToast("Card updated successfully.");
+                } else {
+                    await addCard(selectedUserAccount, payload);
+                    showToast("Card added successfully.");
+                }
+                await refreshModalAssets(selectedUserAccount);
+                resetModalCardEditor();
+            } catch (error) {
+                showToast(error.message || "Card save failed.");
+            }
+        });
+
+        saveWalletBtn.addEventListener("click", async () => {
+            if (!selectedUserAccount) {
+                return;
+            }
+            const payload = validateModalWalletForm();
+            if (!payload) {
+                return;
+            }
+            try {
+                if (editingWalletId) {
+                    await updateWallet(selectedUserAccount, editingWalletId, payload);
+                    showToast("Wallet updated successfully.");
+                } else {
+                    await addWallet(selectedUserAccount, payload);
+                    showToast("Wallet added successfully.");
+                }
+                await refreshModalAssets(selectedUserAccount);
+                resetModalWalletEditor();
+            } catch (error) {
+                showToast(error.message || "Wallet save failed.");
+            }
+        });
+
+        userModal.addEventListener("click", async (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLElement)) {
+                return;
+            }
+            if (event.target === userModal) {
+                userModal.classList.remove("show");
+                userModal.setAttribute("aria-hidden", "true");
+                return;
+            }
+            const editCardId = target.getAttribute("data-edit-card");
+            if (editCardId) {
+                const card = modalCardsCache.find((item) => String(item.id) === editCardId);
+                openModalCardEditor(card);
+                return;
+            }
+            const toggleCardId = target.getAttribute("data-toggle-card");
+            if (toggleCardId) {
+                try {
+                    await updateCardStatus(selectedUserAccount, Number(toggleCardId), target.getAttribute("data-next-active") === "true");
+                    await refreshModalAssets(selectedUserAccount);
+                    showToast("Card status updated.");
+                } catch (error) {
+                    showToast(error.message || "Card status update failed.");
+                }
+                return;
+            }
+            const removeCardId = target.getAttribute("data-remove-card-modal");
+            if (removeCardId) {
+                try {
+                    await updateCardStatus(selectedUserAccount, Number(removeCardId), false);
+                    await refreshModalAssets(selectedUserAccount);
+                    showToast("Card removed from active list.");
+                } catch (error) {
+                    showToast(error.message || "Card remove failed.");
+                }
+                return;
+            }
+            const editWalletId = target.getAttribute("data-edit-wallet");
+            if (editWalletId) {
+                const wallet = modalWalletsCache.find((item) => String(item.id) === editWalletId);
+                openModalWalletEditor(wallet);
+                return;
+            }
+            const toggleWalletId = target.getAttribute("data-toggle-wallet");
+            if (toggleWalletId) {
+                try {
+                    await updateWalletStatus(selectedUserAccount, Number(toggleWalletId), target.getAttribute("data-next-active") === "true");
+                    await refreshModalAssets(selectedUserAccount);
+                    showToast("Wallet status updated.");
+                } catch (error) {
+                    showToast(error.message || "Wallet status update failed.");
+                }
+                return;
+            }
+            const removeWalletId = target.getAttribute("data-remove-wallet-modal");
+            if (removeWalletId) {
+                try {
+                    await updateWalletStatus(selectedUserAccount, Number(removeWalletId), false);
+                    await refreshModalAssets(selectedUserAccount);
+                    showToast("Wallet removed from active list.");
+                } catch (error) {
+                    showToast(error.message || "Wallet remove failed.");
+                }
+            }
+        });
+
         deactivateBtn.addEventListener("click", async () => {
             try {
                 await setUserStatus(false);
@@ -945,13 +1342,6 @@
         closeModalBtn.addEventListener("click", () => {
             userModal.classList.remove("show");
             userModal.setAttribute("aria-hidden", "true");
-        });
-
-        userModal.addEventListener("click", (event) => {
-            if (event.target === userModal) {
-                userModal.classList.remove("show");
-                userModal.setAttribute("aria-hidden", "true");
-            }
         });
 
         refreshUsersBtn.addEventListener("click", async () => {
@@ -988,6 +1378,9 @@
                     event.target.value = normalizeDigits(event.target.value).slice(0, 10);
                 }
                 if (event.target && event.target.id === "cardNumber") {
+                    event.target.value = normalizeDigits(event.target.value).slice(0, 16);
+                }
+                if (event.target && event.target.id === "modalCardNumber") {
                     event.target.value = normalizeDigits(event.target.value).slice(0, 16);
                 }
 
@@ -1027,6 +1420,35 @@
                         setError("walletId", "");
                     }
                 }
+                if (event.target && event.target.id === "modalCardNumber") {
+                    const cardDigits = normalizeDigits(event.target.value);
+                    if (!/^\d{16}$/.test(cardDigits)) {
+                        setError("modalCardNumber", "Card number must contain exactly 16 digits.");
+                    } else {
+                        setError("modalCardNumber", "");
+                    }
+                }
+                if (event.target && event.target.id === "modalCardBalance") {
+                    const modalBalance = Number.parseFloat(event.target.value || "0");
+                    if (!Number.isFinite(modalBalance) || modalBalance < 0) {
+                        setError("modalCardBalance", "Card balance must be greater than or equal to 0.");
+                    } else {
+                        setError("modalCardBalance", "");
+                    }
+                }
+                if (event.target && event.target.id === "modalWalletProvider") {
+                    setError("modalWalletProvider", event.target.value ? "" : "Wallet provider is required.");
+                }
+                if (event.target && event.target.id === "modalWalletId") {
+                    const modalWalletId = event.target.value.trim();
+                    if (!modalWalletId) {
+                        setError("modalWalletId", "Wallet ID is required.");
+                    } else if (modalWalletsCache.some((wallet) => wallet.id !== editingWalletId && String(wallet.walletId || "").toLowerCase() === modalWalletId.toLowerCase())) {
+                        setError("modalWalletId", "Wallet ID already exists.");
+                    } else {
+                        setError("modalWalletId", "");
+                    }
+                }
                 updatePreview();
                 updateCreateEnabled();
             });
@@ -1048,7 +1470,7 @@
             });
         });
 
-        ["mobileNumber", "cardNumber"].forEach((fieldId) => {
+        ["mobileNumber", "cardNumber", "modalCardNumber"].forEach((fieldId) => {
             const field = document.getElementById(fieldId);
             if (!field) {
                 return;

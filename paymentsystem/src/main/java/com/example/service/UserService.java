@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service;
 import com.example.dto.CreateCardRequest;
 import com.example.dto.CreateUserRequest;
 import com.example.dto.CreateWalletRequest;
+import com.example.dto.UpdateCardRequest;
 import com.example.dto.UpdateUserRequest;
+import com.example.dto.UpdateWalletRequest;
 import com.example.model.User;
 import com.example.model.UserCard;
 import com.example.model.UserWallet;
@@ -141,6 +143,27 @@ public class UserService {
         return repository.findCardsByAccount(accountNumber);
     }
 
+    public UserCard updateCard(String accountNumber, Long cardId, UpdateCardRequest request) {
+        getUserByAccountNumber(accountNumber);
+        validateUpdateCardRequest(request);
+
+        UserCard existingCard = getCard(accountNumber, cardId);
+        String cleanCardNumber = request.getCardNumber().trim();
+        if (repository.existsCardNumber(cleanCardNumber, cardId)) {
+            throw new IllegalArgumentException("Card number already exists");
+        }
+
+        repository.updateCard(cardId, cleanCardNumber, normalizeCardType(request.getCardType()), request.getCardBalance());
+        return getCard(accountNumber, cardId);
+    }
+
+    public UserCard updateCardStatus(String accountNumber, Long cardId, boolean active) {
+        getUserByAccountNumber(accountNumber);
+        getCard(accountNumber, cardId);
+        repository.updateCardStatus(cardId, active);
+        return getCard(accountNumber, cardId);
+    }
+
     public UserWallet addWallet(String accountNumber, CreateWalletRequest request) {
         getUserByAccountNumber(accountNumber);
         validateWalletRequest(request);
@@ -163,6 +186,27 @@ public class UserService {
     public List<UserWallet> getWallets(String accountNumber) {
         getUserByAccountNumber(accountNumber);
         return repository.findWalletsByAccount(accountNumber);
+    }
+
+    public UserWallet updateWallet(String accountNumber, Long walletId, UpdateWalletRequest request) {
+        getUserByAccountNumber(accountNumber);
+        validateUpdateWalletRequest(request);
+
+        UserWallet existingWallet = getWallet(accountNumber, walletId);
+        String cleanedWalletId = request.getWalletId().trim();
+        if (repository.existsWalletId(cleanedWalletId, walletId)) {
+            throw new IllegalArgumentException("Wallet ID already exists");
+        }
+
+        repository.updateWallet(walletId, request.getWalletProvider().trim(), cleanedWalletId);
+        return getWallet(accountNumber, walletId);
+    }
+
+    public UserWallet updateWalletStatus(String accountNumber, Long walletId, boolean active) {
+        getUserByAccountNumber(accountNumber);
+        getWallet(accountNumber, walletId);
+        repository.updateWalletStatus(walletId, active);
+        return getWallet(accountNumber, walletId);
     }
 
     private void validateCreateRequest(CreateUserRequest request) {
@@ -250,6 +294,53 @@ public class UserService {
         if (isBlank(request.getWalletId())) {
             throw new IllegalArgumentException("Wallet ID required");
         }
+    }
+
+    private void validateUpdateCardRequest(UpdateCardRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Card request is required");
+        }
+        if (isBlank(request.getCardNumber())) {
+            throw new IllegalArgumentException("Card number required");
+        }
+        if (!request.getCardNumber().trim().matches("^\\d{16}$")) {
+            throw new IllegalArgumentException("Card number must contain 16 digits");
+        }
+        if (request.getCardBalance() == null || request.getCardBalance().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Card balance must be 0 or more");
+        }
+        normalizeCardType(request.getCardType());
+    }
+
+    private void validateUpdateWalletRequest(UpdateWalletRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Wallet request is required");
+        }
+        if (isBlank(request.getWalletProvider())) {
+            throw new IllegalArgumentException("Wallet provider required");
+        }
+        if (!SUPPORTED_WALLET_PROVIDERS.contains(request.getWalletProvider().trim())) {
+            throw new IllegalArgumentException("Unsupported wallet provider");
+        }
+        if (isBlank(request.getWalletId())) {
+            throw new IllegalArgumentException("Wallet ID required");
+        }
+    }
+
+    private UserCard getCard(String accountNumber, Long cardId) {
+        UserCard card = repository.findCardById(accountNumber, cardId);
+        if (card == null) {
+            throw new IllegalArgumentException("Card not found");
+        }
+        return card;
+    }
+
+    private UserWallet getWallet(String accountNumber, Long walletId) {
+        UserWallet wallet = repository.findWalletById(accountNumber, walletId);
+        if (wallet == null) {
+            throw new IllegalArgumentException("Wallet not found");
+        }
+        return wallet;
     }
 
     private String normalizeCardType(String cardType) {

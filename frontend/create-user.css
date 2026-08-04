@@ -572,6 +572,75 @@ textarea {
   gap: 6px;
 }
 
+.manage-section {
+  margin-top: 14px;
+  border: 1px solid #dfe9f3;
+  border-radius: 12px;
+  background: #fbfdff;
+  padding: 12px;
+}
+
+.manage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.manage-head h4 {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.98rem;
+}
+
+.manage-empty {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.manage-list {
+  margin-top: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.manage-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid #dce7f1;
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+}
+
+.manage-meta {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.manage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.manage-editor {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e3ecf5;
+}
+
+.manage-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -613,6 +682,20 @@ textarea {
   }
 
   .modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .manage-item,
+  .manage-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .manage-actions {
+    justify-content: stretch;
+  }
+
+  .manage-form-grid {
     grid-template-columns: 1fr;
   }
 

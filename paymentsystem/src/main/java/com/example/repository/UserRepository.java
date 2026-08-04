@@ -401,6 +401,15 @@ public class UserRepository {
         return count != null && count > 0;
     }
 
+    public boolean existsCardNumber(String cardNumber, Long excludeId) {
+        if (excludeId == null) {
+            return existsCardNumber(cardNumber);
+        }
+        String sql = "select count(*) from cards where card_number = ? and card_id <> ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, cardNumber, excludeId);
+        return count != null && count > 0;
+    }
+
     public int insertCard(String accountNumber, String cardNumber, String cardType, BigDecimal cardBalance, boolean active) {
         String sql = """
                 insert into cards(account_number, card_number, card_type, balance, active)
@@ -426,9 +435,46 @@ public class UserRepository {
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(UserCard.class), accountNumber);
     }
 
+    public UserCard findCardById(String accountNumber, Long cardId) {
+        String sql = """
+                select card_id as id,
+                       account_number as accountNumber,
+                       card_number as cardNumber,
+                       card_type as cardType,
+                       balance as cardBalance,
+                       active
+                from cards
+                where account_number = ? and card_id = ?
+                """;
+        try {
+            return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(UserCard.class), accountNumber, cardId);
+        } catch (EmptyResultDataAccessException ex) {
+            return null;
+        }
+    }
+
+    public int updateCard(Long cardId, String cardNumber, String cardType, BigDecimal cardBalance) {
+        String sql = "update cards set card_number = ?, card_type = ?, balance = ? where card_id = ?";
+        return jdbcTemplate.update(sql, cardNumber, cardType, cardBalance, cardId);
+    }
+
+    public int updateCardStatus(Long cardId, boolean active) {
+        String sql = "update cards set active = ? where card_id = ?";
+        return jdbcTemplate.update(sql, active, cardId);
+    }
+
     public boolean existsWalletId(String walletId) {
         String sql = "select count(*) from wallets where wallet_identifier = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, walletId);
+        return count != null && count > 0;
+    }
+
+    public boolean existsWalletId(String walletId, Long excludeId) {
+        if (excludeId == null) {
+            return existsWalletId(walletId);
+        }
+        String sql = "select count(*) from wallets where wallet_identifier = ? and wallet_id <> ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, walletId, excludeId);
         return count != null && count > 0;
     }
 
@@ -454,5 +500,32 @@ public class UserRepository {
                 """;
 
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(UserWallet.class), accountNumber);
+    }
+
+    public UserWallet findWalletById(String accountNumber, Long walletId) {
+        String sql = """
+                select wallet_id as id,
+                       account_number as accountNumber,
+                       provider as walletProvider,
+                       wallet_identifier as walletId,
+                       active
+                from wallets
+                where account_number = ? and wallet_id = ?
+                """;
+        try {
+            return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(UserWallet.class), accountNumber, walletId);
+        } catch (EmptyResultDataAccessException ex) {
+            return null;
+        }
+    }
+
+    public int updateWallet(Long walletId, String walletProvider, String walletIdentifier) {
+        String sql = "update wallets set provider = ?, wallet_identifier = ? where wallet_id = ?";
+        return jdbcTemplate.update(sql, walletProvider, walletIdentifier, walletId);
+    }
+
+    public int updateWalletStatus(Long walletId, boolean active) {
+        String sql = "update wallets set active = ? where wallet_id = ?";
+        return jdbcTemplate.update(sql, active, walletId);
     }
 }

@@ -18,8 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.dto.CreateCardRequest;
 import com.example.dto.CreateUserRequest;
 import com.example.dto.CreateWalletRequest;
+import com.example.dto.UpdateCardRequest;
 import com.example.dto.UpdateUserRequest;
 import com.example.dto.UpdateUserStatusRequest;
+import com.example.dto.UpdateWalletRequest;
 import com.example.model.User;
 import com.example.model.UserCard;
 import com.example.model.UserWallet;
@@ -105,6 +107,30 @@ public class UserController {
         }
     }
 
+    @PutMapping("/{accountNumber}/cards/{cardId}")
+    public ResponseEntity<?> updateCard(
+            @PathVariable String accountNumber,
+            @PathVariable Long cardId,
+            @RequestBody UpdateCardRequest request) {
+        try {
+            return ResponseEntity.ok(service.updateCard(accountNumber, cardId, request));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{accountNumber}/cards/{cardId}/status")
+    public ResponseEntity<?> updateCardStatus(
+            @PathVariable String accountNumber,
+            @PathVariable Long cardId,
+            @RequestBody UpdateUserStatusRequest request) {
+        try {
+            return ResponseEntity.ok(service.updateCardStatus(accountNumber, cardId, request.isActive()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+        }
+    }
+
     @PostMapping("/{accountNumber}/wallets")
     public ResponseEntity<?> addWallet(
             @PathVariable String accountNumber,
@@ -123,6 +149,30 @@ public class UserController {
             return ResponseEntity.ok(service.getWallets(accountNumber));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", ex.getMessage()));
+        }
+    }
+
+    @PutMapping("/{accountNumber}/wallets/{walletId}")
+    public ResponseEntity<?> updateWallet(
+            @PathVariable String accountNumber,
+            @PathVariable Long walletId,
+            @RequestBody UpdateWalletRequest request) {
+        try {
+            return ResponseEntity.ok(service.updateWallet(accountNumber, walletId, request));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{accountNumber}/wallets/{walletId}/status")
+    public ResponseEntity<?> updateWalletStatus(
+            @PathVariable String accountNumber,
+            @PathVariable Long walletId,
+            @RequestBody UpdateUserStatusRequest request) {
+        try {
+            return ResponseEntity.ok(service.updateWalletStatus(accountNumber, walletId, request.isActive()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
         }
     }
 }
