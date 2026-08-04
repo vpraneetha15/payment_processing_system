@@ -879,6 +879,30 @@
             text-align: center;
         }
 
+        .error-state {
+            color: #8f2231;
+            padding: 22px 16px;
+            text-align: center;
+            line-height: 1.45;
+        }
+
+        .retry-inline-btn {
+            margin-top: 10px;
+            border: 1px solid #f2b7bf;
+            background: #fff4f6;
+            color: #8f2231;
+            font-size: 0.8rem;
+            font-weight: 800;
+            border-radius: 9px;
+            min-height: 34px;
+            padding: 0 12px;
+            cursor: pointer;
+        }
+
+        .retry-inline-btn:hover {
+            background: #ffe9ed;
+        }
+
         body.modal-open {
             overflow: hidden;
         }
@@ -1281,6 +1305,20 @@
             background: #3e1f2a;
             border-color: #6d3546;
             color: #ffd7de;
+        }
+
+        :root[data-theme="dark"] .error-state {
+            color: #ffd7de;
+        }
+
+        :root[data-theme="dark"] .retry-inline-btn {
+            border-color: #84505f;
+            background: #3e1f2a;
+            color: #ffd7de;
+        }
+
+        :root[data-theme="dark"] .retry-inline-btn:hover {
+            background: #4c2633;
         }
 
         @media (max-width: 1180px) {
@@ -2380,7 +2418,6 @@
             }
 
             let rawData = [];
-            let usingFallbackData = false;
             try {
                 let response = null;
                 let lastError = null;
@@ -2402,13 +2439,25 @@
                 }
 
                 rawData = await response.json();
-
-                // Inject one manual demo payment so UI behavior can be previewed quickly.
-                rawData = rawData.concat(getManualHistoryEntity());
             } catch (error) {
                 console.error("Failed to load payment history from backend:", error.message);
-                rawData = getManualHistoryEntity();
-                usingFallbackData = true;
+                historyTableBody.innerHTML = ""
+                    + "<tr><td colspan='8' class='error-state'>"
+                    + "⚠️ Unable to load payment history"
+                    + "<br>"
+                    + "<button type='button' id='retryLoadHistoryBtn' class='retry-inline-btn'>Try again</button>"
+                    + "</td></tr>";
+                const retryBtn = document.getElementById("retryLoadHistoryBtn");
+                if (retryBtn) {
+                    retryBtn.addEventListener("click", () => {
+                        loadHistory(false);
+                    });
+                }
+                statusCardsEl.innerHTML = "";
+                allPayments = [];
+                filteredPayments = [];
+                paginationControls.innerHTML = "";
+                return;
             }
 
             const events = normalizeEvents(rawData);
@@ -2421,10 +2470,6 @@
             lastSignatureByPayment = nextSig;
             allPayments = nextPayments;
             applyFilters();
-
-            if (usingFallbackData) {
-                console.warn("Backend unreachable. Showing hardcoded demo history entity.");
-            }
 
             if (activeModalPaymentId && detailModal.classList.contains("open")) {
                 const activePayment = allPayments.find((p) => p.paymentId === activeModalPaymentId);
