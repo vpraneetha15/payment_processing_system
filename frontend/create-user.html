@@ -176,7 +176,7 @@
                     <h2>Recent Users <span id="userCount" class="count-pill">0</span></h2>
                     <button id="refreshUsersBtn" class="btn-link" type="button">Refresh</button>
                 </div>
-                <input type="search" id="userSearch" class="search-input" placeholder="Search by account, name or email">
+                <input type="search" id="userSearch" class="search-input" placeholder="Search by Account Number, Name, Email, or UPI ID">
                 <ul id="userList" class="user-list" aria-live="polite"></ul>
             </section>
         </aside>
@@ -587,7 +587,8 @@
                 }
                 return String(user.accountNumber || "").toLowerCase().includes(query)
                     || String(user.fullName || "").toLowerCase().includes(query)
-                    || String(user.email || "").toLowerCase().includes(query);
+                    || String(user.email || "").toLowerCase().includes(query)
+                    || String(user.upiId || "").toLowerCase().includes(query);
             });
 
             const filteredSorted = sortUsersLatestFirst(filtered);
@@ -595,7 +596,9 @@
             userCountEl.textContent = String(usersCache.length);
 
             if (!filtered.length) {
-                userList.innerHTML = "<li>No users found.</li>";
+                userList.innerHTML = query
+                    ? "<li>No matching users found.</li>"
+                    : "<li>No users found.</li>";
                 return;
             }
 
