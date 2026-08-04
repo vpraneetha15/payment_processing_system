@@ -852,9 +852,25 @@
         }
 
         .modal-loading {
-            padding: 18px;
+            min-height: 260px;
+            padding: 26px 18px;
             display: grid;
-            gap: 12px;
+            gap: 10px;
+            align-content: center;
+            justify-items: center;
+            text-align: center;
+        }
+
+        .loading-emoji {
+            font-size: 2rem;
+            line-height: 1;
+            animation: bob 0.95s ease-in-out infinite;
+            filter: drop-shadow(0 5px 10px rgba(24, 71, 117, 0.22));
+        }
+
+        @keyframes bob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
         }
 
         .loading-badge {
@@ -1107,6 +1123,10 @@
             background: #3e1f2a;
             border-color: #6d3546;
             color: #ffd7de;
+        }
+
+        :root[data-theme="dark"] .loading-note {
+            color: #a8c1db;
         }
 
         :root[data-theme="dark"] .failed-box h3 {
@@ -1736,16 +1756,9 @@
         function loadingSkeletonHtml(paymentId) {
             return ""
                 + "<section class='modal-loading'>"
-                + "<span class='loading-badge'><span class='loading-spinner'></span>Loading transfer details</span>"
-                + "<p class='loading-note'>Preparing complete payment view for <strong>" + paymentId + "</strong>. Please wait a moment.</p>"
-                + "<div class='loading-grid'>"
-                + "<div class='skeleton'></div>"
-                + "<div class='skeleton'></div>"
-                + "<div class='skeleton'></div>"
-                + "<div class='skeleton tall'></div>"
-                + "<div class='skeleton tall'></div>"
-                + "<div class='skeleton tall'></div>"
-                + "</div>"
+                + "<div class='loading-emoji' aria-hidden='true'>⏳</div>"
+                + "<span class='loading-badge'><span class='loading-spinner'></span>Loading payment details</span>"
+                + "<p class='loading-note'>Fetching source and destination account information for <strong>" + paymentId + "</strong>.</p>"
                 + "</section>";
         }
 
