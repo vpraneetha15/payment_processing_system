@@ -345,6 +345,47 @@
             background: linear-gradient(180deg, #f8fbff, #f3f8ff);
         }
 
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px 16px 16px;
+            border-top: 1px solid #e6f0fb;
+            background: linear-gradient(180deg, #fcfeff, #f7fbff);
+        }
+
+        .page-btn {
+            min-height: 34px;
+            min-width: 34px;
+            padding: 0 10px;
+            border: 1px solid #cfe2f6;
+            border-radius: 9px;
+            background: #ffffff;
+            color: #2a5078;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.14s ease, transform 0.14s ease;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: #edf5ff;
+            transform: translateY(-1px);
+        }
+
+        .page-btn.active {
+            background: #1363a3;
+            border-color: #1363a3;
+            color: #ffffff;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         table {
             width: 100%;
             border-collapse: separate;
@@ -1098,6 +1139,27 @@
             background: linear-gradient(180deg, #13283f, #102236);
         }
 
+        :root[data-theme="dark"] .pagination {
+            border-top-color: #26415d;
+            background: linear-gradient(180deg, #14283f, #112336);
+        }
+
+        :root[data-theme="dark"] .page-btn {
+            background: #18324c;
+            border-color: #2f5376;
+            color: #c7def5;
+        }
+
+        :root[data-theme="dark"] .page-btn:hover:not(:disabled) {
+            background: #204161;
+        }
+
+        :root[data-theme="dark"] .page-btn.active {
+            background: #56a8e5;
+            border-color: #56a8e5;
+            color: #07253e;
+        }
+
         :root[data-theme="dark"] table {
             background: #102236;
         }
@@ -1265,6 +1327,17 @@
                 padding: 8px;
             }
 
+            .pagination {
+                justify-content: flex-start;
+                padding: 10px 10px 14px;
+            }
+
+            .page-btn {
+                min-height: 32px;
+                min-width: 32px;
+                font-size: 0.77rem;
+            }
+
             table {
                 min-width: 0;
                 border-collapse: separate;
@@ -1403,6 +1476,7 @@
                     <tbody id="historyTableBody"></tbody>
                 </table>
             </div>
+            <nav id="paginationControls" class="pagination" aria-label="Payment history pagination"></nav>
         </section>
     </main>
 
@@ -1442,6 +1516,7 @@
         const exportBtn = document.getElementById("exportBtn");
         const themeToggleBtn = document.getElementById("themeToggleBtn");
         const historyTableBody = document.getElementById("historyTableBody");
+        const paginationControls = document.getElementById("paginationControls");
         const detailModal = document.getElementById("detailModal");
         const detailModalTitle = document.getElementById("detailModalTitle");
         const detailModalContent = document.getElementById("detailModalContent");
@@ -1453,6 +1528,8 @@
         let filteredPayments = [];
         let activeModalPaymentId = null;
         let lastSignatureByPayment = {};
+        let currentPage = 1;
+        const rowsPerPage = 10;
         let detailViewMode = "detailed";
         let isModalHydrating = false;
         let modalLoadToken = 0;
@@ -1942,14 +2019,61 @@
             }
         }
 
-        function renderTable(payments) {
-            if (!payments.length) {
-                historyTableBody.innerHTML = "<tr><td colspan='8' class='empty'>📄 No payment history found<br>Try changing filters</td></tr>";
+        function renderPagination(totalItems) {
+            const totalPages = Math.max(1, Math.ceil(totalItems / rowsPerPage));
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+
+            if (totalItems === 0) {
+                paginationControls.innerHTML = "";
                 return;
             }
 
+            const parts = [];
+            parts.push("<button type='button' class='page-btn' data-page='" + (currentPage - 1) + "'" + (currentPage === 1 ? " disabled" : "") + ">&lt; Previous</button>");
+
+            for (let i = 1; i <= totalPages; i++) {
+                parts.push("<button type='button' class='page-btn" + (i === currentPage ? " active" : "") + "' data-page='" + i + "'>" + i + "</button>");
+            }
+
+            parts.push("<button type='button' class='page-btn' data-page='" + (currentPage + 1) + "'" + (currentPage === totalPages ? " disabled" : "") + ">Next &gt;</button>");
+            paginationControls.innerHTML = parts.join("");
+
+            const pageButtons = paginationControls.querySelectorAll("button[data-page]");
+            pageButtons.forEach((button) => {
+                button.addEventListener("click", () => {
+                    if (button.hasAttribute("disabled")) {
+                        return;
+                    }
+                    const nextPage = Number(button.getAttribute("data-page"));
+                    if (!Number.isFinite(nextPage) || nextPage < 1 || nextPage === currentPage) {
+                        return;
+                    }
+                    currentPage = nextPage;
+                    renderTable(filteredPayments);
+                });
+            });
+        }
+
+        function renderTable(payments) {
+            if (!payments.length) {
+                historyTableBody.innerHTML = "<tr><td colspan='8' class='empty'>📄 No payment history found<br>Try changing filters</td></tr>";
+                renderPagination(0);
+                return;
+            }
+
+            const totalPages = Math.max(1, Math.ceil(payments.length / rowsPerPage));
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const pagePayments = payments.slice(startIndex, endIndex);
+
             const rows = [];
-            for (const p of payments) {
+            for (const p of pagePayments) {
                 const selected = p.paymentId === activeModalPaymentId;
                 const summaryClass = "summary-row" + (selected ? " selected" : "") + (p.justUpdated ? " updated" : "");
                 rows.push(
@@ -1967,6 +2091,7 @@
             }
 
             historyTableBody.innerHTML = rows.join("");
+            renderPagination(payments.length);
             bindRowActions();
         }
 
@@ -2313,9 +2438,18 @@
             }
         }
 
-        searchInput.addEventListener("input", applyFilters);
-        statusFilter.addEventListener("change", applyFilters);
-        dateRangeFilter.addEventListener("change", applyFilters);
+        searchInput.addEventListener("input", () => {
+            currentPage = 1;
+            applyFilters();
+        });
+        statusFilter.addEventListener("change", () => {
+            currentPage = 1;
+            applyFilters();
+        });
+        dateRangeFilter.addEventListener("change", () => {
+            currentPage = 1;
+            applyFilters();
+        });
         refreshBtn.addEventListener("click", () => loadHistory(false));
         exportBtn.addEventListener("click", exportCsv);
         themeToggleBtn.addEventListener("click", () => {
