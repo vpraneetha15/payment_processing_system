@@ -927,6 +927,63 @@
             display: flex;
         }
 
+        .confirm-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(7, 24, 43, 0.45);
+            backdrop-filter: blur(3px);
+        }
+
+        .confirm-overlay.open {
+            display: flex;
+        }
+
+        .confirm-box {
+            width: min(420px, 100%);
+            border-radius: 14px;
+            border: 1px solid #d6e6f8;
+            background: linear-gradient(180deg, #ffffff, #f8fcff);
+            box-shadow: 0 24px 55px rgba(12, 32, 55, 0.25);
+            padding: 16px;
+        }
+
+        .confirm-title {
+            margin: 0 0 12px;
+            color: #244a72;
+            font-size: 0.96rem;
+            font-weight: 800;
+            line-height: 1.4;
+        }
+
+        .confirm-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .confirm-btn {
+            min-height: 34px;
+            min-width: 74px;
+            border-radius: 9px;
+            border: 1px solid #cadff4;
+            background: #f1f7ff;
+            color: #274e76;
+            font-weight: 800;
+            font-size: 0.78rem;
+            cursor: pointer;
+        }
+
+        .confirm-btn.primary {
+            border-color: #1363a3;
+            background: #1363a3;
+            color: #fff;
+        }
+
         .modal-box {
             width: min(980px, 100%);
             max-height: 88vh;
@@ -1307,6 +1364,28 @@
             color: #ffd7de;
         }
 
+        :root[data-theme="dark"] .confirm-box {
+            border-color: #2a4663;
+            background: linear-gradient(180deg, #14283f, #112336);
+            box-shadow: 0 26px 58px rgba(1, 8, 16, 0.5);
+        }
+
+        :root[data-theme="dark"] .confirm-title {
+            color: #d6e9ff;
+        }
+
+        :root[data-theme="dark"] .confirm-btn {
+            border-color: #2f5376;
+            background: #17314b;
+            color: #c8def5;
+        }
+
+        :root[data-theme="dark"] .confirm-btn.primary {
+            border-color: #56a8e5;
+            background: #56a8e5;
+            color: #07253e;
+        }
+
         :root[data-theme="dark"] .error-state {
             color: #ffd7de;
         }
@@ -1528,6 +1607,16 @@
         </section>
     </div>
 
+    <div id="exportConfirmModal" class="confirm-overlay" aria-hidden="true">
+        <section class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="exportConfirmTitle">
+            <h3 id="exportConfirmTitle" class="confirm-title">Are you sure you want to export history?</h3>
+            <div class="confirm-actions">
+                <button id="exportConfirmNo" class="confirm-btn" type="button">NO</button>
+                <button id="exportConfirmYes" class="confirm-btn primary" type="button">YES</button>
+            </div>
+        </section>
+    </div>
+
     <script>
         const HISTORY_PATH = "/payment-history";
         const HISTORY_ENDPOINT_CANDIDATES = (() => {
@@ -1559,6 +1648,9 @@
         const detailModalTitle = document.getElementById("detailModalTitle");
         const detailModalContent = document.getElementById("detailModalContent");
         const detailModalClose = document.getElementById("detailModalClose");
+        const exportConfirmModal = document.getElementById("exportConfirmModal");
+        const exportConfirmYes = document.getElementById("exportConfirmYes");
+        const exportConfirmNo = document.getElementById("exportConfirmNo");
         const themeToggleThumb = document.getElementById("themeToggleThumb");
         const THEME_STORAGE_KEY = "payment-history-theme";
 
@@ -2412,6 +2504,19 @@
             URL.revokeObjectURL(url);
         }
 
+        function openExportConfirm() {
+            if (!filteredPayments.length) {
+                return;
+            }
+            exportConfirmModal.classList.add("open");
+            exportConfirmModal.setAttribute("aria-hidden", "false");
+        }
+
+        function closeExportConfirm() {
+            exportConfirmModal.classList.remove("open");
+            exportConfirmModal.setAttribute("aria-hidden", "true");
+        }
+
         async function loadHistory(isRealtimeTick) {
             if (!isRealtimeTick) {
                 historyTableBody.innerHTML = "<tr><td colspan='8' class='loading'>Loading payment history...</td></tr>";
@@ -2496,7 +2601,17 @@
             applyFilters();
         });
         refreshBtn.addEventListener("click", () => loadHistory(false));
-        exportBtn.addEventListener("click", exportCsv);
+        exportBtn.addEventListener("click", openExportConfirm);
+        exportConfirmYes.addEventListener("click", () => {
+            closeExportConfirm();
+            exportCsv();
+        });
+        exportConfirmNo.addEventListener("click", closeExportConfirm);
+        exportConfirmModal.addEventListener("click", (event) => {
+            if (event.target === exportConfirmModal) {
+                closeExportConfirm();
+            }
+        });
         themeToggleBtn.addEventListener("click", () => {
             const currentTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
             const nextTheme = currentTheme === "dark" ? "light" : "dark";
@@ -2514,6 +2629,10 @@
             }
         });
         document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && exportConfirmModal.classList.contains("open")) {
+                closeExportConfirm();
+                return;
+            }
             if (event.key === "Escape" && detailModal.classList.contains("open")) {
                 closeDetailModal();
             }
