@@ -52,5 +52,9 @@ public class AccountService {
 	public String findAccountByMobile(String mobileNumber) {
 		return repository.findAccountNumberByMobile(mobileNumber);
 	}
+
+	public String findAccountByWalletId(String walletIdentifier) {
+		return repository.findAccountNumberByWalletId(walletIdentifier);
+	}
 }
 

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.model.Account;
@@ -91,13 +92,13 @@ public class AccountController {
     }
 
     /** Resolve account number from a registered UPI ID. */
-    @GetMapping("/by-upi/{upiId}")
-    public ResponseEntity<?> findByUpi(@PathVariable String upiId) {
+    @GetMapping("/by-upi")
+    public ResponseEntity<?> findByUpi(@RequestParam(name = "id") String upiId) {
         if (upiId == null || upiId.isBlank() || !upiId.contains("@")) {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", "INVALID_UPI", "message", "UPI ID must be in the format name@provider"));
         }
-        String accountNumber = service.findAccountByUpiId(upiId);
+        String accountNumber = service.findAccountByUpiId(upiId.trim());
         if (accountNumber == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", "UPI_NOT_FOUND", "message", "No active account linked to UPI ID: " + upiId));
@@ -121,6 +122,25 @@ public class AccountController {
         if (accountNumber == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", "MOBILE_NOT_FOUND", "message", "No active account linked to mobile: " + mobileNumber));
+        }
+        Account account = service.findById(accountNumber);
+        return ResponseEntity.ok(Map.of(
+            "accountNumber", accountNumber,
+            "currency", account != null && account.getCurrency() != null ? account.getCurrency() : ""
+        ));
+    }
+
+    /** Resolve account number from a registered wallet identifier. */
+    @GetMapping("/by-wallet/{walletId}")
+    public ResponseEntity<?> findByWallet(@PathVariable String walletId) {
+        if (walletId == null || walletId.isBlank()) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "INVALID_WALLET", "message", "Wallet ID is required"));
+        }
+        String accountNumber = service.findAccountByWalletId(walletId);
+        if (accountNumber == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "WALLET_NOT_FOUND", "message", "No active account linked to wallet: " + walletId));
         }
         Account account = service.findById(accountNumber);
         return ResponseEntity.ok(Map.of(

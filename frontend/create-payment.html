@@ -191,25 +191,6 @@
                             </div>
                         </div>
 
-                        <div class="card form-card mode-extra-group" id="extra-BANK_TRANSFER">
-                            <div class="card-header">
-                                <span class="mode-icon card-green" style="width:38px;height:38px"><span class="material-icons-outlined" style="font-size:20px">account_balance</span></span>
-                                <div><h2 class="card-title">Account Transfer Details</h2><p class="card-sub">Enter the source and destination account numbers below</p></div>
-                            </div>
-                            <div class="form-grid">
-                                <div class="field">
-                                    <label for="transferBankName">Bank / Institution Name</label>
-                                    <input id="transferBankName" name="transferBankName" type="text" maxlength="60" placeholder="e.g. HDFC Bank">
-                                    <span class="field-hint">Optional: name of the receiving institution</span>
-                                </div>
-                                <div class="field">
-                                    <label for="transferCode">NEFT / RTGS / IFSC Code</label>
-                                    <input id="transferCode" name="transferCode" type="text" maxlength="20" placeholder="e.g. HDFC0001234">
-                                    <span class="field-hint">Optional: bank routing or IFSC code</span>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="card form-card mode-extra-group" id="extra-DIGITAL_WALLET">
                             <div class="card-header">
                                 <span class="mode-icon card-purple" style="width:38px;height:38px"><span class="material-icons-outlined" style="font-size:20px">account_balance_wallet</span></span>
@@ -229,7 +210,7 @@
                                 <div class="field">
                                     <label for="walletId">Wallet ID / Email</label>
                                     <input id="walletId" name="walletId" type="text" maxlength="80" placeholder="e.g. user@example.com">
-                                    <span class="field-hint">Your wallet identifier or linked email</span>
+                                    <span id="walletIdStatus" class="field-hint">Source account will be resolved automatically</span>
                                 </div>
                             </div>
                         </div>
@@ -244,6 +225,9 @@
                                     <label for="senderUpiId">Your (Sender) UPI ID <span class="required-mark">*</span></label>
                                     <input id="senderUpiId" name="senderUpiId" type="text" maxlength="80" placeholder="e.g. yourname@upi">
                                     <span id="senderUpiStatus" class="field-hint">Enter your registered UPI ID — source account will be resolved automatically</span>
+                                    <div id="senderUpiResolved" style="display:none;margin-top:0.4rem;padding:0.4rem 0.75rem;background:var(--green-soft);border:1px solid var(--green);border-radius:var(--radius-sm);font-size:0.82rem;color:var(--green);font-weight:600">
+                                        ✓ Source Account: <span id="senderUpiResolvedAcc"></span>
+                                    </div>
                                 </div>
                                 <div class="field">
                                     <label for="upiReceiveBy">Send Money Via</label>
@@ -256,6 +240,9 @@
                                     <label for="receiverUpiId">Receiver UPI ID <span class="required-mark">*</span></label>
                                     <input id="receiverUpiId" name="receiverUpiId" type="text" maxlength="80" placeholder="e.g. receiver@upi">
                                     <span id="receiverUpiStatus" class="field-hint">Destination account will be resolved automatically</span>
+                                    <div id="receiverUpiResolved" style="display:none;margin-top:0.4rem;padding:0.4rem 0.75rem;background:var(--green-soft);border:1px solid var(--green);border-radius:var(--radius-sm);font-size:0.82rem;color:var(--green);font-weight:600">
+                                        ✓ Destination Account: <span id="receiverUpiResolvedAcc"></span>
+                                    </div>
                                 </div>
                                 <div class="field" id="receiverMobileField" style="display:none">
                                     <label for="receiverMobile">Receiver Mobile Number <span class="required-mark">*</span></label>
@@ -779,6 +766,25 @@
             });
         }
 
+        // ─── Wallet ID Auto-Lookup ────────────────────────────
+        const walletIdInput = document.getElementById('walletId');
+        if (walletIdInput) {
+            walletIdInput.addEventListener('input', function () {
+                const val = this.value.trim();
+                const statusEl = document.getElementById('walletIdStatus');
+                if (val.length < 3) {
+                    setLookupStatus(statusEl, 'info', 'Source account will be resolved automatically');
+                    return;
+                }
+                debounce(() => lookupAndFill(
+                    ACCOUNTS_API_URL + '/by-wallet/' + encodeURIComponent(val),
+                    fields.sourceAccount,
+                    statusEl,
+                    'Wallet ID not registered in the system'
+                ), 600, 'walletId');
+            });
+        }
+
         // ─── UPI Sender/Receiver Lookups ─────────────────────
         const senderUpiInput   = document.getElementById('senderUpiId');
         const receiverUpiInput = document.getElementById('receiverUpiId');
@@ -791,16 +797,37 @@
             senderUpiInput.addEventListener('input', function () {
                 const val = this.value.trim();
                 const statusEl = document.getElementById('senderUpiStatus');
+                const resolvedBadge = document.getElementById('senderUpiResolved');
+                const resolvedAcc   = document.getElementById('senderUpiResolvedAcc');
+                resolvedBadge.style.display = 'none';
                 if (!val.includes('@')) {
                     setLookupStatus(statusEl, 'info', 'Enter your registered UPI ID — source account will be resolved automatically');
                     return;
                 }
-                debounce(() => lookupAndFill(
-                    ACCOUNTS_API_URL + '/by-upi/' + encodeURIComponent(val),
-                    fields.sourceAccount,
-                    statusEl,
-                    'UPI ID not registered in the system'
-                ), 600, 'senderUpi');
+                debounce(async () => {
+                    try {
+                        const res = await fetch(ACCOUNTS_API_URL + '/by-upi?id=' + encodeURIComponent(val),
+                            { headers: { Accept: 'application/json' } });
+                        if (!res.ok) {
+                            const err = await res.json().catch(() => ({}));
+                            setLookupStatus(statusEl, 'error', err.message || 'UPI ID not registered in the system');
+                            resolvedBadge.style.display = 'none';
+                            return;
+                        }
+                        const data = await res.json();
+                        if (data.accountNumber) {
+                            fields.sourceAccount.value = data.accountNumber.toUpperCase();
+                            fields.sourceAccount.dispatchEvent(new Event('input'));
+                            resolvedAcc.textContent = data.accountNumber.toUpperCase() +
+                                (data.currency ? ' (' + data.currency + ')' : '');
+                            resolvedBadge.style.display = 'block';
+                            setLookupStatus(statusEl, 'success', '✓ UPI ID verified');
+                            updateConversionPreview();
+                        }
+                    } catch {
+                        setLookupStatus(statusEl, 'error', 'Lookup failed — check server connection');
+                    }
+                }, 600, 'senderUpi');
             });
         }
 
@@ -808,16 +835,37 @@
             receiverUpiInput.addEventListener('input', function () {
                 const val = this.value.trim();
                 const statusEl = document.getElementById('receiverUpiStatus');
+                const resolvedBadge = document.getElementById('receiverUpiResolved');
+                const resolvedAcc   = document.getElementById('receiverUpiResolvedAcc');
+                resolvedBadge.style.display = 'none';
                 if (!val.includes('@')) {
                     setLookupStatus(statusEl, 'info', 'Destination account will be resolved automatically');
                     return;
                 }
-                debounce(() => lookupAndFill(
-                    ACCOUNTS_API_URL + '/by-upi/' + encodeURIComponent(val),
-                    fields.destinationAccount,
-                    statusEl,
-                    'Receiver UPI ID not registered in the system'
-                ), 600, 'receiverUpi');
+                debounce(async () => {
+                    try {
+                        const res = await fetch(ACCOUNTS_API_URL + '/by-upi?id=' + encodeURIComponent(val),
+                            { headers: { Accept: 'application/json' } });
+                        if (!res.ok) {
+                            const err = await res.json().catch(() => ({}));
+                            setLookupStatus(statusEl, 'error', err.message || 'Receiver UPI ID not registered in the system');
+                            resolvedBadge.style.display = 'none';
+                            return;
+                        }
+                        const data = await res.json();
+                        if (data.accountNumber) {
+                            fields.destinationAccount.value = data.accountNumber.toUpperCase();
+                            fields.destinationAccount.dispatchEvent(new Event('input'));
+                            resolvedAcc.textContent = data.accountNumber.toUpperCase() +
+                                (data.currency ? ' (' + data.currency + ')' : '');
+                            resolvedBadge.style.display = 'block';
+                            setLookupStatus(statusEl, 'success', '✓ UPI ID verified');
+                            updateConversionPreview();
+                        }
+                    } catch {
+                        setLookupStatus(statusEl, 'error', 'Lookup failed — check server connection');
+                    }
+                }, 600, 'receiverUpi');
             });
         }
 

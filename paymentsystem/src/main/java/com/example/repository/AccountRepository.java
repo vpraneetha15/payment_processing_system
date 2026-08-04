@@ -117,8 +117,18 @@ public class AccountRepository {
             List<String> rows = jdbcTemplate.queryForList(sql, String.class, accountNumber);
             return rows.isEmpty() ? null : rows.get(0);
         } catch (Exception ex) {
-            // email column may not exist in older schema versions
             return null;
         }
+    }
+
+    /**
+     * Returns the account_number linked to the given wallet identifier (from wallets),
+     * or null if not found / wallet is inactive.
+     */
+    public String findAccountNumberByWalletId(String walletIdentifier) {
+        if (walletIdentifier == null || walletIdentifier.isBlank()) return null;
+        String sql = "select account_number from wallets where wallet_identifier = ? and active = true limit 1";
+        List<String> rows = jdbcTemplate.queryForList(sql, String.class, walletIdentifier);
+        return rows.isEmpty() ? null : rows.get(0);
     }
 }
