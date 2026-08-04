@@ -141,6 +141,13 @@ h2 {
   animation: rise 0.6s ease;
 }
 
+.section-title {
+  margin: 18px 0 12px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1rem;
+  color: #1a3f5a;
+}
+
 .subtext {
   margin: 8px 0 18px;
   color: var(--muted);
@@ -238,6 +245,57 @@ textarea {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.left-actions {
+  justify-content: flex-start;
+}
+
+.quick-actions {
+  margin-top: 12px;
+}
+
+.conditional-fields {
+  margin-top: 8px;
+}
+
+.is-hidden {
+  display: none;
+}
+
+.list-split {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.mini-title {
+  margin: 0 0 8px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.95rem;
+  color: #1a3f5a;
+}
+
+.simple-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.simple-list li {
+  border: 1px solid #dbe6f1;
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #fbfdff;
+  color: #26435b;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
 }
 
 .btn {
@@ -478,6 +536,25 @@ textarea {
   color: #294861;
 }
 
+.modal-input {
+  width: 100%;
+  margin-top: 6px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid #d4e1ee;
+  font-size: 0.92rem;
+}
+
+.modal-span-2 {
+  grid-column: span 2;
+}
+
+.status-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -511,6 +588,7 @@ textarea {
 
   .actions {
     justify-content: stretch;
+    flex-direction: column;
   }
 
   .btn {
@@ -518,6 +596,14 @@ textarea {
   }
 
   .modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-span-2 {
+    grid-column: span 1;
+  }
+
+  .list-split {
     grid-template-columns: 1fr;
   }
 }
