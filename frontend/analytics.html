@@ -38,6 +38,14 @@
             --danger: #c23a3a;
             --warning: #b46b00;
             --success: #0a8e67;
+            --status-success-bg: #e8fbf5;
+            --status-success-ink: #076e52;
+            --status-failed-bg: #ffecee;
+            --status-failed-ink: #a12626;
+            --status-created-bg: #e8f3ff;
+            --status-created-ink: #114f94;
+            --status-pending-bg: #fff4e0;
+            --status-pending-ink: #93590a;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -67,6 +75,17 @@
                 --chip-ink: #bfd7fb;
                 --chip-active-bg: #4f98ff;
                 --chip-active-ink: #081627;
+                --danger: #f07070;
+                --warning: #f4a340;
+                --success: #3ad6be;
+                --status-success-bg: rgba(10, 142, 103, 0.2);
+                --status-success-ink: #5de8c8;
+                --status-failed-bg: rgba(194, 58, 58, 0.2);
+                --status-failed-ink: #f99292;
+                --status-created-bg: rgba(15, 111, 255, 0.2);
+                --status-created-ink: #90c0ff;
+                --status-pending-bg: rgba(180, 107, 0, 0.2);
+                --status-pending-ink: #f4c060;
             }
         }
 
@@ -79,6 +98,10 @@
             --button-primary-shadow: 0 12px 25px rgba(15, 111, 255, 0.28);
             --theme-pill: #ffffff; --theme-pill-ink: #304763; --theme-pill-active-bg: #163a6c; --theme-pill-active-ink: #ffffff;
             --chip-bg: #eef4ff; --chip-ink: #16407a; --chip-active-bg: #0f6fff; --chip-active-ink: #ffffff;
+            --status-success-bg: #e8fbf5; --status-success-ink: #076e52;
+            --status-failed-bg: #ffecee; --status-failed-ink: #a12626;
+            --status-created-bg: #e8f3ff; --status-created-ink: #114f94;
+            --status-pending-bg: #fff4e0; --status-pending-ink: #93590a;
         }
 
         :root[data-theme="dark"] {
@@ -90,6 +113,11 @@
             --button-primary-shadow: 0 12px 25px rgba(41, 110, 214, 0.4);
             --theme-pill: #1a2a42; --theme-pill-ink: #d7e6fd; --theme-pill-active-bg: #5fafff; --theme-pill-active-ink: #081627;
             --chip-bg: #16273f; --chip-ink: #bfd7fb; --chip-active-bg: #4f98ff; --chip-active-ink: #081627;
+            --danger: #f07070; --warning: #f4a340; --success: #3ad6be;
+            --status-success-bg: rgba(10, 142, 103, 0.2); --status-success-ink: #5de8c8;
+            --status-failed-bg: rgba(194, 58, 58, 0.2); --status-failed-ink: #f99292;
+            --status-created-bg: rgba(15, 111, 255, 0.2); --status-created-ink: #90c0ff;
+            --status-pending-bg: rgba(180, 107, 0, 0.2); --status-pending-ink: #f4c060;
         }
 
         * { box-sizing: border-box; }
@@ -123,26 +151,26 @@
         .theme-menu { position: relative; }
         .theme-trigger {
             width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 50%;
-            background: var(--surface); color: var(--theme-pill-ink); display: inline-flex;
-            align-items: center; justify-content: center; cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.25s ease, background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+        .theme-toggle {
+            width: 84px; height: 38px; border: 1px solid var(--line); background: var(--bg);
+            border-radius: 999px; position: relative; overflow: hidden;
+            display: inline-flex; align-items: center; justify-content: center;
+            cursor: pointer; padding: 0; flex-shrink: 0;
+            transition: border-color 0.22s ease, background 0.35s ease;
         }
-        .theme-trigger:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(10, 27, 48, 0.14); }
-        .theme-trigger svg { width: 20px; height: 20px; }
-        .theme-dropdown {
-            position: absolute; top: calc(100% + 10px); right: 0; min-width: 150px;
-            background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
-            box-shadow: 0 18px 32px rgba(8, 24, 44, 0.2); padding: 8px; opacity: 0;
-            transform: translateY(-8px) scale(0.98); pointer-events: none;
-            transition: opacity 0.22s ease, transform 0.22s ease; z-index: 20;
+        .theme-toggle:hover { border-color: var(--brand); }
+        .toggle-track {
+            position: absolute; inset: 0; display: flex; align-items: center;
+            justify-content: space-between; padding: 0 10px; font-size: 0.9rem; pointer-events: none;
         }
-        .theme-menu.open .theme-dropdown { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
-        .theme-btn {
-            width: 100%; border: 0; border-radius: 10px; background: transparent; color: var(--theme-pill-ink);
-            font: inherit; font-size: 0.84rem; font-weight: 700; padding: 9px 10px; text-align: left; cursor: pointer;
-            transition: background-color 0.2s ease, color 0.2s ease;
+        .toggle-thumb {
+            position: absolute; top: 3px; left: 3px; width: 30px; height: 30px;
+            border-radius: 50%; background: var(--brand); display: inline-flex;
+            align-items: center; justify-content: center; font-size: 0.88rem;
+            transition: transform 0.22s cubic-bezier(0.22, 0.61, 0.36, 1); pointer-events: none;
         }
-        .theme-btn.is-active { background: var(--theme-pill-active-bg); color: var(--theme-pill-active-ink); }
+        .theme-toggle.is-dark .toggle-thumb { transform: translateX(46px); }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
         .btn {
             text-decoration: none; border-radius: 999px; font-weight: 700; font-size: 0.9rem;
@@ -253,8 +281,8 @@
         .fx-ticker-header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 4px 0 14px; }
         .fx-ticker-price { font-size: 1.7rem; font-weight: 800; color: var(--ink); }
         .fx-ticker-change { font-size: 0.88rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; }
-        .fx-ticker-change.positive { background: #e8fbf5; color: #076e52; }
-        .fx-ticker-change.negative { background: #ffecee; color: #a12626; }
+        .fx-ticker-change.positive { background: var(--status-success-bg); color: var(--status-success-ink); }
+        .fx-ticker-change.negative { background: var(--status-failed-bg); color: var(--status-failed-ink); }
         .fx-ticker-asof { color: var(--muted); font-size: 0.8rem; margin-left: auto; }
 
         /* Headline strip */
@@ -414,10 +442,10 @@
             display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 9px;
             font-size: 0.74rem; font-weight: 700; background: var(--chip-bg); color: var(--chip-ink);
         }
-        .status-pill.completed, .status-pill.success { background: #e8fbf5; color: #076e52; }
-        .status-pill.failed { background: #ffecee; color: #a12626; }
-        .status-pill.created { background: #e8f3ff; color: #114f94; }
-        .status-pill.validated, .status-pill.sent { background: #fff4e0; color: #93590a; }
+        .status-pill.completed, .status-pill.success { background: var(--status-success-bg); color: var(--status-success-ink); }
+        .status-pill.failed { background: var(--status-failed-bg); color: var(--status-failed-ink); }
+        .status-pill.created { background: var(--status-created-bg); color: var(--status-created-ink); }
+        .status-pill.validated, .status-pill.sent { background: var(--status-pending-bg); color: var(--status-pending-ink); }
         .error-tag { font-size: 0.76rem; font-weight: 700; color: var(--danger); }
         .history-row td { background: var(--bg); }
         .history-timeline { display: grid; gap: 8px; padding: 6px 0; }
@@ -550,21 +578,14 @@
         <header class="topbar">
             <div class="brand">Payment Processing System <span>/ Analytics</span></div>
             <div class="actions">
-                <div class="theme-menu" id="theme-menu">
-                    <button class="theme-trigger" id="theme-trigger" type="button" aria-label="Theme mode" aria-haspopup="true" aria-expanded="false">
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <path d="M12 3C7.03 3 3 6.85 3 11.6C3 14.2 4.25 16.5 6.2 17.95C6.62 18.27 6.86 18.78 6.85 19.3C6.85 19.41 6.85 19.52 6.85 19.64C6.85 20.95 7.96 22 9.34 22H11.25C12.63 22 13.74 20.95 13.74 19.64V19.5C13.74 18.82 14.11 18.2 14.73 17.86C18.22 15.95 20.22 12.08 19.18 7.93C18.43 4.92 15.47 3 12 3Z" stroke="currentColor" stroke-width="1.5"/>
-                            <circle cx="8.2" cy="11" r="1" fill="currentColor"/>
-                            <circle cx="12" cy="9.6" r="1" fill="currentColor"/>
-                            <circle cx="15.6" cy="11.7" r="1" fill="currentColor"/>
-                        </svg>
-                    </button>
-                    <div class="theme-dropdown" id="theme-dropdown" role="menu" aria-label="Theme options">
-                        <button class="theme-btn" type="button" data-theme-mode="light" role="menuitem">Light</button>
-                        <button class="theme-btn" type="button" data-theme-mode="dark" role="menuitem">Dark</button>
-                        <button class="theme-btn" type="button" data-theme-mode="system" role="menuitem">System</button>
-                    </div>
-                </div>
+                <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch theme" aria-pressed="false">
+                    <span class="toggle-track" aria-hidden="true">
+                        <span>🔅</span>
+                        <span>🌙</span>
+                    </span>
+                    <span id="theme-toggle-thumb" class="toggle-thumb" aria-hidden="true">🔅</span>
+                    <span class="sr-only">Theme switch</span>
+                </button>
                 <a class="btn btn-secondary" href="dashboard.html">Back to Dashboard</a>
                 <span class="live-badge"><span class="live-dot"></span>Live</span>
                 <button class="btn btn-primary" id="export-csv-button" type="button">Export CSV</button>
@@ -652,8 +673,17 @@
 
         <section class="headline-grid" aria-label="Headline metrics">
             <article class="headline-card">
-                <div class="headline-label">Total Volume</div>
+                <div class="headline-label" style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;">
+                    Total Volume
+                    <select id="analytics-display-currency" style="font-size:0.7rem;font-weight:700;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:2px 6px;font-family:inherit;cursor:pointer;">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                        <option value="INR">INR</option>
+                    </select>
+                </div>
                 <div class="headline-value" id="headline-total-amount">--</div>
+                <div id="headline-fx-note" style="margin-top:4px;font-size:0.7rem;color:var(--muted);">Waiting for FX rates...</div>
             </article>
             <article class="headline-card">
                 <div class="headline-label">Total Payments</div>
@@ -857,6 +887,13 @@
         var currencyChartMode = "amount";
         var trendChartMode = "count";
         var activeSegment = "ALL";
+        var analyticsFxCache = {};
+        var lastCurrencyVolume = [];
+        var analyticsDisplayCurrency = localStorage.getItem("analytics-display-currency") || "USD";
+        (function initAnalyticsCurrencySelector() {
+            var sel = document.getElementById("analytics-display-currency");
+            if (sel) sel.value = analyticsDisplayCurrency;
+        })();
 
         var DISTRIBUTION_BUCKETS = [
             { key: "0-100", label: "0-100", min: 0, max: 100 },
@@ -871,48 +908,31 @@
             var root = document.documentElement;
             var body = document.body;
             var storageKey = "dashboard-theme-mode";
-            var buttons = Array.from(document.querySelectorAll(".theme-btn"));
-            var menu = document.getElementById("theme-menu");
-            var trigger = document.getElementById("theme-trigger");
+            var toggleBtn = document.getElementById("theme-toggle");
+            var toggleThumb = document.getElementById("theme-toggle-thumb");
 
-            function closeMenu() { menu.classList.remove("open"); trigger.setAttribute("aria-expanded", "false"); }
-            function openMenu() { menu.classList.add("open"); trigger.setAttribute("aria-expanded", "true"); }
-
-            function applyMode(mode) {
+            function setTheme(mode) {
+                var isDark = mode === "dark";
                 body.classList.add("theme-switching");
-                if (mode === "light" || mode === "dark") {
-                    root.setAttribute("data-theme", mode);
-                } else {
-                    root.removeAttribute("data-theme");
-                }
-                buttons.forEach(function (button) {
-                    var active = button.getAttribute("data-theme-mode") === mode;
-                    button.classList.toggle("is-active", active);
-                });
-                window.clearTimeout(applyMode._timer);
-                applyMode._timer = window.setTimeout(function () { body.classList.remove("theme-switching"); }, 500);
+                root.setAttribute("data-theme", isDark ? "dark" : "light");
+                toggleBtn.classList.toggle("is-dark", isDark);
+                toggleBtn.setAttribute("aria-pressed", isDark ? "true" : "false");
+                toggleBtn.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme");
+                if (toggleThumb) { toggleThumb.textContent = isDark ? "🌙" : "🔅"; }
+                window.clearTimeout(setTheme._timer);
+                setTheme._timer = window.setTimeout(function () { body.classList.remove("theme-switching"); }, 500);
             }
 
             var saved = localStorage.getItem(storageKey);
-            applyMode(saved === "light" || saved === "dark" || saved === "system" ? saved : "system");
+            var systemDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            var initial = saved === "dark" || saved === "light" ? saved : (systemDark ? "dark" : "light");
+            setTheme(initial);
 
-            buttons.forEach(function (button) {
-                button.addEventListener("click", function () {
-                    var mode = button.getAttribute("data-theme-mode") || "system";
-                    localStorage.setItem(storageKey, mode);
-                    applyMode(mode);
-                    closeMenu();
-                });
-            });
-
-            trigger.addEventListener("click", function () {
-                menu.classList.contains("open") ? closeMenu() : openMenu();
-            });
-            document.addEventListener("click", function (event) {
-                if (!menu.contains(event.target)) closeMenu();
-            });
-            document.addEventListener("keydown", function (event) {
-                if (event.key === "Escape") closeMenu();
+            toggleBtn.addEventListener("click", function () {
+                var isDark = root.getAttribute("data-theme") === "dark";
+                var next = isDark ? "light" : "dark";
+                localStorage.setItem(storageKey, next);
+                setTheme(next);
             });
         })();
 
@@ -1108,6 +1128,25 @@
             loadAll();
         });
 
+        document.getElementById("analytics-display-currency").addEventListener("change", async function () {
+            analyticsDisplayCurrency = this.value;
+            localStorage.setItem("analytics-display-currency", analyticsDisplayCurrency);
+            var fxNoteEl = document.getElementById("headline-fx-note");
+            if (fxNoteEl) fxNoteEl.textContent = "Converting to " + analyticsDisplayCurrency + "...";
+            var normalized = await computeNormalizedTotal(lastCurrencyVolume, analyticsDisplayCurrency);
+            var totalEl = document.getElementById("headline-total-amount");
+            try {
+                totalEl.textContent = new Intl.NumberFormat(undefined, { style: "currency", currency: analyticsDisplayCurrency, maximumFractionDigits: 2 }).format(normalized.total);
+            } catch (_) {
+                totalEl.textContent = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(normalized.total) + " " + analyticsDisplayCurrency;
+            }
+            if (fxNoteEl) {
+                fxNoteEl.textContent = normalized.hadError
+                    ? "Partial conversion — some FX rates unavailable"
+                    : "All currencies converted to " + analyticsDisplayCurrency + " via live FX rates";
+            }
+        });
+
         document.getElementById("refresh-button").addEventListener("click", loadAll);
 
         /* ---------- Query building ---------- */
@@ -1146,10 +1185,68 @@
 
         var chartColors = ["#0f6fff", "#00c2a8", "#f4a340", "#c23a3a", "#7c5cff", "#2d6ed0", "#e05aa0", "#3ad6be", "#b46b00", "#5f6f85"];
 
+        /* ---------- FX normalization for total volume ---------- */
+        async function getAnalyticsFxRate(src, tgt) {
+            src = src.toUpperCase(); tgt = tgt.toUpperCase();
+            if (src === tgt) return 1;
+            var key = src + "->" + tgt;
+            if (analyticsFxCache[key]) return analyticsFxCache[key];
+            try {
+                var res = await fetch("https://api.frankfurter.dev/v2/rates?base=" + encodeURIComponent(src) + "&quotes=" + encodeURIComponent(tgt));
+                if (!res.ok) throw new Error("status " + res.status);
+                var rows = await res.json();
+                var rate = Array.isArray(rows) && rows.length ? Number(rows[0].rate) : NaN;
+                if (!isNaN(rate) && rate > 0) { analyticsFxCache[key] = rate; return rate; }
+                throw new Error("no rate");
+            } catch (_) {
+                var fb = await fetch("https://open.er-api.com/v6/latest/" + encodeURIComponent(src));
+                if (!fb.ok) throw new Error("fallback failed");
+                var fd = await fb.json();
+                var fbRate = fd && fd.rates ? Number(fd.rates[tgt]) : NaN;
+                if (isNaN(fbRate) || fbRate <= 0) throw new Error("no fallback rate");
+                analyticsFxCache[key] = fbRate;
+                return fbRate;
+            }
+        }
+
+        async function computeNormalizedTotal(cvData, targetCurrency) {
+            var total = 0;
+            var hadError = false;
+            for (var i = 0; i < cvData.length; i++) {
+                var src = String(cvData[i].currency || "").toUpperCase();
+                var amt = Number(cvData[i].totalAmount || 0);
+                if (!src || isNaN(amt)) continue;
+                if (src === targetCurrency) { total += amt; continue; }
+                try {
+                    var rate = await getAnalyticsFxRate(src, targetCurrency);
+                    total += amt * rate;
+                } catch (_) { hadError = true; }
+            }
+            return { total: total, hadError: hadError };
+        }
+
         /* ---------- Renderers ---------- */
-        function renderHeadline(overview) {
-            animateCount(document.getElementById("headline-total-amount"), overview.totalAmount || 0, 900,
-                function (v) { return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(v); });
+        function renderHeadline(overview, normalizedTotal, displayCurrency) {
+            var totalEl = document.getElementById("headline-total-amount");
+            var fxNoteEl = document.getElementById("headline-fx-note");
+            if (normalizedTotal !== undefined && displayCurrency) {
+                animateCount(totalEl, normalizedTotal.total, 900, function (v) {
+                    try {
+                        return new Intl.NumberFormat(undefined, { style: "currency", currency: displayCurrency, maximumFractionDigits: 2 }).format(v);
+                    } catch (_) {
+                        return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(v) + " " + displayCurrency;
+                    }
+                });
+                if (fxNoteEl) {
+                    fxNoteEl.textContent = normalizedTotal.hadError
+                        ? "Partial conversion — some FX rates unavailable"
+                        : "All currencies converted to " + displayCurrency + " via live FX rates";
+                }
+            } else {
+                animateCount(totalEl, overview.totalAmount || 0, 900,
+                    function (v) { return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(v); });
+                if (fxNoteEl) fxNoteEl.textContent = "";
+            }
             animateCount(document.getElementById("headline-total-count"), overview.totalPayments || 0, 900,
                 function (v) { return Math.round(v).toLocaleString(); });
             animateCount(document.getElementById("headline-success-rate"), overview.successRate || 0, 900,
@@ -1836,6 +1933,8 @@
             var statusDistribution = await fetchJson(ANALYTICS_URL + "/status-distribution?" + query) || [];
             var errorCodes = await fetchJson(ANALYTICS_URL + "/error-codes?" + query) || [];
             var currencyVolume = await fetchJson(ANALYTICS_URL + "/currency-volume?" + query) || [];
+            lastCurrencyVolume = currencyVolume;
+            var normalizedTotal = await computeNormalizedTotal(currencyVolume, analyticsDisplayCurrency);
             var trend = await fetchJson(ANALYTICS_URL + "/trend?" + query) || [];
             var payments = await fetchJson(ANALYTICS_URL + "/payments?" + query + "&limit=200") || [];
 
@@ -1846,7 +1945,7 @@
             var paymentIds = new Set(payments.map(function (payment) { return payment.id; }));
             var scopedHistory = allHistory.filter(function (entry) { return paymentIds.has(entry.paymentId); });
 
-            renderHeadline(overview);
+            renderHeadline(overview, normalizedTotal, analyticsDisplayCurrency);
             renderStatusChart(statusDistribution);
             renderErrorChart(errorCodes);
             renderCurrencyChart(currencyVolume);
