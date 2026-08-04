@@ -711,18 +711,24 @@
             } catch { return null; }
         }
 
+
+
+
+        
         async function updateConversionPreview() {
             const src = fields.sourceAccount.value.trim();
             const dst = fields.destinationAccount.value.trim();
             const amt = parseFloat(fields.amount.value);
             const convEl = document.getElementById('conversion-preview');
             if (!convEl) return;
+
             if (!src || !dst || src === dst) { convEl.style.display = 'none'; return; }
             srcCurrency = await fetchAccountCurrency(src);
             dstCurrency = await fetchAccountCurrency(dst);
             if (!srcCurrency || !dstCurrency || srcCurrency === dstCurrency) {
                 convEl.style.display = 'none'; return;
             }
+
             convEl.style.display = 'flex';
             if (Number.isFinite(amt) && amt > 0) {
                 const paymentCurrency = fields.currency.value || srcCurrency;
