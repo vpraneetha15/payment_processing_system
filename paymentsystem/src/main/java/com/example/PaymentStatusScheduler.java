@@ -4,6 +4,7 @@ import com.example.model.Payment;
 import com.example.model.PaymentHistory;
 import com.example.repository.PaymentHistoryRepository;
 import com.example.repository.PaymentRepository;
+import com.example.service.PaymentNotificationService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -18,11 +19,14 @@ public class PaymentStatusScheduler {
 
     private final PaymentRepository paymentRepository;
     private final PaymentHistoryRepository paymentHistoryRepository;
+    private final PaymentNotificationService paymentNotificationService;
 
     public PaymentStatusScheduler(PaymentRepository paymentRepository,
-                                   PaymentHistoryRepository paymentHistoryRepository) {
+                                   PaymentHistoryRepository paymentHistoryRepository,
+                                   PaymentNotificationService paymentNotificationService) {
         this.paymentRepository = paymentRepository;
         this.paymentHistoryRepository = paymentHistoryRepository;
+        this.paymentNotificationService = paymentNotificationService;
     }
 
     @Scheduled(fixedDelay = 5000)
@@ -70,5 +74,9 @@ public class PaymentStatusScheduler {
         history.setTriggeredBy("SCHEDULER");
         history.setNote(note);
         paymentHistoryRepository.save(history);
+
+        if ("COMPLETED".equalsIgnoreCase(newStatus)) {
+            paymentNotificationService.sendPaymentCompletedNotifications(payment);
+        }
     }
 }

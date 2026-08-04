@@ -840,6 +840,95 @@
             box-shadow: 0 30px 65px rgba(10, 28, 49, 0.3);
         }
 
+        .modal-shell {
+            opacity: 0;
+            transform: translateY(8px) scale(0.995);
+            transition: opacity 0.24s ease, transform 0.24s ease;
+        }
+
+        .modal-shell.is-ready {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-loading {
+            padding: 18px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .loading-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #d5e6fa;
+            background: linear-gradient(180deg, #f2f8ff, #e9f4ff);
+            color: #2b537b;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            width: fit-content;
+        }
+
+        .loading-spinner {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid rgba(19, 99, 163, 0.2);
+            border-top-color: #1363a3;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .skeleton {
+            border-radius: 10px;
+            border: 1px solid #deebfb;
+            min-height: 74px;
+            background:
+                linear-gradient(110deg, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0.82) 45%, rgba(255, 255, 255, 0) 70%),
+                linear-gradient(180deg, #eff6ff, #e8f2ff);
+            background-size: 200% 100%, 100% 100%;
+            animation: shimmer 1.2s linear infinite;
+            box-shadow: 0 6px 14px rgba(19, 67, 113, 0.08);
+        }
+
+        .skeleton.tall {
+            min-height: 130px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 170% 0, 0 0; }
+            100% { background-position: -35% 0, 0 0; }
+        }
+
+        .loading-note {
+            margin: 0;
+            color: #486b8f;
+            font-size: 0.84rem;
+        }
+
+        .modal-warning {
+            margin-top: 8px;
+            border-radius: 10px;
+            border: 1px solid #ffd6dc;
+            background: #fff4f6;
+            color: #942434;
+            padding: 8px 10px;
+            font-size: 0.8rem;
+        }
+
         .modal-head {
             position: sticky;
             top: 0;
@@ -1038,6 +1127,35 @@
             color: #d8ebff;
         }
 
+        :root[data-theme="dark"] .loading-badge {
+            border-color: #2f4f70;
+            background: linear-gradient(180deg, #17314b, #142a40);
+            color: #cce4fb;
+        }
+
+        :root[data-theme="dark"] .loading-spinner {
+            border-color: rgba(86, 168, 229, 0.25);
+            border-top-color: #56a8e5;
+        }
+
+        :root[data-theme="dark"] .skeleton {
+            border-color: #2a4663;
+            background:
+                linear-gradient(110deg, rgba(255, 255, 255, 0) 20%, rgba(126, 171, 213, 0.17) 45%, rgba(255, 255, 255, 0) 70%),
+                linear-gradient(180deg, #17314b, #12263b);
+            box-shadow: var(--shadow);
+        }
+
+        :root[data-theme="dark"] .loading-note {
+            color: #b0cae5;
+        }
+
+        :root[data-theme="dark"] .modal-warning {
+            background: #3e1f2a;
+            border-color: #6d3546;
+            color: #ffd7de;
+        }
+
         @media (max-width: 1180px) {
             .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .toolbar { grid-template-columns: 1fr 1fr 1fr auto auto; }
@@ -1051,6 +1169,7 @@
             .toolbar { grid-template-columns: 1fr; }
             .detail-grid { grid-template-columns: 1fr; }
             .compact-grid { grid-template-columns: 1fr; }
+            .loading-grid { grid-template-columns: 1fr; }
             .event-head { grid-template-columns: 1fr; gap: 2px; }
             .transfer-path { grid-template-columns: 1fr; }
             .transfer-arrow { justify-self: center; transform: rotate(90deg); }
@@ -1108,6 +1227,8 @@
             <select id="statusFilter" class="select" aria-label="Filter by status">
                 <option value="all">All statuses</option>
                 <option value="created">Created</option>
+                <option value="validated">Validated</option>
+                <option value="sent">Sent</option>
                 <option value="processing">Processing</option>
                 <option value="pending">Pending</option>
                 <option value="completed">Completed</option>
@@ -1117,7 +1238,7 @@
             <select id="dateRangeFilter" class="select" aria-label="Filter by time range">
                 <option value="all">All time</option>
                 <option value="weekly">Weekly (Last 7 days)</option>
-                <option value="monthly">Monthly (Last 30 days)</option>
+                <option value="monthly">Monthly (Current month)</option>
             </select>
             <button id="refreshBtn" class="btn" type="button">Refresh</button>
             <button id="exportBtn" class="btn secondary" type="button">Export CSV</button>
@@ -1193,6 +1314,55 @@
         let activeModalPaymentId = null;
         let lastSignatureByPayment = {};
         let detailViewMode = "detailed";
+        let isModalHydrating = false;
+        let modalLoadToken = 0;
+        let activeModalWarning = "";
+        const prefetchedTimelineByPayment = new Map();
+        const prefetchInFlight = new Map();
+
+        function getManualHistoryEntity() {
+            return [
+                {
+                    id: "manual-evt-1",
+                    paymentId: "PMT-DEMO-2026-0001",
+                    accountNumber: "IN-998877665544",
+                    sourceAccount: "IN-998877665544",
+                    destinationAccount: "IN-110022003300",
+                    currency: "INR",
+                    amount: 25400.5,
+                    status: "CREATED",
+                    triggeredBy: "MANUAL_DEMO",
+                    note: "Demo payment injected in UI for history preview.",
+                    timestamp: "2026-08-04T09:15:00Z"
+                },
+                {
+                    id: "manual-evt-2",
+                    paymentId: "PMT-DEMO-2026-0001",
+                    accountNumber: "IN-998877665544",
+                    sourceAccount: "IN-998877665544",
+                    destinationAccount: "IN-110022003300",
+                    currency: "INR",
+                    amount: 25400.5,
+                    status: "PROCESSING",
+                    triggeredBy: "RISK_ENGINE",
+                    note: "KYC and velocity checks passed.",
+                    timestamp: "2026-08-04T09:15:07Z"
+                },
+                {
+                    id: "manual-evt-3",
+                    paymentId: "PMT-DEMO-2026-0001",
+                    accountNumber: "IN-998877665544",
+                    sourceAccount: "IN-998877665544",
+                    destinationAccount: "IN-110022003300",
+                    currency: "INR",
+                    amount: 25400.5,
+                    status: "COMPLETED",
+                    triggeredBy: "SETTLEMENT_GATEWAY",
+                    note: "Funds transferred successfully.",
+                    timestamp: "2026-08-04T09:15:15Z"
+                }
+            ];
+        }
 
         function parseTime(value) {
             if (!value) {
@@ -1330,6 +1500,7 @@
                 status: (item.status || "UNKNOWN").toUpperCase(),
                 triggeredBy: item.triggeredBy || item.triggered_by || "SYSTEM",
                 note: item.note || item.message || item.errorMessage || "",
+                errorCode: item.errorCode || item.error_code || "",
                 timestamp: item.createdAt || item.timestamp || item.eventTime || null
             }));
         }
@@ -1478,6 +1649,7 @@
                 ? "<section class='failed-box'>"
                     + "<div class='section-head'><h3 class='section-title'>Failed Payment Details</h3></div>"
                     + "<div><strong>Status:</strong> " + payment.failedEvent.status + "</div>"
+                    + "<div><strong>Error Code:</strong> " + (payment.failedEvent.errorCode || "N/A") + "</div>"
                     + "<div><strong>Time:</strong> " + formatDate(payment.failedEvent.timestamp) + "</div>"
                     + "<div><strong>Triggered By:</strong> " + payment.failedEvent.triggeredBy + "</div>"
                     + "<div><strong>Reason:</strong> " + (payment.failedEvent.note || "No error note provided") + "</div>"
@@ -1487,6 +1659,7 @@
             const failedBoxCompact = payment.failedEvent
                 ? "<section class='failed-box'>"
                     + "<div class='section-head'><h3 class='section-title'>Failure Reason</h3></div>"
+                    + "<div><strong>Error Code:</strong> " + (payment.failedEvent.errorCode || "N/A") + "</div>"
                     + "<div><strong>" + (payment.failedEvent.note || payment.failedEvent.status || "No error details") + "</strong></div>"
                     + "</section>"
                 : "";
@@ -1556,7 +1729,39 @@
                 + "<div class='section-head'><h3 class='section-title'>Status Timeline</h3></div>"
                 + "<ol class='timeline" + (detailViewMode === "compact" ? " compact" : "") + "'>" + timeline + "</ol>"
                 + "</section>"
+                + (activeModalWarning ? "<div class='modal-warning'>" + activeModalWarning + "</div>" : "")
                 + "</section>";
+        }
+
+        function loadingSkeletonHtml(paymentId) {
+            return ""
+                + "<section class='modal-loading'>"
+                + "<span class='loading-badge'><span class='loading-spinner'></span>Loading transfer details</span>"
+                + "<p class='loading-note'>Preparing complete payment view for <strong>" + paymentId + "</strong>. Please wait a moment.</p>"
+                + "<div class='loading-grid'>"
+                + "<div class='skeleton'></div>"
+                + "<div class='skeleton'></div>"
+                + "<div class='skeleton'></div>"
+                + "<div class='skeleton tall'></div>"
+                + "<div class='skeleton tall'></div>"
+                + "<div class='skeleton tall'></div>"
+                + "</div>"
+                + "</section>";
+        }
+
+        function setModalShellHtml(html) {
+            detailModalContent.innerHTML = "<div class='modal-shell'>" + html + "</div>";
+            const shell = detailModalContent.querySelector(".modal-shell");
+            if (shell) {
+                requestAnimationFrame(() => {
+                    shell.classList.add("is-ready");
+                });
+            }
+        }
+
+        function setModalLoadingState(paymentId) {
+            detailModalTitle.textContent = "Loading Payment Details";
+            setModalShellHtml(loadingSkeletonHtml(paymentId));
         }
 
         function renderActiveModalContent() {
@@ -1570,7 +1775,7 @@
             }
 
             detailModalTitle.textContent = "Payment Details: " + activeModalPaymentId;
-            detailModalContent.innerHTML = detailHtml(payment);
+            setModalShellHtml(detailHtml(payment));
             bindDetailModalActions();
         }
 
@@ -1632,24 +1837,49 @@
             bindRowActions();
         }
 
-        function openDetailModal(paymentId) {
+        async function openDetailModal(paymentId) {
             const payment = allPayments.find((p) => p.paymentId === paymentId);
             if (!payment) {
                 return;
             }
 
             activeModalPaymentId = paymentId;
-            renderActiveModalContent();
+            activeModalWarning = "";
+            isModalHydrating = true;
+            const loadToken = ++modalLoadToken;
+
             detailModal.classList.add("open");
             detailModal.setAttribute("aria-hidden", "false");
             document.body.classList.add("modal-open");
+            setModalLoadingState(paymentId);
             renderTable(filteredPayments);
+
+            try {
+                if (prefetchInFlight.has(paymentId)) {
+                    await prefetchInFlight.get(paymentId);
+                }
+                await refreshPaymentTimeline(paymentId);
+            } catch (error) {
+                activeModalWarning = "Live timeline could not be refreshed. Showing latest cached snapshot.";
+                console.warn("Could not refresh payment timeline for " + paymentId + ":", error.message);
+            }
+
+            if (loadToken !== modalLoadToken || activeModalPaymentId !== paymentId || !detailModal.classList.contains("open")) {
+                return;
+            }
+
+            isModalHydrating = false;
+            renderActiveModalContent();
+            applyFilters();
         }
 
         function closeDetailModal() {
             detailModal.classList.remove("open");
             detailModal.setAttribute("aria-hidden", "true");
             document.body.classList.remove("modal-open");
+            modalLoadToken += 1;
+            isModalHydrating = false;
+            activeModalWarning = "";
             activeModalPaymentId = null;
             renderTable(filteredPayments);
         }
@@ -1697,7 +1927,11 @@
             }) || null;
         }
 
-        async function refreshPaymentTimeline(paymentId) {
+        function cloneTimelineEvents(events) {
+            return (events || []).map((event) => ({ ...event }));
+        }
+
+        async function fetchPaymentTimeline(paymentId) {
             let response = null;
             let lastError = null;
 
@@ -1719,7 +1953,41 @@
             }
 
             const rawTimeline = await response.json();
-            const timelineEvents = normalizeEvents(rawTimeline).filter((ev) => ev.paymentId === paymentId);
+            return normalizeEvents(rawTimeline).filter((ev) => ev.paymentId === paymentId);
+        }
+
+        function prefetchPaymentTimeline(paymentId) {
+            if (!paymentId || prefetchedTimelineByPayment.has(paymentId) || prefetchInFlight.has(paymentId)) {
+                return;
+            }
+
+            const task = fetchPaymentTimeline(paymentId)
+                .then((events) => {
+                    if (events.length) {
+                        prefetchedTimelineByPayment.set(paymentId, cloneTimelineEvents(events));
+                    }
+                })
+                .catch(() => {
+                    // Silent prefetch failure. Normal open flow will retry.
+                })
+                .finally(() => {
+                    prefetchInFlight.delete(paymentId);
+                });
+
+            prefetchInFlight.set(paymentId, task);
+        }
+
+        async function refreshPaymentTimeline(paymentId) {
+            let timelineEvents = prefetchedTimelineByPayment.has(paymentId)
+                ? cloneTimelineEvents(prefetchedTimelineByPayment.get(paymentId))
+                : null;
+
+            if (timelineEvents) {
+                prefetchedTimelineByPayment.delete(paymentId);
+            } else {
+                timelineEvents = await fetchPaymentTimeline(paymentId);
+            }
+
             if (!timelineEvents.length) {
                 return;
             }
@@ -1742,18 +2010,21 @@
                     }
 
                     openDetailModal(paymentId);
-
-                    refreshPaymentTimeline(paymentId)
-                        .then(() => {
-                            if (activeModalPaymentId === paymentId && detailModal.classList.contains("open")) {
-                                renderActiveModalContent();
-                            }
-                            applyFilters();
-                        })
-                        .catch((error) => {
-                            console.warn("Could not refresh payment timeline for " + paymentId + ":", error.message);
-                        });
                 });
+            });
+
+            const actionButtons = historyTableBody.querySelectorAll("button[data-open]");
+            actionButtons.forEach((button) => {
+                const paymentId = button.getAttribute("data-open") || "";
+                button.addEventListener("mouseenter", () => {
+                    prefetchPaymentTimeline(paymentId);
+                });
+                button.addEventListener("focus", () => {
+                    prefetchPaymentTimeline(paymentId);
+                });
+                button.addEventListener("touchstart", () => {
+                    prefetchPaymentTimeline(paymentId);
+                }, { passive: true });
             });
         }
 
@@ -1764,7 +2035,10 @@
 
             const now = Date.now();
             const weeklyStart = now - (7 * 24 * 60 * 60 * 1000);
-            const monthlyStart = now - (30 * 24 * 60 * 60 * 1000);
+            const monthStartDate = new Date();
+            monthStartDate.setHours(0, 0, 0, 0);
+            monthStartDate.setDate(1);
+            const monthlyStart = monthStartDate.getTime();
 
             filteredPayments = allPayments.filter((p) => {
                 const searchHit = term === ""
@@ -1848,6 +2122,7 @@
             }
 
             let rawData = [];
+            let usingFallbackData = false;
             try {
                 let response = null;
                 let lastError = null;
@@ -1869,13 +2144,13 @@
                 }
 
                 rawData = await response.json();
+
+                // Inject one manual demo payment so UI behavior can be previewed quickly.
+                rawData = rawData.concat(getManualHistoryEntity());
             } catch (error) {
                 console.error("Failed to load payment history from backend:", error.message);
-                historyTableBody.innerHTML = "<tr><td colspan='8' class='empty'>Unable to fetch data from backend. Check if Spring Boot API is running and reachable.</td></tr>";
-                statusCardsEl.innerHTML = "";
-                allPayments = [];
-                filteredPayments = [];
-                return;
+                rawData = getManualHistoryEntity();
+                usingFallbackData = true;
             }
 
             const events = normalizeEvents(rawData);
@@ -1889,10 +2164,16 @@
             allPayments = nextPayments;
             applyFilters();
 
+            if (usingFallbackData) {
+                console.warn("Backend unreachable. Showing hardcoded demo history entity.");
+            }
+
             if (activeModalPaymentId && detailModal.classList.contains("open")) {
                 const activePayment = allPayments.find((p) => p.paymentId === activeModalPaymentId);
                 if (activePayment) {
-                    renderActiveModalContent();
+                    if (!isModalHydrating) {
+                        renderActiveModalContent();
+                    }
                 } else {
                     closeDetailModal();
                 }

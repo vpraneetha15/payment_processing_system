@@ -33,9 +33,9 @@
             <h2 id="form-title">Create User</h2>
 
             <div class="system-values" aria-live="polite">
-                <p><strong>Account Number:</strong> <span id="generatedAccountNumber">Generated in backend on create</span></p>
+                <p><strong>Account Number:</strong> <span id="generatedAccountNumber" class="copy-value" data-copy-label="Account Number" title="Click to copy">Generated in backend on create</span></p>
                 <p><strong>Status:</strong> ACTIVE</p>
-                <p><strong>UPI ID:</strong> <span id="generatedUpi">Generated on create</span></p>
+                <p><strong>UPI ID:</strong> <span id="generatedUpi" class="copy-value" data-copy-label="UPI ID" title="Click to copy">Generated on create</span></p>
             </div>
 
             <form id="createUserForm" novalidate>
@@ -167,12 +167,12 @@
                 <h2>Live Preview</h2>
                 <div class="preview" id="previewCard">
                     <p class="preview-name" id="previewName">New User</p>
-                    <p class="preview-line">Account No: <span id="previewAccountNumber">Will be generated</span></p>
+                    <p class="preview-line">Account No: <span id="previewAccountNumber" class="copy-value" data-copy-label="Account Number" title="Click to copy">Will be generated</span></p>
                     <p class="preview-line">Email: <span id="previewEmail">-</span></p>
                     <p class="preview-line">Mobile: <span id="previewMobile">-</span></p>
                     <p class="preview-line">Currency: <span id="previewCurrency">-</span></p>
                     <p class="preview-line">Opening Balance: <span id="previewBalance">-</span></p>
-                    <p class="preview-line">Default UPI: <span id="previewUpi">Will be generated</span></p>
+                    <p class="preview-line">Default UPI: <span id="previewUpi" class="copy-value" data-copy-label="UPI ID" title="Click to copy">Will be generated</span></p>
                     <p class="preview-line">Cards: <span id="previewCards">0</span></p>
                     <p class="preview-line">Wallets: <span id="previewWallets">0</span></p>
                     <p class="preview-line">Status: <span id="previewStatus">Active</span></p>
@@ -199,7 +199,7 @@
                 <button type="button" id="closeModalBtn" class="btn-link">Close</button>
             </div>
             <div class="modal-grid">
-                <p><strong>Account Number:</strong> <span id="modalAccountNumber">-</span></p>
+                <p><strong>Account Number:</strong> <span id="modalAccountNumber" class="copy-value" data-copy-label="Account Number" title="Click to copy">-</span></p>
                 <p><strong>Name:</strong> <input id="modalName" class="modal-input"></p>
                 <p><strong>Email:</strong> <input id="modalEmail" class="modal-input"></p>
                 <p><strong>Mobile:</strong> <input id="modalMobile" class="modal-input"></p>
@@ -212,7 +212,7 @@
                     </select>
                 </p>
                 <p><strong>Opening Balance:</strong> <span id="modalBalance">-</span></p>
-                <p><strong>UPI ID:</strong> <span id="modalUpi">-</span></p>
+                <p><strong>UPI ID:</strong> <span id="modalUpi" class="copy-value" data-copy-label="UPI ID" title="Click to copy">-</span></p>
                 <p><strong>Status:</strong> <label class="status-inline"><input type="checkbox" id="modalActive"> Active</label></p>
                 <p><strong>Created At:</strong> <span id="modalCreatedAt">-</span></p>
                 <p class="modal-span-2"><strong>Notes:</strong> <textarea id="modalNotes" class="modal-input" rows="2"></textarea></p>
@@ -257,6 +257,7 @@
         let cardsDraft = [];
         let walletsDraft = [];
         let selectedUserAccount = null;
+        const createdAtOverrideMap = new Map();
 
         function showToast(message) {
             toast.textContent = message;
@@ -298,7 +299,8 @@
         }
 
         function getRecentRank(user) {
-            const createdAt = user?.createdAt || user?.created_at;
+            const overrideCreatedAt = createdAtOverrideMap.get(String(user?.accountNumber || ""));
+            const createdAt = overrideCreatedAt || user?.createdAt || user?.created_at;
             const createdTime = createdAt ? new Date(createdAt).getTime() : Number.NaN;
             if (Number.isFinite(createdTime)) {
                 return createdTime;
@@ -335,57 +337,102 @@
             return /^\S+@\S+\.\S+$/.test(String(email || "").trim());
         }
 
-        function validateForm() {
-            clearErrors();
-            let valid = true;
+        function validateFullName(showError = true) {
+            const value = document.getElementById("fullName").value.trim();
+            if (!value) {
+                if (showError) setError("fullName", "Full Name is required.");
+                return false;
+            }
+            if (value.length < 3) {
+                if (showError) setError("fullName", "Full Name must be at least 3 characters.");
+                return false;
+            }
+            if (!/^[A-Za-z ]+$/.test(value)) {
+                if (showError) setError("fullName", "Only alphabets and spaces are allowed.");
+                return false;
+            }
+            setError("fullName", "");
+            return true;
+        }
 
-            const fullName = document.getElementById("fullName").value.trim();
-            const email = document.getElementById("email").value.trim().toLowerCase();
+        function validateEmail(showError = true) {
+            const value = document.getElementById("email").value.trim().toLowerCase();
+            if (!value) {
+                if (showError) setError("email", "Email is required.");
+                return false;
+            }
+            if (!isValidEmail(value)) {
+                if (showError) setError("email", "Enter a valid email address.");
+                return false;
+            }
+            if (usersCache.some((user) => String(user.email || "").toLowerCase() === value)) {
+                if (showError) setError("email", "Email already exists.");
+                return false;
+            }
+            setError("email", "");
+            return true;
+        }
+
+        function validateMobileNumber(showError = true) {
             const mobile = normalizeDigits(document.getElementById("mobileNumber").value);
-            const openingBalance = Number.parseFloat(document.getElementById("openingBalance").value || "0");
-            const currency = document.getElementById("preferredCurrency").value;
-            const terms = document.getElementById("terms").checked;
+            if (!/^\d{10}$/.test(mobile)) {
+                if (showError) setError("mobileNumber", "Enter a valid 10-digit mobile number.");
+                return false;
+            }
+            if (usersCache.some((user) => String(user.mobileNumber || "") === mobile)) {
+                if (showError) setError("mobileNumber", "Mobile number already exists.");
+                return false;
+            }
+            setError("mobileNumber", "");
+            return true;
+        }
 
-            if (!fullName) {
-                setError("fullName", "Name required");
-                valid = false;
+        function validateOpeningBalance(showError = true) {
+            const raw = document.getElementById("openingBalance").value;
+            const value = Number.parseFloat(raw);
+            if (raw === "" || !Number.isFinite(value) || value < 0) {
+                if (showError) setError("openingBalance", "Opening balance must be greater than or equal to 0.");
+                return false;
             }
-            if (!email) {
-                setError("email", "Email required");
-                valid = false;
-            } else if (!isValidEmail(email)) {
-                setError("email", "Invalid email format");
-                valid = false;
-            } else if (usersCache.some((user) => String(user.email || "").toLowerCase() === email)) {
-                setError("email", "Email unique: this email already exists");
-                valid = false;
-            }
+            setError("openingBalance", "");
+            return true;
+        }
 
-            if (!mobile) {
-                setError("mobileNumber", "Mobile number required");
-                valid = false;
-            } else if (!/^\d{10}$/.test(mobile)) {
-                setError("mobileNumber", "Mobile number should contain 10 digits");
-                valid = false;
-            } else if (usersCache.some((user) => String(user.mobileNumber || "") === mobile)) {
-                setError("mobileNumber", "Mobile number unique: this mobile already exists");
-                valid = false;
+        function validatePreferredCurrency(showError = true) {
+            const value = document.getElementById("preferredCurrency").value;
+            if (!value) {
+                if (showError) setError("preferredCurrency", "Preferred currency is required.");
+                return false;
             }
+            setError("preferredCurrency", "");
+            return true;
+        }
 
-            if (!Number.isFinite(openingBalance) || openingBalance < 0) {
-                setError("openingBalance", "Opening balance >= 0");
-                valid = false;
+        function validateTerms(showError = true) {
+            const checked = document.getElementById("terms").checked;
+            if (!checked) {
+                if (showError) setError("terms", "Confirmation required.");
+                return false;
             }
-            if (!currency) {
-                setError("preferredCurrency", "Currency required");
-                valid = false;
-            }
-            if (!terms) {
-                setError("terms", "Confirmation required");
-                valid = false;
-            }
+            setError("terms", "");
+            return true;
+        }
 
-            return valid;
+        function validateForm(showError = true) {
+            if (!showError) {
+                return validateFullName(false)
+                    && validateEmail(false)
+                    && validateMobileNumber(false)
+                    && validateOpeningBalance(false)
+                    && validatePreferredCurrency(false)
+                    && validateTerms(false);
+            }
+            return validateFullName(true)
+                && validateEmail(true)
+                && validateMobileNumber(true)
+                && validateOpeningBalance(true)
+                && validatePreferredCurrency(true)
+                && validateTerms(true);
         }
 
         function validateCardDraft() {
@@ -394,20 +441,16 @@
             const cardNumber = normalizeDigits(document.getElementById("cardNumber").value);
             const cardBalance = Number.parseFloat(document.getElementById("cardBalance").value || "0");
 
-            if (!cardNumber) {
-                setError("cardNumber", "Card number required");
-                return null;
-            }
             if (!/^\d{16}$/.test(cardNumber)) {
-                setError("cardNumber", "Card number must contain 16 digits");
+                setError("cardNumber", "Card number must contain exactly 16 digits.");
                 return null;
             }
             if (cardsDraft.some((card) => card.cardNumber === cardNumber)) {
-                setError("cardNumber", "Card number unique: already added");
+                setError("cardNumber", "Card number already exists.");
                 return null;
             }
             if (!Number.isFinite(cardBalance) || cardBalance < 0) {
-                setError("cardBalance", "Card balance >= 0");
+                setError("cardBalance", "Card balance must be greater than or equal to 0.");
                 return null;
             }
 
@@ -451,15 +494,15 @@
             const walletId = document.getElementById("walletId").value.trim();
 
             if (!walletProvider) {
-                setError("walletProvider", "Wallet provider required");
+                setError("walletProvider", "Wallet provider is required.");
                 return null;
             }
             if (!walletId) {
-                setError("walletId", "Wallet ID required");
+                setError("walletId", "Wallet ID is required.");
                 return null;
             }
             if (walletsDraft.some((wallet) => wallet.walletId.toLowerCase() === walletId.toLowerCase())) {
-                setError("walletId", "Wallet ID unique: already added");
+                setError("walletId", "Wallet ID already exists.");
                 return null;
             }
 
@@ -503,6 +546,30 @@
             createBtn.classList.toggle("is-loading", isLoading);
         }
 
+        async function copyTextToClipboard(value, label) {
+            const text = String(value || "").trim();
+            if (!text || text === "-" || /generated|will be generated/i.test(text)) {
+                showToast("Unable to copy. Please try again.");
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast(`${label} copied!`);
+            } catch (_error) {
+                showToast("Unable to copy. Please try again.");
+            }
+        }
+
+        function createInlineCopyText(value, label) {
+            const safeValue = escapeHtml(value || "");
+            const safeLabel = escapeHtml(label);
+            if (!safeValue || safeValue === "-") {
+                return "";
+            }
+            return `<span class="copy-value copy-value-inline" data-copy-value="${safeValue}" data-copy-label="${safeLabel}" title="Click to copy">${safeValue}</span>`;
+        }
+
         async function fetchUsers() {
             const response = await fetch(`${apiBaseUrl}/users`);
             if (!response.ok) {
@@ -510,6 +577,12 @@
             }
             const responseBody = await response.json();
             usersCache = sortUsersLatestFirst(Array.isArray(responseBody) ? responseBody : []);
+            usersCache.forEach((user) => {
+                const createdAt = user?.createdAt || user?.created_at;
+                if (createdAt) {
+                    createdAtOverrideMap.set(String(user.accountNumber || ""), createdAt);
+                }
+            });
             renderUsers();
         }
 
@@ -537,10 +610,10 @@
             userList.innerHTML = filteredSorted.slice(0, 5).map((user) => `
                 <li>
                     <div class="line-1">
-                        <span>${escapeHtml(user.accountNumber)} - ${escapeHtml(user.fullName)}</span>
+                        <span>${createInlineCopyText(user.accountNumber, "Account Number")} - ${escapeHtml(user.fullName)}</span>
                         <span class="${user.active ? "badge" : "badge inactive"}">${user.active ? "Active" : "Inactive"}</span>
                     </div>
-                    <div class="line-2">${escapeHtml(user.preferredCurrency || "-")} | ${escapeHtml(user.upiId || "-")}</div>
+                    <div class="line-2">${escapeHtml(user.preferredCurrency || "-")} | ${createInlineCopyText(user.upiId || "-", "UPI ID") || escapeHtml(user.upiId || "-")}</div>
                     <div class="user-actions-row">
                         <button type="button" class="user-action" data-user="${escapeHtml(user.accountNumber)}">View Details</button>
                     </div>
@@ -684,23 +757,7 @@
         }
 
         function updateCreateEnabled() {
-            createBtn.disabled = !validateFormPreviewOnly();
-        }
-
-        function validateFormPreviewOnly() {
-            const fullName = document.getElementById("fullName").value.trim();
-            const email = document.getElementById("email").value.trim();
-            const mobile = normalizeDigits(document.getElementById("mobileNumber").value);
-            const openingBalance = Number.parseFloat(document.getElementById("openingBalance").value || "0");
-            const currency = document.getElementById("preferredCurrency").value;
-            const terms = document.getElementById("terms").checked;
-            if (!fullName) return false;
-            if (!email || !isValidEmail(email)) return false;
-            if (!/^\d{10}$/.test(mobile)) return false;
-            if (!Number.isFinite(openingBalance) || openingBalance < 0) return false;
-            if (!currency) return false;
-            if (!terms) return false;
-            return true;
+            createBtn.disabled = !validateForm(false);
         }
 
         form.addEventListener("submit", async (event) => {
@@ -723,6 +780,8 @@
             setLoading(true);
             try {
                 const createdUser = await createUser(payload);
+                const creationTime = createdUser.createdAt || new Date().toISOString();
+                createdAtOverrideMap.set(String(createdUser.accountNumber || ""), creationTime);
 
                 for (const card of cardsDraft) {
                     await addCard(createdUser.accountNumber, card);
@@ -739,12 +798,15 @@
 
                 showToast(`User created: ${createdUser.accountNumber}`);
 
+                usersCache = sortUsersLatestFirst([
+                    { ...createdUser, createdAt: creationTime },
+                    ...usersCache.filter((u) => u.accountNumber !== createdUser.accountNumber)
+                ]);
+                renderUsers();
+
                 try {
                     await fetchUsers();
                 } catch (_error) {
-                    usersCache = [createdUser, ...usersCache.filter((u) => u.accountNumber !== createdUser.accountNumber)];
-                    usersCache = sortUsersLatestFirst(usersCache);
-                    renderUsers();
                     showToast("User created, but unable to fetch latest users right now.");
                 }
 
@@ -776,6 +838,8 @@
             cardsDraft.push(card);
             document.getElementById("cardNumber").value = "";
             document.getElementById("cardBalance").value = "0";
+            setError("cardNumber", "");
+            setError("cardBalance", "");
             hideConditionalFields();
             renderDraftLists();
             showToast("Card added to draft list.");
@@ -794,6 +858,8 @@
             walletsDraft.push(wallet);
             document.getElementById("walletProvider").value = "";
             document.getElementById("walletId").value = "";
+            setError("walletProvider", "");
+            setError("walletId", "");
             hideConditionalFields();
             renderDraftLists();
             showToast("Wallet added to draft list.");
@@ -836,6 +902,15 @@
             if (!(target instanceof HTMLElement)) {
                 return;
             }
+
+            const clickableValue = target.closest(".copy-value");
+            if (clickableValue instanceof HTMLElement) {
+                const copyValue = clickableValue.getAttribute("data-copy-value");
+                const label = clickableValue.getAttribute("data-copy-label") || "Value";
+                await copyTextToClipboard(copyValue != null ? copyValue : clickableValue.textContent, label);
+                return;
+            }
+
             const accountNumber = target.getAttribute("data-user");
             if (!accountNumber) {
                 return;
@@ -890,13 +965,101 @@
             showToast("Form cleared.");
         });
 
+        document.addEventListener("click", async (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLElement)) {
+                return;
+            }
+
+            const clickableValue = target.closest(".copy-value");
+            if (!(clickableValue instanceof HTMLElement) || clickableValue.hasAttribute("data-copy-value")) {
+                return;
+            }
+
+            await copyTextToClipboard(clickableValue.textContent, clickableValue.getAttribute("data-copy-label") || "Value");
+        });
+
         ["input", "change"].forEach((eventName) => {
             form.addEventListener(eventName, (event) => {
                 if (event.target && event.target.id === "mobileNumber") {
                     event.target.value = normalizeDigits(event.target.value).slice(0, 10);
                 }
+                if (event.target && event.target.id === "cardNumber") {
+                    event.target.value = normalizeDigits(event.target.value).slice(0, 16);
+                }
+
+                if (event.target && event.target.id === "fullName") {
+                    validateFullName(true);
+                }
+                if (event.target && event.target.id === "email") {
+                    validateEmail(true);
+                }
+                if (event.target && event.target.id === "mobileNumber") {
+                    validateMobileNumber(true);
+                }
+                if (event.target && event.target.id === "openingBalance") {
+                    validateOpeningBalance(true);
+                }
+                if (event.target && event.target.id === "preferredCurrency") {
+                    validatePreferredCurrency(true);
+                }
+                if (event.target && event.target.id === "terms") {
+                    validateTerms(true);
+                }
+                if (event.target && event.target.id === "cardNumber" && !cardFieldsSection.classList.contains("is-hidden")) {
+                    const cardDigits = normalizeDigits(event.target.value);
+                    if (!/^\d{16}$/.test(cardDigits)) {
+                        setError("cardNumber", "Card number must contain exactly 16 digits.");
+                    } else {
+                        setError("cardNumber", "");
+                    }
+                }
+                if (event.target && event.target.id === "walletId" && !walletFieldsSection.classList.contains("is-hidden")) {
+                    const walletIdValue = event.target.value.trim();
+                    if (!walletIdValue) {
+                        setError("walletId", "Wallet ID is required.");
+                    } else if (walletsDraft.some((wallet) => wallet.walletId.toLowerCase() === walletIdValue.toLowerCase())) {
+                        setError("walletId", "Wallet ID already exists.");
+                    } else {
+                        setError("walletId", "");
+                    }
+                }
                 updatePreview();
                 updateCreateEnabled();
+            });
+        });
+
+        ["fullName", "email", "mobileNumber", "openingBalance", "preferredCurrency", "terms"].forEach((fieldId) => {
+            const field = document.getElementById(fieldId);
+            if (!field) {
+                return;
+            }
+            field.addEventListener("blur", () => {
+                if (fieldId === "fullName") validateFullName(true);
+                if (fieldId === "email") validateEmail(true);
+                if (fieldId === "mobileNumber") validateMobileNumber(true);
+                if (fieldId === "openingBalance") validateOpeningBalance(true);
+                if (fieldId === "preferredCurrency") validatePreferredCurrency(true);
+                if (fieldId === "terms") validateTerms(true);
+                updateCreateEnabled();
+            });
+        });
+
+        ["mobileNumber", "cardNumber"].forEach((fieldId) => {
+            const field = document.getElementById(fieldId);
+            if (!field) {
+                return;
+            }
+            field.addEventListener("beforeinput", (event) => {
+                if (event.data && /\D/.test(event.data)) {
+                    event.preventDefault();
+                }
+            });
+            field.addEventListener("paste", (event) => {
+                const pasted = event.clipboardData?.getData("text") || "";
+                if (/\D/.test(pasted)) {
+                    event.preventDefault();
+                }
             });
         });
 

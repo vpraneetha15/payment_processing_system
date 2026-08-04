@@ -51,15 +51,18 @@ private final Random random = new Random();
 private PaymentRepository repository;
 private AccountRepository accountRepository;
 private PaymentHistoryRepository paymentHistoryRepository;
+private PaymentNotificationService paymentNotificationService;
 
 
 public PaymentService(PaymentRepository repository,
 	AccountRepository accountRepository,
-	PaymentHistoryRepository paymentHistoryRepository){
+	PaymentHistoryRepository paymentHistoryRepository,
+	PaymentNotificationService paymentNotificationService){
 
 this.repository=repository;
 this.accountRepository=accountRepository;
 this.paymentHistoryRepository=paymentHistoryRepository;
+this.paymentNotificationService=paymentNotificationService;
 
 }
 
@@ -206,6 +209,7 @@ private void simulateProcessing(Payment payment) {
 	payment.setErrorCode(null);
 	repository.update(payment);
 	recordTransition(payment, "COMPLETED", "SYSTEM", "Payment completed successfully");
+	paymentNotificationService.sendPaymentCompletedNotifications(payment);
 
 }
 
