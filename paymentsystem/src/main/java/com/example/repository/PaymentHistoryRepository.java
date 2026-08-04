@@ -32,14 +32,14 @@ public class PaymentHistoryRepository {
     public List<PaymentHistory> findAll() {
         String joinedSql = """
             select ph.*,
-                   (
-                       select coalesce(a.account_number, p.source_account)
-                       from payments p
-                       left join accounts a on a.account_number = p.source_account
-                       where p.id = ph.payment_id
-                       limit 1
-                   ) as account_number
+                   p.amount as amount,
+                   p.currency as currency,
+                   p.source_account as source_account,
+                   p.destination_account as destination_account,
+                   coalesce(a.account_number, p.source_account) as account_number
             from payment_history ph
+            left join payments p on p.id = ph.payment_id
+            left join accounts a on a.account_number = p.source_account
             """;
 
         try {
@@ -57,14 +57,14 @@ public class PaymentHistoryRepository {
         int safeLimit = Math.max(1, Math.min(limit, 50));
         String mapperSql = """
             select ph.*,
-                   (
-                       select coalesce(a.account_number, p.source_account)
-                       from payments p
-                       left join accounts a on a.account_number = p.source_account
-                       where p.id = ph.payment_id
-                       limit 1
-                   ) as account_number
+                   p.amount as amount,
+                   p.currency as currency,
+                   p.source_account as source_account,
+                   p.destination_account as destination_account,
+                   coalesce(a.account_number, p.source_account) as account_number
             from payment_history ph
+            left join payments p on p.id = ph.payment_id
+            left join accounts a on a.account_number = p.source_account
             order by ph.created_at desc
             limit
             """ + safeLimit;
@@ -76,14 +76,14 @@ public class PaymentHistoryRepository {
             try {
                 String fallbackSql = """
                     select ph.*,
-                           (
-                               select coalesce(a.account_number, p.source_account)
-                               from payments p
-                               left join accounts a on a.account_number = p.source_account
-                               where p.id = ph.payment_id
-                               limit 1
-                           ) as account_number
+                           p.amount as amount,
+                           p.currency as currency,
+                           p.source_account as source_account,
+                           p.destination_account as destination_account,
+                           coalesce(a.account_number, p.source_account) as account_number
                     from payment_history ph
+                    left join payments p on p.id = ph.payment_id
+                    left join accounts a on a.account_number = p.source_account
                     order by `timestamp` desc
                     limit
                     """ + safeLimit;
@@ -92,14 +92,14 @@ public class PaymentHistoryRepository {
             } catch (BadSqlGrammarException ex2) {
                 String finalFallbackSql = """
                     select ph.*,
-                           (
-                               select coalesce(a.account_number, p.source_account)
-                               from payments p
-                               left join accounts a on a.account_number = p.source_account
-                               where p.id = ph.payment_id
-                               limit 1
-                           ) as account_number
+                           p.amount as amount,
+                           p.currency as currency,
+                           p.source_account as source_account,
+                           p.destination_account as destination_account,
+                           coalesce(a.account_number, p.source_account) as account_number
                     from payment_history ph
+                    left join payments p on p.id = ph.payment_id
+                    left join accounts a on a.account_number = p.source_account
                     order by id desc
                     limit
                     """ + safeLimit;
@@ -112,14 +112,14 @@ public class PaymentHistoryRepository {
     public PaymentHistory findById(String id) {
         String joinedSql = """
             select ph.*,
-                   (
-                       select coalesce(a.account_number, p.source_account)
-                       from payments p
-                       left join accounts a on a.account_number = p.source_account
-                       where p.id = ph.payment_id
-                       limit 1
-                   ) as account_number
+                   p.amount as amount,
+                   p.currency as currency,
+                   p.source_account as source_account,
+                   p.destination_account as destination_account,
+                   coalesce(a.account_number, p.source_account) as account_number
             from payment_history ph
+            left join payments p on p.id = ph.payment_id
+            left join accounts a on a.account_number = p.source_account
             where ph.id=?
             """;
 
@@ -147,14 +147,14 @@ public class PaymentHistoryRepository {
     public List<PaymentHistory> findByPaymentId(String paymentId) {
         String sql = """
             select ph.*,
-                   (
-                       select coalesce(a.account_number, p.source_account)
-                       from payments p
-                       left join accounts a on a.account_number = p.source_account
-                       where p.id = ph.payment_id
-                       limit 1
-                   ) as account_number
+                   p.amount as amount,
+                   p.currency as currency,
+                   p.source_account as source_account,
+                   p.destination_account as destination_account,
+                   coalesce(a.account_number, p.source_account) as account_number
             from payment_history ph
+            left join payments p on p.id = ph.payment_id
+            left join accounts a on a.account_number = p.source_account
             where ph.payment_id=?
             order by ph.created_at asc
             """;

@@ -9,17 +9,40 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #f3f8ff;
+            --bg: #f0f7ff;
             --card: #ffffff;
-            --line: #d8e5f4;
-            --text: #10253b;
-            --muted: #5f748e;
-            --brand: #0d4e83;
-            --success: #147d5f;
-            --danger: #bb1d2e;
-            --pending: #5f3dc4;
-            --shadow: 0 14px 34px rgba(17, 40, 74, 0.09);
+            --line: #cfe1f4;
+            --text: #0f2741;
+            --muted: #5b7492;
+            --brand: #1363a3;
+            --success: #118c68;
+            --danger: #ca2e44;
+            --pending: #f59e0b;
+            --phase-created: #2563eb;
+            --phase-validation: #7c3aed;
+            --phase-sent: #f59e0b;
+            --phase-success: #16a34a;
+            --phase-failure: #dc2626;
+            --shadow: 0 16px 34px rgba(18, 48, 82, 0.12);
             --radius: 14px;
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #0a1523;
+            --card: #122439;
+            --line: #26415d;
+            --text: #deecfb;
+            --muted: #9cb7d2;
+            --brand: #56a8e5;
+            --success: #34c194;
+            --danger: #ff6f84;
+            --pending: #f59e0b;
+            --phase-created: #2563eb;
+            --phase-validation: #7c3aed;
+            --phase-sent: #f59e0b;
+            --phase-success: #16a34a;
+            --phase-failure: #dc2626;
+            --shadow: 0 20px 40px rgba(1, 8, 16, 0.46);
         }
 
         * { box-sizing: border-box; }
@@ -29,10 +52,11 @@
             font-family: "Manrope", sans-serif;
             color: var(--text);
             background:
-                radial-gradient(circle at 20% 7%, rgba(13, 78, 131, 0.12) 0%, rgba(13, 78, 131, 0) 36%),
-                radial-gradient(circle at 90% 0%, rgba(20, 125, 95, 0.1) 0%, rgba(20, 125, 95, 0) 33%),
+                radial-gradient(circle at 18% 7%, rgba(27, 103, 177, 0.18) 0%, rgba(27, 103, 177, 0) 42%),
+                radial-gradient(circle at 95% 3%, rgba(17, 140, 104, 0.16) 0%, rgba(17, 140, 104, 0) 36%),
                 var(--bg);
             min-height: 100vh;
+            transition: background 0.28s ease, color 0.2s ease;
         }
 
         .page {
@@ -41,13 +65,20 @@
         }
 
         .hero {
-            background: linear-gradient(126deg, #0d4e83, #1d7fc4);
+            background: linear-gradient(128deg, #0a4f8a, #1f8ed1 58%, #29b7a4 120%);
             color: #fff;
             border-radius: calc(var(--radius) + 6px);
             padding: 26px;
             box-shadow: var(--shadow);
             position: relative;
             overflow: hidden;
+        }
+
+        .hero-actions {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            z-index: 2;
         }
 
         .hero::after {
@@ -112,9 +143,15 @@
             background: var(--card);
             border: 1px solid var(--line);
             border-radius: var(--radius);
-            box-shadow: 0 6px 14px rgba(17, 34, 58, 0.06);
+            box-shadow: 0 8px 18px rgba(14, 43, 77, 0.08);
             padding: 12px;
         }
+
+        .card:nth-child(1) { border-top: 3px solid #1d7fc4; }
+        .card:nth-child(2) { border-top: 3px solid #18a176; }
+        .card:nth-child(3) { border-top: 3px solid #6a47d7; }
+        .card:nth-child(4) { border-top: 3px solid #ca2e44; }
+        .card:nth-child(5) { border-top: 3px solid #f0a935; }
 
         .card .k {
             font-size: 0.74rem;
@@ -131,7 +168,7 @@
         }
 
         .toolbar {
-            background: var(--card);
+            background: linear-gradient(180deg, #ffffff, #f8fcff);
             border: 1px solid var(--line);
             border-radius: var(--radius);
             padding: 12px;
@@ -139,7 +176,7 @@
             grid-template-columns: 1fr 220px auto auto;
             gap: 10px;
             align-items: center;
-            box-shadow: 0 6px 14px rgba(17, 34, 58, 0.06);
+            box-shadow: 0 8px 16px rgba(15, 42, 72, 0.08);
             margin-bottom: 14px;
         }
 
@@ -156,23 +193,105 @@
         .select {
             border: 1px solid var(--line);
             padding: 0 10px;
+            background: #ffffff;
+            color: var(--text);
+        }
+
+        .search:focus,
+        .select:focus {
+            outline: none;
+            border-color: #59a8e0;
+            box-shadow: 0 0 0 3px rgba(89, 168, 224, 0.2);
         }
 
         .btn {
             border: none;
             cursor: pointer;
             color: #fff;
-            background: var(--brand);
+            background: linear-gradient(135deg, #1363a3, #1a82c6);
             padding: 0 14px;
             font-weight: 700;
-            transition: transform 0.16s ease;
+            transition: transform 0.16s ease, box-shadow 0.16s ease;
+            box-shadow: 0 8px 16px rgba(19, 99, 163, 0.24);
         }
 
-        .btn.secondary { background: #355b81; }
-        .btn:hover { transform: translateY(-1px); }
+        .btn.secondary {
+            background: linear-gradient(135deg, #4a627d, #607a9a);
+            box-shadow: 0 8px 16px rgba(74, 98, 125, 0.2);
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(19, 99, 163, 0.3);
+        }
+
+        .theme-toggle {
+            width: 84px;
+            height: 38px;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            box-shadow: none;
+            padding: 0;
+            border-radius: 999px;
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .theme-toggle .toggle-track {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .theme-toggle .toggle-thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            transition: transform 0.22s ease;
+        }
+
+        .theme-toggle.is-dark .toggle-thumb {
+            transform: translateX(46px);
+        }
+
+        .theme-toggle .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .theme-toggle:hover {
+            transform: none;
+            box-shadow: none;
+            background: rgba(255, 255, 255, 0.2);
+        }
 
         .panel {
-            background: var(--card);
+            background: linear-gradient(180deg, #ffffff, #fbfdff);
             border: 1px solid var(--line);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
@@ -213,16 +332,20 @@
             position: sticky;
             top: 0;
             z-index: 2;
-            background: #f8fbff;
-            color: #466385;
+            background: linear-gradient(180deg, #edf6ff, #f7fbff);
+            color: #365b81;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.04em;
             font-size: 0.74rem;
         }
 
+        tbody tr:nth-child(2n) {
+            background: #fcfdff;
+        }
+
         .summary-row { cursor: pointer; }
-        .summary-row:hover { background: #f8fbff; }
+        .summary-row:hover { background: #eef6ff; }
 
         .summary-row.selected {
             background: #ecf5ff;
@@ -236,14 +359,130 @@
             100% { background: transparent; }
         }
 
-        .detail-row { background: #fcfeff; }
-        .detail-cell { padding: 0; }
-
         .detail-box {
-            border-top: 1px solid #dce9f7;
             padding: 14px;
             display: grid;
             gap: 12px;
+        }
+
+        .modal-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .segmented {
+            display: inline-flex;
+            border: 1px solid #cfe2f6;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #eef6ff;
+        }
+
+        .segment-btn {
+            border: none;
+            background: transparent;
+            color: #365e86;
+            font-weight: 700;
+            font-size: 0.78rem;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .segment-btn.active {
+            background: #1363a3;
+            color: #fff;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .section-title {
+            margin: 0;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #4d6c8c;
+        }
+
+        .transfer-summary {
+            border: 1px solid #d7e7fa;
+            border-radius: 14px;
+            background: linear-gradient(140deg, #eaf4ff, #ffffff 62%, #eefcf8 120%);
+            padding: 14px;
+            box-shadow: 0 8px 20px rgba(22, 54, 93, 0.08);
+        }
+
+        .transfer-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+        .amount-pill {
+            border-radius: 999px;
+            padding: 6px 12px;
+            background: linear-gradient(140deg, #1363a3, #29a89c);
+            color: #fff;
+            font-weight: 800;
+            font-size: 0.82rem;
+            letter-spacing: 0.02em;
+            box-shadow: 0 8px 16px rgba(19, 99, 163, 0.24);
+        }
+
+        .transfer-path {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .account-box {
+            border: 1px solid #dce9f7;
+            border-radius: 12px;
+            background: linear-gradient(180deg, #ffffff, #f8fbff);
+            padding: 10px;
+        }
+
+        .account-box .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #607997;
+            font-weight: 700;
+        }
+
+        .account-box .value {
+            margin-top: 3px;
+            font-size: 0.83rem;
+            font-weight: 800;
+            color: #16395d;
+            word-break: break-all;
+            font-family: "JetBrains Mono", monospace;
+        }
+
+        .transfer-arrow {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #eaf3ff;
+            border: 1px solid #cce0f5;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #325d87;
+            font-size: 1rem;
+            font-weight: 700;
         }
 
         .detail-grid {
@@ -252,11 +491,17 @@
             gap: 10px;
         }
 
+        .compact-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
         .kv {
             border: 1px solid #e5eef9;
             border-radius: 10px;
             padding: 8px 10px;
-            background: #fff;
+            background: linear-gradient(180deg, #ffffff, #f9fcff);
         }
 
         .kv .k {
@@ -294,6 +539,17 @@
             position: relative;
         }
 
+        .timeline.compact .meta,
+        .timeline.compact .note,
+        .timeline.compact .error,
+        .timeline.compact .transition {
+            display: none;
+        }
+
+        .timeline.compact .event {
+            padding-bottom: 8px;
+        }
+
         .timeline::before {
             content: "";
             position: absolute;
@@ -306,7 +562,44 @@
 
         .event {
             position: relative;
-            padding: 0 0 12px 14px;
+            padding: 9px 10px 12px 14px;
+            border: 1px solid #dce9f7;
+            border-left: 4px solid #8ba3bc;
+            border-radius: 12px;
+            margin: 0 0 10px;
+            background: linear-gradient(180deg, #ffffff, #f9fcff);
+            box-shadow: 0 5px 12px rgba(22, 53, 88, 0.06);
+        }
+
+        .event.event-success {
+            border-left-color: var(--phase-success);
+            background: linear-gradient(180deg, #f4fff9, #ecfbf3);
+        }
+
+        .event.event-failed {
+            border-left-color: var(--phase-failure);
+            background: linear-gradient(180deg, #fff6f7, #ffeef0);
+        }
+
+        .event.event-validation,
+        .event.event-processing {
+            border-left-color: var(--phase-validation);
+            background: linear-gradient(180deg, #fffdf3, #fff8df);
+        }
+
+        .event.event-sent {
+            border-left-color: var(--phase-sent);
+            background: linear-gradient(180deg, #f6f5ff, #efedff);
+        }
+
+        .event.event-created {
+            border-left-color: var(--phase-created);
+            background: linear-gradient(180deg, #f5faff, #edf6ff);
+        }
+
+        .event:hover {
+            border-color: #b9d7f3;
+            box-shadow: 0 8px 16px rgba(23, 61, 101, 0.12);
         }
 
         .dot {
@@ -322,14 +615,17 @@
         }
 
         .dot.created,
-        .dot.initiated { background: #2e6ea9; }
+        .dot.initiated { background: var(--phase-created); }
+        .dot.validation { background: var(--phase-validation); }
+        .dot.sent { background: var(--phase-sent); }
         .dot.processing,
-        .dot.pending { background: var(--pending); }
+        .dot.pending { background: var(--phase-validation); }
         .dot.completed,
-        .dot.success { background: var(--success); }
+        .dot.success { background: var(--phase-success); }
         .dot.failed,
+        .dot.failure,
         .dot.cancelled,
-        .dot.error { background: var(--danger); }
+        .dot.error { background: var(--phase-failure); }
 
         .event-head {
             display: grid;
@@ -440,28 +736,38 @@
             color: #fff;
             text-transform: uppercase;
             letter-spacing: 0.03em;
+            box-shadow: 0 4px 10px rgba(25, 56, 87, 0.18);
         }
 
         .status-created,
-        .status-initiated { background: #2e6ea9; }
+        .status-initiated { background: var(--phase-created); }
+        .status-validation { background: var(--phase-validation); }
+        .status-sent { background: var(--phase-sent); }
         .status-processing,
-        .status-pending { background: var(--pending); }
+        .status-pending { background: var(--phase-sent); }
         .status-completed,
-        .status-success { background: var(--success); }
+        .status-success { background: var(--phase-success); }
         .status-failed,
+        .status-failure,
         .status-cancelled,
-        .status-error { background: var(--danger); }
+        .status-error { background: var(--phase-failure); }
         .status-default { background: #4a5f79; }
 
         .action-btn {
             border: 1px solid #c6dbf2;
-            background: #eef6ff;
+            background: linear-gradient(180deg, #f4f9ff, #e8f2ff);
             color: #23496f;
             font-weight: 700;
             border-radius: 8px;
             padding: 6px 10px;
             cursor: pointer;
             font-size: 0.75rem;
+            transition: transform 0.14s ease, box-shadow 0.14s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 10px rgba(31, 76, 122, 0.16);
         }
 
         .loading,
@@ -471,26 +777,288 @@
             text-align: center;
         }
 
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        body.modal-open .page {
+            filter: blur(4px);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(7, 24, 43, 0.45);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            width: min(980px, 100%);
+            max-height: 88vh;
+            overflow: auto;
+            border-radius: 16px;
+            border: 1px solid #dce9f7;
+            background: linear-gradient(180deg, #ffffff, #fafdff);
+            box-shadow: 0 30px 65px rgba(10, 28, 49, 0.3);
+        }
+
+        .modal-head {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-bottom: 1px solid #dce9f7;
+            background: linear-gradient(180deg, #eef7ff, #ffffff);
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #365e86;
+        }
+
+        .modal-close {
+            border: 1px solid #c6dbf2;
+            background: #eef6ff;
+            color: #23496f;
+            font-weight: 700;
+            border-radius: 8px;
+            width: 34px;
+            height: 34px;
+            cursor: pointer;
+            font-size: 1.05rem;
+            line-height: 1;
+            transition: transform 0.14s ease, background 0.14s ease;
+        }
+
+        .modal-close:hover {
+            background: #dcedff;
+            transform: rotate(6deg);
+        }
+
+        :root[data-theme="dark"] body {
+            background:
+                radial-gradient(circle at 18% 7%, rgba(57, 141, 224, 0.18) 0%, rgba(57, 141, 224, 0) 45%),
+                radial-gradient(circle at 95% 3%, rgba(64, 214, 170, 0.12) 0%, rgba(64, 214, 170, 0) 38%),
+                var(--bg);
+        }
+
+        :root[data-theme="dark"] .hero {
+            background: linear-gradient(130deg, #0f3d68, #185e92 58%, #1b7f76 120%);
+        }
+
+        :root[data-theme="dark"] .theme-toggle {
+            border-color: rgba(148, 188, 224, 0.4);
+            background: rgba(8, 23, 39, 0.35);
+            color: #dff0ff;
+        }
+
+        :root[data-theme="dark"] .theme-toggle .toggle-thumb {
+            border-color: rgba(110, 194, 255, 0.54);
+            background: rgba(86, 168, 229, 0.24);
+        }
+
+        :root[data-theme="dark"] .theme-toggle:hover {
+            background: rgba(11, 31, 53, 0.5);
+        }
+
+        :root[data-theme="dark"] .toolbar,
+        :root[data-theme="dark"] .panel,
+        :root[data-theme="dark"] .modal-box,
+        :root[data-theme="dark"] .card,
+        :root[data-theme="dark"] .transfer-summary,
+        :root[data-theme="dark"] .account-box,
+        :root[data-theme="dark"] .kv {
+            background: linear-gradient(180deg, #13283f, #102236);
+            border-color: var(--line);
+            box-shadow: var(--shadow);
+        }
+
+        :root[data-theme="dark"] .event {
+            border-color: var(--line);
+            box-shadow: var(--shadow);
+            background: linear-gradient(180deg, #14273c, #112336);
+        }
+
+        :root[data-theme="dark"] .event.event-success {
+            border-left-color: var(--phase-success);
+            background: linear-gradient(180deg, #18382e, #142f27);
+        }
+
+        :root[data-theme="dark"] .event.event-failed {
+            border-left-color: var(--phase-failure);
+            background: linear-gradient(180deg, #3f2530, #351f29);
+        }
+
+        :root[data-theme="dark"] .event.event-validation,
+        :root[data-theme="dark"] .event.event-processing {
+            border-left-color: var(--phase-validation);
+            background: linear-gradient(180deg, #3b331f, #322b1b);
+        }
+
+        :root[data-theme="dark"] .event.event-sent {
+            border-left-color: var(--phase-sent);
+            background: linear-gradient(180deg, #292846, #24223c);
+        }
+
+        :root[data-theme="dark"] .event.event-created {
+            border-left-color: var(--phase-created);
+            background: linear-gradient(180deg, #1c3349, #182d40);
+        }
+
+        :root[data-theme="dark"] .search,
+        :root[data-theme="dark"] .select {
+            background: #11253b;
+            border-color: #2a4663;
+            color: var(--text);
+        }
+
+        :root[data-theme="dark"] th {
+            background: linear-gradient(180deg, #18324c, #152b43);
+            color: #b8d5f2;
+        }
+
+        :root[data-theme="dark"] td {
+            border-bottom-color: #253f5a;
+        }
+
+        :root[data-theme="dark"] tbody tr:nth-child(2n) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        :root[data-theme="dark"] .summary-row:hover,
+        :root[data-theme="dark"] .summary-row.selected {
+            background: rgba(86, 168, 229, 0.14);
+        }
+
+        :root[data-theme="dark"] .modal-head {
+            background: linear-gradient(180deg, #17314a, #13283f);
+            border-bottom-color: #2a4663;
+        }
+
+        :root[data-theme="dark"] .modal-title,
+        :root[data-theme="dark"] .section-title,
+        :root[data-theme="dark"] .account-box .label,
+        :root[data-theme="dark"] .event .stamp,
+        :root[data-theme="dark"] .kv .k,
+        :root[data-theme="dark"] .transition,
+        :root[data-theme="dark"] .card .k,
+        :root[data-theme="dark"] .panel h2 {
+            color: var(--muted);
+        }
+
+        :root[data-theme="dark"] .segmented {
+            background: #17314b;
+            border-color: #2a4867;
+        }
+
+        :root[data-theme="dark"] .segment-btn {
+            color: #c8def5;
+        }
+
+        :root[data-theme="dark"] .segment-btn.active {
+            background: #56a8e5;
+            color: #082137;
+        }
+
+        :root[data-theme="dark"] .pill,
+        :root[data-theme="dark"] .event .duration,
+        :root[data-theme="dark"] .note {
+            background: #17314b;
+            border-color: #2a4867;
+            color: #c8def5;
+        }
+
+        :root[data-theme="dark"] .error,
+        :root[data-theme="dark"] .failed-box {
+            background: #3e1f2a;
+            border-color: #6d3546;
+            color: #ffd7de;
+        }
+
+        :root[data-theme="dark"] .failed-box h3 {
+            color: #ff9fb0;
+        }
+
+        :root[data-theme="dark"] .id,
+        :root[data-theme="dark"] .event .state,
+        :root[data-theme="dark"] .account-box .value,
+        :root[data-theme="dark"] .kv .v {
+            color: #d9ebfe;
+        }
+
+        :root[data-theme="dark"] .action-btn,
+        :root[data-theme="dark"] .modal-close {
+            background: #183654;
+            border-color: #35608a;
+            color: #d8ebff;
+        }
+
         @media (max-width: 1180px) {
             .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .toolbar { grid-template-columns: 1fr 1fr auto auto; }
             .toolbar .search { grid-column: 1 / -1; }
             .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .compact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
 
         @media (max-width: 760px) {
             .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .toolbar { grid-template-columns: 1fr; }
             .detail-grid { grid-template-columns: 1fr; }
+            .compact-grid { grid-template-columns: 1fr; }
             .event-head { grid-template-columns: 1fr; gap: 2px; }
+            .transfer-path { grid-template-columns: 1fr; }
+            .transfer-arrow { justify-self: center; transform: rotate(90deg); }
+            .modal-toolbar { align-items: stretch; }
+            .segmented { width: 100%; }
+            .segment-btn { flex: 1; }
+            .hero-actions {
+                top: 12px;
+                right: 12px;
+            }
+            .theme-toggle {
+                height: 36px;
+                width: 78px;
+                font-size: 0.82rem;
+                padding: 0;
+            }
+            .theme-toggle.is-dark .toggle-thumb {
+                transform: translateX(40px);
+            }
         }
     </style>
 </head>
 <body>
     <main class="page">
         <section class="hero">
+            <div class="hero-actions">
+                <button id="themeToggleBtn" class="theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch theme" aria-pressed="false">
+                    <span class="toggle-track" aria-hidden="true">
+                        <span>🔅</span>
+                        <span>💡</span>
+                    </span>
+                    <span id="themeToggleThumb" class="toggle-thumb" aria-hidden="true">🔅</span>
+                    <span class="sr-only">Theme switch</span>
+                </button>
+            </div>
             <h1>Payment History</h1>
-            <p>All transaction history in one table. Click any row to expand full details under that same row.</p>
+            <p>All transaction history in one table. Click View on any row to open full details in a popup.</p>
             <div class="hero-meta">
                 <span class="live-dot"></span>
                 <span>Real-time status monitor enabled (auto-refresh every 15 seconds)</span>
@@ -536,6 +1104,16 @@
         </section>
     </main>
 
+    <div id="detailModal" class="modal-overlay" aria-hidden="true">
+        <section class="modal-box" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
+            <header class="modal-head">
+                <h2 id="detailModalTitle" class="modal-title">Payment Details</h2>
+                <button id="detailModalClose" class="modal-close" type="button" aria-label="Close details">&times;</button>
+            </header>
+            <div id="detailModalContent"></div>
+        </section>
+    </div>
+
     <script>
         const HISTORY_PATH = "/payment-history";
         const HISTORY_ENDPOINT_CANDIDATES = (() => {
@@ -559,12 +1137,20 @@
         const statusFilter = document.getElementById("statusFilter");
         const refreshBtn = document.getElementById("refreshBtn");
         const exportBtn = document.getElementById("exportBtn");
+        const themeToggleBtn = document.getElementById("themeToggleBtn");
         const historyTableBody = document.getElementById("historyTableBody");
+        const detailModal = document.getElementById("detailModal");
+        const detailModalTitle = document.getElementById("detailModalTitle");
+        const detailModalContent = document.getElementById("detailModalContent");
+        const detailModalClose = document.getElementById("detailModalClose");
+        const themeToggleThumb = document.getElementById("themeToggleThumb");
+        const THEME_STORAGE_KEY = "payment-history-theme";
 
         let allPayments = [];
         let filteredPayments = [];
-        let expandedPaymentId = null;
+        let activeModalPaymentId = null;
         let lastSignatureByPayment = {};
+        let detailViewMode = "detailed";
 
         function parseTime(value) {
             if (!value) {
@@ -607,16 +1193,82 @@
             return "Spent " + s + "s";
         }
 
+        function formatAmount(amount, currency) {
+            if (amount == null || amount === "") {
+                return "N/A";
+            }
+            const num = Number(amount);
+            if (!Number.isFinite(num)) {
+                return "N/A";
+            }
+            const curr = (currency || "").trim() || "INR";
+            return new Intl.NumberFormat("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(num) + " " + curr;
+        }
+
+        function setTheme(theme) {
+            const targetTheme = theme === "dark" ? "dark" : "light";
+            document.documentElement.setAttribute("data-theme", targetTheme);
+            themeToggleBtn.classList.toggle("is-dark", targetTheme === "dark");
+            themeToggleBtn.setAttribute("aria-pressed", targetTheme === "dark" ? "true" : "false");
+            themeToggleBtn.setAttribute("aria-label", targetTheme === "dark" ? "Switch to light theme" : "Switch to dark theme");
+            if (themeToggleThumb) {
+                themeToggleThumb.textContent = targetTheme === "dark" ? "💡" : "🔅";
+            }
+        }
+
+        function initTheme() {
+            let savedTheme = "";
+            try {
+                savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || "";
+            } catch (error) {
+                savedTheme = "";
+            }
+
+            const systemPrefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            const initialTheme = savedTheme === "dark" || savedTheme === "light"
+                ? savedTheme
+                : (systemPrefersDark ? "dark" : "light");
+
+            setTheme(initialTheme);
+        }
+
         function statusClass(status) {
             const s = (status || "").toLowerCase();
-            const known = ["created", "initiated", "processing", "pending", "completed", "success", "failed", "cancelled", "error"];
+            const known = ["created", "initiated", "validation", "sent", "processing", "pending", "completed", "success", "failed", "failure", "cancelled", "error"];
             return known.includes(s) ? "status-" + s : "status-default";
         }
 
         function dotClass(status) {
             const s = (status || "").toLowerCase();
-            const known = ["created", "initiated", "processing", "pending", "completed", "success", "failed", "cancelled", "error"];
+            const known = ["created", "initiated", "validation", "sent", "processing", "pending", "completed", "success", "failed", "failure", "cancelled", "error"];
             return known.includes(s) ? s : "default";
+        }
+
+        function eventToneClass(status) {
+            const s = normalizeStatus(status);
+
+            if (isCompletedStatus(s)) {
+                return "event-success";
+            }
+            if (isFailedStatus(s)) {
+                return "event-failed";
+            }
+            if (s === "sent") {
+                return "event-sent";
+            }
+            if (s === "validation") {
+                return "event-validation";
+            }
+            if (s === "processing" || s === "pending") {
+                return "event-sent";
+            }
+            if (s === "created" || s === "initiated") {
+                return "event-created";
+            }
+            return "event-default";
         }
 
         function isErrorText(note, status) {
@@ -629,6 +1281,10 @@
                 id: item.id || "evt-" + index,
                 paymentId: item.paymentId || item.payment_id || "UNKNOWN",
                 accountNumber: item.accountNumber || item.account_number || "-",
+                sourceAccount: item.sourceAccount || item.source_account || "-",
+                destinationAccount: item.destinationAccount || item.destination_account || "-",
+                currency: item.currency || "",
+                amount: item.amount,
                 status: (item.status || "UNKNOWN").toUpperCase(),
                 triggeredBy: item.triggeredBy || item.triggered_by || "SYSTEM",
                 note: item.note || item.message || item.errorMessage || "",
@@ -678,6 +1334,10 @@
                 result.push({
                     paymentId,
                     accountNumber: first ? (first.accountNumber || "-") : "-",
+                    sourceAccount: first ? (first.sourceAccount || "-") : "-",
+                    destinationAccount: first ? (first.destinationAccount || "-") : "-",
+                    currency: first ? (first.currency || "") : "",
+                    amount: first ? first.amount : null,
                     latestStatus: last ? last.status : "UNKNOWN",
                     startedAt: first ? first.timestamp : null,
                     updatedAt: last ? last.timestamp : null,
@@ -730,7 +1390,7 @@
 
         function isFailedStatus(status) {
             const s = normalizeStatus(status);
-            return ["failed", "error", "cancelled", "canceled", "rejected", "declined"].includes(s);
+            return ["failed", "failure", "error", "cancelled", "canceled", "rejected", "declined"].includes(s);
         }
 
         function isProcessingStatus(status) {
@@ -759,12 +1419,33 @@
         }
 
         function detailHtml(payment) {
-            const failedBox = payment.failedEvent
-                ? "<section class='failed-box'><h3>Failed Payment Details</h3>"
+            const transferSummary = ""
+                + "<section class='transfer-summary'>"
+                + "<header class='transfer-head section-head'>"
+                + "<h3 class='section-title'>Transfer Summary</h3>"
+                + "<span class='amount-pill'>" + formatAmount(payment.amount, payment.currency) + "</span>"
+                + "</header>"
+                + "<div class='transfer-path'>"
+                + "<article class='account-box'><div class='label'>From Account</div><div class='value'>" + (payment.sourceAccount || "-") + "</div></article>"
+                + "<span class='transfer-arrow' aria-hidden='true'>&#8594;</span>"
+                + "<article class='account-box'><div class='label'>To Account</div><div class='value'>" + (payment.destinationAccount || "-") + "</div></article>"
+                + "</div>"
+                + "</section>";
+
+            const failedBoxDetailed = payment.failedEvent
+                ? "<section class='failed-box'>"
+                    + "<div class='section-head'><h3 class='section-title'>Failed Payment Details</h3></div>"
                     + "<div><strong>Status:</strong> " + payment.failedEvent.status + "</div>"
                     + "<div><strong>Time:</strong> " + formatDate(payment.failedEvent.timestamp) + "</div>"
                     + "<div><strong>Triggered By:</strong> " + payment.failedEvent.triggeredBy + "</div>"
                     + "<div><strong>Reason:</strong> " + (payment.failedEvent.note || "No error note provided") + "</div>"
+                    + "</section>"
+                : "";
+
+            const failedBoxCompact = payment.failedEvent
+                ? "<section class='failed-box'>"
+                    + "<div class='section-head'><h3 class='section-title'>Failure Reason</h3></div>"
+                    + "<div><strong>" + (payment.failedEvent.note || payment.failedEvent.status || "No error details") + "</strong></div>"
                     + "</section>"
                 : "";
 
@@ -775,7 +1456,7 @@
                     ? "<div class='transition'>" + ev.status + " <span class='arrow'></span> " + ev.nextStatus + "</div>"
                     : "";
 
-                return "<li class='event'>"
+                return "<li class='event " + eventToneClass(ev.status) + "'>"
                     + "<span class='dot " + dotClass(ev.status) + "'></span>"
                     + "<div class='event-head'>"
                     + "<span class='state'>" + ev.status + "</span>"
@@ -788,20 +1469,97 @@
                     + "</li>";
             }).join("");
 
-            return ""
-                + "<section class='detail-box'>"
+            const snapshotDetailed = ""
+                + "<section>"
+                + "<div class='section-head'><h3 class='section-title'>Payment Snapshot</h3></div>"
                 + "<section class='detail-grid'>"
                 + "<article class='kv'><div class='k'>Payment ID</div><div class='v id'>" + payment.paymentId + "</div></article>"
                 + "<article class='kv'><div class='k'>Account Number</div><div class='v id'>" + (payment.accountNumber || "-") + "</div></article>"
+                + "<article class='kv'><div class='k'>Currency</div><div class='v'>" + (payment.currency || "N/A") + "</div></article>"
+                + "<article class='kv'><div class='k'>Amount</div><div class='v'>" + formatAmount(payment.amount, payment.currency) + "</div></article>"
                 + "<article class='kv'><div class='k'>Latest Status</div><div class='v'><span class='status-chip " + statusClass(payment.latestStatus) + "'>" + payment.latestStatus + "</span></div></article>"
                 + "<article class='kv'><div class='k'>Started At</div><div class='v'>" + formatDate(payment.startedAt) + "</div></article>"
                 + "<article class='kv'><div class='k'>Last Updated</div><div class='v'>" + formatDate(payment.updatedAt) + "</div></article>"
                 + "<article class='kv'><div class='k'>Total Events</div><div class='v'>" + payment.eventsCount + "</div></article>"
                 + "<article class='kv'><div class='k'>Processing Time</div><div class='v'>" + (payment.processingMs == null ? "N/A" : durationText(payment.processingMs).replace("Spent ", "")) + "</div></article>"
                 + "</section>"
-                + failedBox
-                + "<ol class='timeline'>" + timeline + "</ol>"
                 + "</section>";
+
+            const snapshotCompact = ""
+                + "<section>"
+                + "<div class='section-head'><h3 class='section-title'>Important Information</h3></div>"
+                + "<section class='compact-grid'>"
+                + "<article class='kv'><div class='k'>Payment ID</div><div class='v id'>" + payment.paymentId + "</div></article>"
+                + "<article class='kv'><div class='k'>Latest Status</div><div class='v'><span class='status-chip " + statusClass(payment.latestStatus) + "'>" + payment.latestStatus + "</span></div></article>"
+                + "<article class='kv'><div class='k'>Amount</div><div class='v'>" + formatAmount(payment.amount, payment.currency) + "</div></article>"
+                + "<article class='kv'><div class='k'>From Account</div><div class='v id'>" + (payment.sourceAccount || "-") + "</div></article>"
+                + "<article class='kv'><div class='k'>To Account</div><div class='v id'>" + (payment.destinationAccount || "-") + "</div></article>"
+                + "<article class='kv'><div class='k'>Last Updated</div><div class='v'>" + formatDate(payment.updatedAt) + "</div></article>"
+                + "</section>"
+                + "</section>";
+
+            return ""
+                + "<section class='detail-box'>"
+                + "<section class='modal-toolbar'>"
+                + "<div class='segmented' role='group' aria-label='Timeline view mode'>"
+                + "<button type='button' class='segment-btn" + (detailViewMode === "detailed" ? " active" : "") + "' data-view='detailed'>Detailed</button>"
+                + "<button type='button' class='segment-btn" + (detailViewMode === "compact" ? " active" : "") + "' data-view='compact'>Compact</button>"
+                + "</div>"
+                + "<button type='button' class='action-btn' data-copy-id='" + payment.paymentId + "'>Copy Payment ID</button>"
+                + "</section>"
+                + transferSummary
+                + (detailViewMode === "compact" ? snapshotCompact : snapshotDetailed)
+                + (detailViewMode === "compact" ? failedBoxCompact : failedBoxDetailed)
+                + "<section>"
+                + "<div class='section-head'><h3 class='section-title'>Status Timeline</h3></div>"
+                + "<ol class='timeline" + (detailViewMode === "compact" ? " compact" : "") + "'>" + timeline + "</ol>"
+                + "</section>"
+                + "</section>";
+        }
+
+        function renderActiveModalContent() {
+            if (!activeModalPaymentId) {
+                return;
+            }
+
+            const payment = allPayments.find((p) => p.paymentId === activeModalPaymentId);
+            if (!payment) {
+                return;
+            }
+
+            detailModalTitle.textContent = "Payment Details: " + activeModalPaymentId;
+            detailModalContent.innerHTML = detailHtml(payment);
+            bindDetailModalActions();
+        }
+
+        function bindDetailModalActions() {
+            const viewButtons = detailModalContent.querySelectorAll("[data-view]");
+            viewButtons.forEach((button) => {
+                button.addEventListener("click", () => {
+                    const nextView = button.getAttribute("data-view");
+                    detailViewMode = nextView === "compact" ? "compact" : "detailed";
+                    renderActiveModalContent();
+                });
+            });
+
+            const copyButton = detailModalContent.querySelector("[data-copy-id]");
+            if (copyButton) {
+                copyButton.addEventListener("click", async () => {
+                    const paymentId = copyButton.getAttribute("data-copy-id") || "";
+                    if (!paymentId) {
+                        return;
+                    }
+                    try {
+                        await navigator.clipboard.writeText(paymentId);
+                        copyButton.textContent = "Copied";
+                        setTimeout(() => {
+                            copyButton.textContent = "Copy Payment ID";
+                        }, 1200);
+                    } catch (error) {
+                        console.warn("Could not copy payment ID:", error.message);
+                    }
+                });
+            }
         }
 
         function renderTable(payments) {
@@ -810,13 +1568,9 @@
                 return;
             }
 
-            if (expandedPaymentId && !payments.some((p) => p.paymentId === expandedPaymentId)) {
-                expandedPaymentId = null;
-            }
-
             const rows = [];
             for (const p of payments) {
-                const selected = p.paymentId === expandedPaymentId;
+                const selected = p.paymentId === activeModalPaymentId;
                 const summaryClass = "summary-row" + (selected ? " selected" : "") + (p.justUpdated ? " updated" : "");
                 rows.push(
                     "<tr class='" + summaryClass + "' data-id='" + p.paymentId + "'>"
@@ -827,21 +1581,35 @@
                     + "<td>" + formatDate(p.startedAt) + "</td>"
                     + "<td>" + formatDate(p.updatedAt) + "</td>"
                     + "<td>" + (p.processingMs == null ? "N/A" : durationText(p.processingMs).replace("Spent ", "")) + "</td>"
-                    + "<td><button type='button' class='action-btn' data-open='" + p.paymentId + "'>" + (selected ? "Hide" : "View") + "</button></td>"
+                    + "<td><button type='button' class='action-btn' data-open='" + p.paymentId + "'>View</button></td>"
                     + "</tr>"
                 );
-
-                if (selected) {
-                    rows.push(
-                        "<tr class='detail-row' data-detail-id='" + p.paymentId + "'>"
-                        + "<td class='detail-cell' colspan='8'>" + detailHtml(p) + "</td>"
-                        + "</tr>"
-                    );
-                }
             }
 
             historyTableBody.innerHTML = rows.join("");
             bindRowActions();
+        }
+
+        function openDetailModal(paymentId) {
+            const payment = allPayments.find((p) => p.paymentId === paymentId);
+            if (!payment) {
+                return;
+            }
+
+            activeModalPaymentId = paymentId;
+            renderActiveModalContent();
+            detailModal.classList.add("open");
+            detailModal.setAttribute("aria-hidden", "false");
+            document.body.classList.add("modal-open");
+            renderTable(filteredPayments);
+        }
+
+        function closeDetailModal() {
+            detailModal.classList.remove("open");
+            detailModal.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("modal-open");
+            activeModalPaymentId = null;
+            renderTable(filteredPayments);
         }
 
         function applyTimelineToPayment(payment, timelineEvents) {
@@ -871,6 +1639,10 @@
             const lastTime = last ? parseTime(last.timestamp) : null;
 
             payment.accountNumber = first ? (first.accountNumber || payment.accountNumber || "-") : (payment.accountNumber || "-");
+            payment.sourceAccount = first ? (first.sourceAccount || payment.sourceAccount || "-") : (payment.sourceAccount || "-");
+            payment.destinationAccount = first ? (first.destinationAccount || payment.destinationAccount || "-") : (payment.destinationAccount || "-");
+            payment.currency = first ? (first.currency || payment.currency || "") : (payment.currency || "");
+            payment.amount = first ? (first.amount != null ? first.amount : payment.amount) : payment.amount;
             payment.latestStatus = last ? last.status : payment.latestStatus;
             payment.startedAt = first ? first.timestamp : payment.startedAt;
             payment.updatedAt = last ? last.timestamp : payment.updatedAt;
@@ -919,7 +1691,7 @@
         function bindRowActions() {
             const clickableRows = historyTableBody.querySelectorAll(".summary-row");
             clickableRows.forEach((row) => {
-                row.addEventListener("click", async (event) => {
+                row.addEventListener("click", (event) => {
                     const target = event.target;
                     const paymentId = row.getAttribute("data-id");
 
@@ -927,18 +1699,18 @@
                         event.preventDefault();
                     }
 
-                    if (expandedPaymentId === paymentId) {
-                        expandedPaymentId = null;
-                    } else {
-                        expandedPaymentId = paymentId;
-                        try {
-                            await refreshPaymentTimeline(paymentId);
-                        } catch (error) {
-                            console.warn("Could not refresh payment timeline for " + paymentId + ":", error.message);
-                        }
-                    }
+                    openDetailModal(paymentId);
 
-                    renderTable(filteredPayments);
+                    refreshPaymentTimeline(paymentId)
+                        .then(() => {
+                            if (activeModalPaymentId === paymentId && detailModal.classList.contains("open")) {
+                                renderActiveModalContent();
+                            }
+                            applyFilters();
+                        })
+                        .catch((error) => {
+                            console.warn("Could not refresh payment timeline for " + paymentId + ":", error.message);
+                        });
                 });
             });
         }
@@ -1061,13 +1833,44 @@
             lastSignatureByPayment = nextSig;
             allPayments = nextPayments;
             applyFilters();
+
+            if (activeModalPaymentId && detailModal.classList.contains("open")) {
+                const activePayment = allPayments.find((p) => p.paymentId === activeModalPaymentId);
+                if (activePayment) {
+                    renderActiveModalContent();
+                } else {
+                    closeDetailModal();
+                }
+            }
         }
 
         searchInput.addEventListener("input", applyFilters);
         statusFilter.addEventListener("change", applyFilters);
         refreshBtn.addEventListener("click", () => loadHistory(false));
         exportBtn.addEventListener("click", exportCsv);
+        themeToggleBtn.addEventListener("click", () => {
+            const currentTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+            const nextTheme = currentTheme === "dark" ? "light" : "dark";
+            setTheme(nextTheme);
+            try {
+                localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+            } catch (error) {
+                console.warn("Could not save theme preference:", error.message);
+            }
+        });
+        detailModalClose.addEventListener("click", closeDetailModal);
+        detailModal.addEventListener("click", (event) => {
+            if (event.target === detailModal) {
+                closeDetailModal();
+            }
+        });
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && detailModal.classList.contains("open")) {
+                closeDetailModal();
+            }
+        });
 
+        initTheme();
         loadHistory(false);
         setInterval(() => {
             loadHistory(true);

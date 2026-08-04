@@ -26,11 +26,24 @@ public class PaymentHistory {
     private String accountNumber;
 
 
+    private Double amount;
+
+
+    private String currency;
+
+
+    private String sourceAccount;
+
+
+    private String destinationAccount;
+
+
     public PaymentHistory() {}
 
 
     public PaymentHistory(String id, String paymentId, String status,
-                          LocalDateTime timestamp, String triggeredBy, String note, String accountNumber) {
+                          LocalDateTime timestamp, String triggeredBy, String note, String accountNumber,
+                          Double amount, String currency, String sourceAccount, String destinationAccount) {
         this.id = id;
         this.paymentId = paymentId;
         this.status = status;
@@ -38,6 +51,10 @@ public class PaymentHistory {
         this.triggeredBy = triggeredBy;
         this.note = note;
         this.accountNumber = accountNumber;
+        this.amount = amount;
+        this.currency = currency;
+        this.sourceAccount = sourceAccount;
+        this.destinationAccount = destinationAccount;
     }
 
 
@@ -118,6 +135,46 @@ public class PaymentHistory {
 
     public void setAccountNumber(String accountNumber) {
         this.accountNumber = accountNumber;
+    }
+
+
+    public Double getAmount() {
+        return amount;
+    }
+
+
+    public void setAmount(Double amount) {
+        this.amount = amount;
+    }
+
+
+    public String getCurrency() {
+        return currency;
+    }
+
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+
+    public String getSourceAccount() {
+        return sourceAccount;
+    }
+
+
+    public void setSourceAccount(String sourceAccount) {
+        this.sourceAccount = sourceAccount;
+    }
+
+
+    public String getDestinationAccount() {
+        return destinationAccount;
+    }
+
+
+    public void setDestinationAccount(String destinationAccount) {
+        this.destinationAccount = destinationAccount;
     }
 
 
