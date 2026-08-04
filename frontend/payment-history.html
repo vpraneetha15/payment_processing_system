@@ -1108,6 +1108,8 @@
             <select id="statusFilter" class="select" aria-label="Filter by status">
                 <option value="all">All statuses</option>
                 <option value="created">Created</option>
+                <option value="validated">Validated</option>
+                <option value="sent">Sent</option>
                 <option value="processing">Processing</option>
                 <option value="pending">Pending</option>
                 <option value="completed">Completed</option>
@@ -1117,7 +1119,7 @@
             <select id="dateRangeFilter" class="select" aria-label="Filter by time range">
                 <option value="all">All time</option>
                 <option value="weekly">Weekly (Last 7 days)</option>
-                <option value="monthly">Monthly (Last 30 days)</option>
+                <option value="monthly">Monthly (Current month)</option>
             </select>
             <button id="refreshBtn" class="btn" type="button">Refresh</button>
             <button id="exportBtn" class="btn secondary" type="button">Export CSV</button>
@@ -1330,6 +1332,7 @@
                 status: (item.status || "UNKNOWN").toUpperCase(),
                 triggeredBy: item.triggeredBy || item.triggered_by || "SYSTEM",
                 note: item.note || item.message || item.errorMessage || "",
+                errorCode: item.errorCode || item.error_code || "",
                 timestamp: item.createdAt || item.timestamp || item.eventTime || null
             }));
         }
@@ -1478,6 +1481,7 @@
                 ? "<section class='failed-box'>"
                     + "<div class='section-head'><h3 class='section-title'>Failed Payment Details</h3></div>"
                     + "<div><strong>Status:</strong> " + payment.failedEvent.status + "</div>"
+                    + "<div><strong>Error Code:</strong> " + (payment.failedEvent.errorCode || "N/A") + "</div>"
                     + "<div><strong>Time:</strong> " + formatDate(payment.failedEvent.timestamp) + "</div>"
                     + "<div><strong>Triggered By:</strong> " + payment.failedEvent.triggeredBy + "</div>"
                     + "<div><strong>Reason:</strong> " + (payment.failedEvent.note || "No error note provided") + "</div>"
@@ -1487,6 +1491,7 @@
             const failedBoxCompact = payment.failedEvent
                 ? "<section class='failed-box'>"
                     + "<div class='section-head'><h3 class='section-title'>Failure Reason</h3></div>"
+                    + "<div><strong>Error Code:</strong> " + (payment.failedEvent.errorCode || "N/A") + "</div>"
                     + "<div><strong>" + (payment.failedEvent.note || payment.failedEvent.status || "No error details") + "</strong></div>"
                     + "</section>"
                 : "";
@@ -1764,7 +1769,10 @@
 
             const now = Date.now();
             const weeklyStart = now - (7 * 24 * 60 * 60 * 1000);
-            const monthlyStart = now - (30 * 24 * 60 * 60 * 1000);
+            const monthStartDate = new Date();
+            monthStartDate.setHours(0, 0, 0, 0);
+            monthStartDate.setDate(1);
+            const monthlyStart = monthStartDate.getTime();
 
             filteredPayments = allPayments.filter((p) => {
                 const searchHit = term === ""
