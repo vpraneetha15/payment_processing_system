@@ -33,9 +33,9 @@
             <h2 id="form-title">Create User</h2>
 
             <div class="system-values" aria-live="polite">
-                <p><strong>Account Number:</strong> <span id="generatedAccountNumber">Generated in backend on create</span></p>
+                <p><strong>Account Number:</strong> <span id="generatedAccountNumber" class="copy-value" data-copy-label="Account Number" title="Click to copy">Generated in backend on create</span></p>
                 <p><strong>Status:</strong> ACTIVE</p>
-                <p><strong>UPI ID:</strong> <span id="generatedUpi">Generated on create</span></p>
+                <p><strong>UPI ID:</strong> <span id="generatedUpi" class="copy-value" data-copy-label="UPI ID" title="Click to copy">Generated on create</span></p>
             </div>
 
             <form id="createUserForm" novalidate>
@@ -159,12 +159,12 @@
                 <h2>Live Preview</h2>
                 <div class="preview" id="previewCard">
                     <p class="preview-name" id="previewName">New User</p>
-                    <p class="preview-line">Account No: <span id="previewAccountNumber">Will be generated</span></p>
+                    <p class="preview-line">Account No: <span id="previewAccountNumber" class="copy-value" data-copy-label="Account Number" title="Click to copy">Will be generated</span></p>
                     <p class="preview-line">Email: <span id="previewEmail">-</span></p>
                     <p class="preview-line">Mobile: <span id="previewMobile">-</span></p>
                     <p class="preview-line">Currency: <span id="previewCurrency">-</span></p>
                     <p class="preview-line">Opening Balance: <span id="previewBalance">-</span></p>
-                    <p class="preview-line">Default UPI: <span id="previewUpi">Will be generated</span></p>
+                    <p class="preview-line">Default UPI: <span id="previewUpi" class="copy-value" data-copy-label="UPI ID" title="Click to copy">Will be generated</span></p>
                     <p class="preview-line">Cards: <span id="previewCards">0</span></p>
                     <p class="preview-line">Wallets: <span id="previewWallets">0</span></p>
                     <p class="preview-line">Status: <span id="previewStatus">Active</span></p>
@@ -191,7 +191,7 @@
                 <button type="button" id="closeModalBtn" class="btn-link">Close</button>
             </div>
             <div class="modal-grid">
-                <p><strong>Account Number:</strong> <span id="modalAccountNumber">-</span></p>
+                <p><strong>Account Number:</strong> <span id="modalAccountNumber" class="copy-value" data-copy-label="Account Number" title="Click to copy">-</span></p>
                 <p><strong>Name:</strong> <input id="modalName" class="modal-input"></p>
                 <p><strong>Email:</strong> <input id="modalEmail" class="modal-input"></p>
                 <p><strong>Mobile:</strong> <input id="modalMobile" class="modal-input"></p>
@@ -204,7 +204,7 @@
                     </select>
                 </p>
                 <p><strong>Opening Balance:</strong> <span id="modalBalance">-</span></p>
-                <p><strong>UPI ID:</strong> <span id="modalUpi">-</span></p>
+                <p><strong>UPI ID:</strong> <span id="modalUpi" class="copy-value" data-copy-label="UPI ID" title="Click to copy">-</span></p>
                 <p><strong>Status:</strong> <label class="status-inline"><input type="checkbox" id="modalActive"> Active</label></p>
                 <p><strong>Created At:</strong> <span id="modalCreatedAt">-</span></p>
                 <p class="modal-span-2"><strong>Notes:</strong> <textarea id="modalNotes" class="modal-input" rows="2"></textarea></p>
@@ -538,6 +538,30 @@
             createBtn.classList.toggle("is-loading", isLoading);
         }
 
+        async function copyTextToClipboard(value, label) {
+            const text = String(value || "").trim();
+            if (!text || text === "-" || /generated|will be generated/i.test(text)) {
+                showToast("Unable to copy. Please try again.");
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast(`${label} copied!`);
+            } catch (_error) {
+                showToast("Unable to copy. Please try again.");
+            }
+        }
+
+        function createInlineCopyText(value, label) {
+            const safeValue = escapeHtml(value || "");
+            const safeLabel = escapeHtml(label);
+            if (!safeValue || safeValue === "-") {
+                return "";
+            }
+            return `<span class="copy-value copy-value-inline" data-copy-value="${safeValue}" data-copy-label="${safeLabel}" title="Click to copy">${safeValue}</span>`;
+        }
+
         async function fetchUsers() {
             const response = await fetch(`${apiBaseUrl}/users`);
             if (!response.ok) {
@@ -578,10 +602,10 @@
             userList.innerHTML = filteredSorted.slice(0, 5).map((user) => `
                 <li>
                     <div class="line-1">
-                        <span>${escapeHtml(user.accountNumber)} - ${escapeHtml(user.fullName)}</span>
+                        <span>${createInlineCopyText(user.accountNumber, "Account Number")} - ${escapeHtml(user.fullName)}</span>
                         <span class="${user.active ? "badge" : "badge inactive"}">${user.active ? "Active" : "Inactive"}</span>
                     </div>
-                    <div class="line-2">${escapeHtml(user.preferredCurrency || "-")} | ${escapeHtml(user.upiId || "-")}</div>
+                    <div class="line-2">${escapeHtml(user.preferredCurrency || "-")} | ${createInlineCopyText(user.upiId || "-", "UPI ID") || escapeHtml(user.upiId || "-")}</div>
                     <div class="user-actions-row">
                         <button type="button" class="user-action" data-user="${escapeHtml(user.accountNumber)}">View Details</button>
                     </div>
@@ -870,6 +894,15 @@
             if (!(target instanceof HTMLElement)) {
                 return;
             }
+
+            const clickableValue = target.closest(".copy-value");
+            if (clickableValue instanceof HTMLElement) {
+                const copyValue = clickableValue.getAttribute("data-copy-value");
+                const label = clickableValue.getAttribute("data-copy-label") || "Value";
+                await copyTextToClipboard(copyValue != null ? copyValue : clickableValue.textContent, label);
+                return;
+            }
+
             const accountNumber = target.getAttribute("data-user");
             if (!accountNumber) {
                 return;
@@ -922,6 +955,20 @@
         clearBtn.addEventListener("click", () => {
             resetForm();
             showToast("Form cleared.");
+        });
+
+        document.addEventListener("click", async (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLElement)) {
+                return;
+            }
+
+            const clickableValue = target.closest(".copy-value");
+            if (!(clickableValue instanceof HTMLElement) || clickableValue.hasAttribute("data-copy-value")) {
+                return;
+            }
+
+            await copyTextToClipboard(clickableValue.textContent, clickableValue.getAttribute("data-copy-label") || "Value");
         });
 
         ["input", "change"].forEach((eventName) => {

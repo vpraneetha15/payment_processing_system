@@ -167,6 +167,23 @@ h2 {
   font-size: 0.94rem;
 }
 
+.copy-value {
+  color: #0b5c79;
+  cursor: pointer;
+  text-decoration: underline transparent;
+  text-underline-offset: 0.12em;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease, opacity 0.2s ease;
+}
+
+.copy-value:hover {
+  color: var(--primary);
+  text-decoration-color: currentColor;
+}
+
+.copy-value-inline {
+  font-weight: 700;
+}
+
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
