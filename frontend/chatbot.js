@@ -75,6 +75,12 @@
         '.chat-bubble th,.chat-bubble td{word-break:break-word;overflow-wrap:anywhere;}',
         '.chat-bubble th{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;opacity:0.65;}',
         '.chat-bubble td:last-child,.chat-bubble th:last-child{text-align:right;}',
+        '.chat-help-table th,.chat-help-table td{text-align:left!important;}',
+        '.chat-options{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}',
+        '.chat-option{border:1px solid var(--line,#dbe4f0);background:var(--surface,#fff);',
+        'color:var(--brand,#0f6fff);border-radius:999px;padding:5px 11px;font-size:0.76rem;',
+        'font-weight:700;cursor:pointer;transition:background 0.15s ease,color 0.15s ease;}',
+        '.chat-option:hover{background:var(--brand,#0f6fff);color:#fff;border-color:transparent;}',
         '.chat-badge{display:inline-flex;border-radius:999px;padding:1px 7px;font-size:0.72rem;',
         'font-weight:700;background:var(--chip-bg,#eef4ff);color:var(--chip-ink,#16407a);}',
         '.chat-badge.success{background:#e8fbf5;color:#076e52;}',
@@ -568,20 +574,26 @@
     function handleHelp() {
         return [
             '<strong>What I can help you with:</strong><br>',
-            '<table><thead><tr><th>Topic</th><th>Example</th></tr></thead><tbody>',
-            '<tr><td>Summary</td><td><em>System overview</em></td></tr>',
-            '<tr><td>Failed payments</td><td><em>Show me failed payments</em></td></tr>',
-            '<tr><td>Pending / in-flight</td><td><em>How many are pending?</em></td></tr>',
-            '<tr><td>Success stats</td><td><em>How many succeeded?</em></td></tr>',
-            '<tr><td>Error codes</td><td><em>Error code breakdown</em></td></tr>',
-            '<tr><td>Payment lookup</td><td><em>Find payment #42</em></td></tr>',
-            '<tr><td>Currency volumes</td><td><em>Currency volumes</em></td></tr>',
-            '<tr><td>Trends</td><td><em>Show me the volume trend</em></td></tr>',
-            '<tr><td>Health score</td><td><em>What\'s the health score?</em></td></tr>',
-            '<tr><td>Recent activity</td><td><em>Recent payment history</em></td></tr>',
-            '<tr><td>Explain terms</td><td><em>Explain INSUFFICIENT_FUNDS</em></td></tr>',
+            '<table class="chat-help-table"><thead><tr><th>Try this</th></tr></thead><tbody>',
+            '<tr><td><button type="button" class="chat-option" data-query="System overview">System overview</button></td></tr>',
+            '<tr><td><button type="button" class="chat-option" data-query="Show me failed payments">Show me failed payments</button></td></tr>',
+            '<tr><td><button type="button" class="chat-option" data-query="How many are pending?">How many are pending?</button></td></tr>',
+            '<tr><td><button type="button" class="chat-option" data-query="How many succeeded?">How many succeeded?</button></td></tr>',
+            '<tr><td><button type="button" class="chat-option" data-query="Error code breakdown">Error code breakdown</button></td></tr>',
+            '<tr><td><button type="button" class="chat-option" data-query="Find payment #42">Find payment #42</button></td></tr>',
+            '<tr><td><button type="button" class="chat-option" data-query="Currency volumes">Currency volumes</button></td></tr>',
+            '<tr><td><button type="button" class="chat-option" data-query="Show me the volume trend">Show me the volume trend</button></td></tr>',
+            '<tr><td><button type="button" class="chat-option" data-query="What\'s the health score?">What\'s the health score?</button></td></tr>',
+            '<tr><td><button type="button" class="chat-option" data-query="Recent payment history">Recent payment history</button></td></tr>',
+            '<tr><td><button type="button" class="chat-option" data-query="Explain INSUFFICIENT_FUNDS">Explain INSUFFICIENT_FUNDS</button></td></tr>',
             '</tbody></table>',
-            '<br>You can also tap the quick-action chips below.'
+            '<br>You can also tap a quick option:<div class="chat-options">',
+            '<button type="button" class="chat-option" data-query="System summary">System summary</button>',
+            '<button type="button" class="chat-option" data-query="Show failed payments">Failed payments</button>',
+            '<button type="button" class="chat-option" data-query="Error code breakdown">Error codes</button>',
+            '<button type="button" class="chat-option" data-query="Recent payment history">Recent history</button>',
+            '<button type="button" class="chat-option" data-query="Health score">Health score</button>',
+            '</div>'
         ].join('');
     }
 
@@ -690,7 +702,14 @@
             addMessage('bot', [
                 'Hi! I\'m your <strong>Payment Assistant</strong>. I can help you understand your payment data using natural language.<br><br>',
                 'Try asking: <em>"System summary"</em>, <em>"Show failed payments"</em>, <em>"Health score"</em>, or <em>"Find payment #1"</em>.<br><br>',
-                'Tap <em>Help</em> below to see everything I can do.'
+                'Or tap an option to continue:',
+                '<div class="chat-options">',
+                '<button type="button" class="chat-option" data-query="System summary">System summary</button>',
+                '<button type="button" class="chat-option" data-query="Show failed payments">Failed payments</button>',
+                '<button type="button" class="chat-option" data-query="Error code breakdown">Error code breakdown</button>',
+                '<button type="button" class="chat-option" data-query="Recent payment history">Recent payment history</button>',
+                '<button type="button" class="chat-option" data-query="Help">Help</button>',
+                '</div>'
             ].join(''));
         }
     }
@@ -721,6 +740,12 @@
         if (!chip) return;
         if (panelEl.classList.contains('hidden')) openPanel();
         sendMessage(chip.getAttribute('data-query'));
+    });
+
+    messagesEl.addEventListener('click', function (e) {
+        var option = e.target.closest('[data-query]');
+        if (!option) return;
+        sendMessage(option.getAttribute('data-query'));
     });
 
     document.addEventListener('keydown', function (e) {

@@ -395,7 +395,7 @@
                         <span class="material-icons-outlined" style="font-size:16px;color:var(--amber)">currency_exchange</span>
                         <span style="font-size:0.82rem;font-weight:600;color:var(--text-2)">Auto Currency Conversion</span>
                     </div>
-                    <p id="conv-text" style="font-size:0.8rem;color:var(--muted);margin-top:0.35rem"></p>
+                    <p id="conv-text" style="font-size:0.9rem;color:var(--text);margin:0.6rem 0 0 0;font-weight:500;line-height:1.4">—</p>
                 </div>
 
                 <div class="card tips-card">
@@ -814,8 +814,11 @@
                         return data.currency;
                     }
                 }
-            } catch { /* ignore */ }
+            } catch (err) {
+                console.log('Failed to fetch currency for', accountNumber, err);
+            }
             
+            // Return null if currency cannot be determined
             return null;
         }
 
@@ -829,77 +832,61 @@
             const amt = parseFloat(fields.amount.value);
             const convEl = document.getElementById('conversion-preview');
             const convText = document.getElementById('conv-text');
+            const selectedCurrency = fields.currency.value?.trim() || '';
+            
             if (!convEl || !convText) return;
 
-            // Check if we have both accounts
-            if (!src || !dst || src === dst) { 
+            // Hide if missing required fields
+            if (!src || !dst || src === dst || !selectedCurrency) { 
                 convEl.style.display = 'none'; 
                 return; 
             }
             
-            // Try to get currencies (from cache or API)
-            let srcCurrency = accountCurrencyMap[src.toUpperCase()] || null;
-            let dstCurrency = accountCurrencyMap[dst.toUpperCase()] || null;
+            // Try to get source currency
+            let srcCurrency = accountCurrencyMap[src.toUpperCase()];
             
-            // Fetch from backend if not in cache
+            // If not cached, try to fetch
             if (!srcCurrency) {
-                srcCurrency = await getAccountCurrency(src);
+                try {
+                    const res = await fetch(ACCOUNTS_API_URL + '/' + encodeURIComponent(src) + '/currency',
+                        { headers: { Accept: 'application/json' } });
+                    if (res.ok) {
+                        const data = await res.json();
+                        srcCurrency = data.currency;
+                        if (srcCurrency) {
+                            accountCurrencyMap[src.toUpperCase()] = srcCurrency;
+                        }
+                    }
+                } catch (err) {
+                    // Silently fail
+                }
             }
-            if (!dstCurrency) {
-                dstCurrency = await getAccountCurrency(dst);
-            }
             
-            // Get the payment currency selected
-            const paymentCurrency = fields.currency.value || srcCurrency;
-            
-            // Show conversion preview if:
-            // 1. Source and destination have different currencies, OR
-            // 2. Payment currency differs from source account currency
-            const showConversion = (srcCurrency && dstCurrency && srcCurrency !== dstCurrency) || 
-                                   (srcCurrency && paymentCurrency && srcCurrency !== paymentCurrency);
-            
-            if (showConversion && srcCurrency && paymentCurrency) {
+            // Show conversion if source currency is different from selected currency
+            if (srcCurrency && srcCurrency !== selectedCurrency) {
                 convEl.style.display = 'flex';
                 
-                // Build the conversion description
-                let convDesc = '';
-                if (srcCurrency === dstCurrency) {
-                    // Source and dest same, but payment currency different
-                    if (Number.isFinite(amt) && amt > 0) {
-                        convDesc = `Your ${srcCurrency} account → Payment in ${paymentCurrency}`;
-                    } else {
-                        convDesc = `Payment from your ${srcCurrency} account in ${paymentCurrency}`;
-                    }
-                } else {
-                    // Source and dest different
-                    if (Number.isFinite(amt) && amt > 0) {
-                        convDesc = `Your ${srcCurrency} account → Destination in ${dstCurrency}`;
-                    } else {
-                        convDesc = `From your ${srcCurrency} account → To ${dstCurrency} account`;
-                    }
-                }
+                let displayText = srcCurrency + ' → ' + selectedCurrency;
                 
-                // Try to get actual conversion rates
+                // If we have amount, try to get conversion
                 if (Number.isFinite(amt) && amt > 0) {
                     try {
-                        const res = await fetch(
-                            PAYMENT_API_URL + '/conversion-preview?from=' + srcCurrency +
-                            '&to=' + paymentCurrency + '&amount=' + amt,
+                        const res = await fetch(PAYMENT_API_URL + '/conversion-preview?from=' + srcCurrency +
+                            '&to=' + selectedCurrency + '&amount=' + amt,
                             { headers: { Accept: 'application/json' } });
                         if (res.ok) {
                             const d = await res.json();
-                            convText.textContent =
-                                amt.toFixed(2) + ' ' + srcCurrency + ' \u2192 ' +
-                                parseFloat(d.convertedAmount).toFixed(2) + ' ' + paymentCurrency;
-                        } else {
-                            convText.textContent = convDesc;
+                            if (d.convertedAmount !== null && d.convertedAmount !== undefined) {
+                                displayText = amt.toFixed(2) + ' ' + srcCurrency + ' → ' + 
+                                             parseFloat(d.convertedAmount).toFixed(2) + ' ' + selectedCurrency;
+                            }
                         }
                     } catch (err) {
-                        convText.textContent = convDesc;
+                        // Keep basic display
                     }
-                } else {
-                    convText.textContent = convDesc;
                 }
+                
+                convText.textContent = displayText;
             } else {
                 convEl.style.display = 'none';
             }
