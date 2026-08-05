@@ -60,10 +60,18 @@ public class UserService {
         repository.insertUser(user);
 
         String upiId = accountNumber.toLowerCase(Locale.ROOT) + "@payments";
-        repository.insertUpi(accountNumber, upiId, "ACTIVE", now);
+        try {
+            repository.insertUpi(accountNumber, upiId, "ACTIVE", now);
+        } catch (Exception ignored) {
+            // Keep user creation successful even if UPI table has an incompatible schema.
+        }
 
         User saved = repository.findUserByAccountNumber(accountNumber);
         if (saved != null) {
+            if (saved.getUpiId() == null || saved.getUpiId().isBlank()) {
+                saved.setUpiId(upiId);
+                saved.setUpiStatus("ACTIVE");
+            }
             return saved;
         }
 

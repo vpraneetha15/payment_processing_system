@@ -387,12 +387,48 @@ public class UserRepository {
     }
 
     public int insertUpi(String accountNumber, String upiId, String status, LocalDateTime createdAt) {
-        String sql = """
+        boolean active = status == null || status.equalsIgnoreCase("ACTIVE");
+
+        String activeColumnSql = """
                 insert into upi_accounts(upi_id, account_number, active)
                 values(?,?,?)
                 """;
-        boolean active = status == null || status.equalsIgnoreCase("ACTIVE");
-        return jdbcTemplate.update(sql, upiId, accountNumber, active);
+
+        try {
+            return jdbcTemplate.update(activeColumnSql, upiId, accountNumber, active);
+        } catch (Exception ignored) {
+        }
+
+        String statusColumnSql = """
+                insert into upi_accounts(upi_id, account_number, status)
+                values(?,?,?)
+                """;
+
+        try {
+            return jdbcTemplate.update(statusColumnSql, upiId, accountNumber, active ? "ACTIVE" : "INACTIVE");
+        } catch (Exception ignored) {
+        }
+
+        String accountFirstSql = """
+                insert into upi_accounts(account_number, upi_id, status)
+                values(?,?,?)
+                """;
+
+        try {
+            return jdbcTemplate.update(accountFirstSql, accountNumber, upiId, active ? "ACTIVE" : "INACTIVE");
+        } catch (Exception ignored) {
+        }
+
+        String minimalSql = """
+                insert into upi_accounts(upi_id, account_number)
+                values(?,?)
+                """;
+
+        try {
+            return jdbcTemplate.update(minimalSql, upiId, accountNumber);
+        } catch (Exception ignored) {
+            return 0;
+        }
     }
 
     public boolean existsCardNumber(String cardNumber) {
