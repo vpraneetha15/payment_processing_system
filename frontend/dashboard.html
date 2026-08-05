@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>TrustPay Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g3' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%230a5fd3'/%3E%3Cstop offset='100%25' stop-color='%2300bba4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='4' y='4' width='56' height='56' rx='14' fill='url(%23g3)'/%3E%3Cpath d='M32 11l16 7v13c0 10-6.6 19-16 22-9.4-3-16-12-16-22V18l16-7z' fill='%23fff' fill-opacity='.96'/%3E%3Cpath d='M22 33l7 7 13-13' stroke='%230a5fd3' stroke-width='4' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -15,6 +16,7 @@
             --muted: #5f6f85;
             --brand: #0f6fff;
             --brand-deep: #0046b8;
+            --brand-wordmark: #163f69;
             --accent: #00c2a8;
             --line: #dbe4f0;
             --glow-a: rgba(15, 111, 255, 0.18);
@@ -51,6 +53,7 @@
                 --muted: #a8bddb;
                 --brand: #4f98ff;
                 --brand-deep: #2d6ed0;
+                --brand-wordmark: #e1ecff;
                 --accent: #3ad6be;
                 --line: #2a3a56;
                 --glow-a: rgba(79, 152, 255, 0.2);
@@ -87,6 +90,7 @@
             --muted: #5f6f85;
             --brand: #0f6fff;
             --brand-deep: #0046b8;
+            --brand-wordmark: #163f69;
             --accent: #00c2a8;
             --line: #dbe4f0;
             --glow-a: rgba(15, 111, 255, 0.18);
@@ -122,6 +126,7 @@
             --muted: #a8bddb;
             --brand: #4f98ff;
             --brand-deep: #2d6ed0;
+            --brand-wordmark: #e1ecff;
             --accent: #3ad6be;
             --line: #2a3a56;
             --glow-a: rgba(79, 152, 255, 0.2);
@@ -423,10 +428,35 @@
         }
 
         .brand {
-            font-size: 1.05rem;
-            font-weight: 800;
-            letter-spacing: 0.03em;
+            font-size: 1.46rem;
+            font-weight: 900;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            line-height: 1;
+            color: var(--brand-wordmark);
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.28);
+        }
+
+        .brand-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0a5fd3, #00bba4);
+            color: #ffffff;
+            box-shadow: 0 10px 18px rgba(8, 70, 158, 0.3);
+            flex-shrink: 0;
+        }
+
+        .brand-icon svg {
+            width: 15px;
+            height: 15px;
+            fill: currentColor;
         }
 
         .actions {
@@ -1275,7 +1305,15 @@
 <body>
     <main class="page">
         <header class="topbar">
-            <div class="brand">Payment Processing System</div>
+            <div class="brand">
+                <span class="brand-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2l7 3v5.8c0 5-3.3 9.6-7 10.8-3.7-1.2-7-5.8-7-10.8V5l7-3z"/>
+                        <path d="M7.2 12.2l2.3 2.3 4.8-4.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                TrustPay
+            </div>
             <div class="actions">
                 <span class="live-badge"><span class="live-dot"></span>Live</span>
                 <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch theme" aria-pressed="false">
