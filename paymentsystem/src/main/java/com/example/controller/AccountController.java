@@ -148,4 +148,18 @@ public class AccountController {
             "currency", account != null && account.getCurrency() != null ? account.getCurrency() : ""
         ));
     }
+
+    /** Get currency for a specific account number. */
+    @GetMapping("/{accountNumber}/currency")
+    public ResponseEntity<?> getCurrency(@PathVariable String accountNumber) {
+        Account account = service.findById(accountNumber);
+        if (account == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "ACCOUNT_NOT_FOUND", "message", "Account not found: " + accountNumber));
+        }
+        return ResponseEntity.ok(Map.of(
+            "accountNumber", accountNumber,
+            "currency", account.getCurrency() != null ? account.getCurrency() : "USD"
+        ));
+    }
 }

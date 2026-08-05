@@ -716,6 +716,10 @@
                 const data = await res.json();
                 if (data.accountNumber) {
                     targetField.value = data.accountNumber.toUpperCase();
+                    // Cache the currency if returned from lookup
+                    if (data.currency) {
+                        cacheAccountCurrency(data.accountNumber, data.currency);
+                    }
                     setLookupStatus(statusEl, 'success',
                         '\u2713 Account resolved: ' + data.accountNumber +
                         (data.currency ? ' (' + data.currency + ')' : ''));
@@ -728,18 +732,37 @@
         }
 
         // ─── Currency Conversion Preview ────────────────────
-        let srcCurrency = null;
-        let dstCurrency = null;
+        let accountCurrencyMap = {}; // Cache for account currencies fetched from lookups
 
-        async function fetchAccountCurrency(accountNumber) {
+        function cacheAccountCurrency(accountNumber, currency) {
+            if (accountNumber && currency) {
+                accountCurrencyMap[accountNumber.toUpperCase()] = currency;
+            }
+        }
+
+        async function getAccountCurrency(accountNumber) {
             if (!accountNumber) return null;
+            const upper = accountNumber.toUpperCase();
+            
+            // Return from cache if available
+            if (accountCurrencyMap[upper]) {
+                return accountCurrencyMap[upper];
+            }
+            
+            // Fetch from backend if not in cache
             try {
-                const res = await fetch(ACCOUNTS_API_URL + '/' + encodeURIComponent(accountNumber),
+                const res = await fetch(ACCOUNTS_API_URL + '/' + encodeURIComponent(accountNumber) + '/currency',
                     { headers: { Accept: 'application/json' } });
-                if (!res.ok) return null;
-                const data = await res.json();
-                return data.currency || null;
-            } catch { return null; }
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.currency) {
+                        cacheAccountCurrency(accountNumber, data.currency);
+                        return data.currency;
+                    }
+                }
+            } catch { /* ignore */ }
+            
+            return null;
         }
 
 
@@ -751,34 +774,80 @@
             const dst = fields.destinationAccount.value.trim();
             const amt = parseFloat(fields.amount.value);
             const convEl = document.getElementById('conversion-preview');
-            if (!convEl) return;
+            const convText = document.getElementById('conv-text');
+            if (!convEl || !convText) return;
 
-            if (!src || !dst || src === dst) { convEl.style.display = 'none'; return; }
-            srcCurrency = await fetchAccountCurrency(src);
-            dstCurrency = await fetchAccountCurrency(dst);
-            if (!srcCurrency || !dstCurrency || srcCurrency === dstCurrency) {
-                convEl.style.display = 'none'; return;
+            // Check if we have both accounts
+            if (!src || !dst || src === dst) { 
+                convEl.style.display = 'none'; 
+                return; 
             }
-
-            convEl.style.display = 'flex';
-            if (Number.isFinite(amt) && amt > 0) {
-                const paymentCurrency = fields.currency.value || srcCurrency;
-                try {
-                    const res = await fetch(
-                        PAYMENT_API_URL + '/conversion-preview?from=' + paymentCurrency +
-                        '&to=' + dstCurrency + '&amount=' + amt,
-                        { headers: { Accept: 'application/json' } });
-                    if (res.ok) {
-                        const d = await res.json();
-                        document.getElementById('conv-text').textContent =
-                            amt.toFixed(2) + ' ' + paymentCurrency + ' \u2192 ' +
-                            parseFloat(d.convertedAmount).toFixed(2) + ' ' + dstCurrency +
-                            ' (destination will receive converted amount)';
+            
+            // Try to get currencies (from cache or API)
+            let srcCurrency = accountCurrencyMap[src.toUpperCase()] || null;
+            let dstCurrency = accountCurrencyMap[dst.toUpperCase()] || null;
+            
+            // Fetch from backend if not in cache
+            if (!srcCurrency) {
+                srcCurrency = await getAccountCurrency(src);
+            }
+            if (!dstCurrency) {
+                dstCurrency = await getAccountCurrency(dst);
+            }
+            
+            // Get the payment currency selected
+            const paymentCurrency = fields.currency.value || srcCurrency;
+            
+            // Show conversion preview if:
+            // 1. Source and destination have different currencies, OR
+            // 2. Payment currency differs from source account currency
+            const showConversion = (srcCurrency && dstCurrency && srcCurrency !== dstCurrency) || 
+                                   (srcCurrency && paymentCurrency && srcCurrency !== paymentCurrency);
+            
+            if (showConversion && srcCurrency && paymentCurrency) {
+                convEl.style.display = 'flex';
+                
+                // Build the conversion description
+                let convDesc = '';
+                if (srcCurrency === dstCurrency) {
+                    // Source and dest same, but payment currency different
+                    if (Number.isFinite(amt) && amt > 0) {
+                        convDesc = `Your ${srcCurrency} account → Payment in ${paymentCurrency}`;
+                    } else {
+                        convDesc = `Payment from your ${srcCurrency} account in ${paymentCurrency}`;
                     }
-                } catch {}
+                } else {
+                    // Source and dest different
+                    if (Number.isFinite(amt) && amt > 0) {
+                        convDesc = `Your ${srcCurrency} account → Destination in ${dstCurrency}`;
+                    } else {
+                        convDesc = `From your ${srcCurrency} account → To ${dstCurrency} account`;
+                    }
+                }
+                
+                // Try to get actual conversion rates
+                if (Number.isFinite(amt) && amt > 0) {
+                    try {
+                        const res = await fetch(
+                            PAYMENT_API_URL + '/conversion-preview?from=' + srcCurrency +
+                            '&to=' + paymentCurrency + '&amount=' + amt,
+                            { headers: { Accept: 'application/json' } });
+                        if (res.ok) {
+                            const d = await res.json();
+                            convText.textContent =
+                                amt.toFixed(2) + ' ' + srcCurrency + ' \u2192 ' +
+                                parseFloat(d.convertedAmount).toFixed(2) + ' ' + paymentCurrency;
+                        } else {
+                            convText.textContent = convDesc;
+                        }
+                    } catch (err) {
+                        convText.textContent = convDesc;
+                    }
+                } else {
+                    convText.textContent = convDesc;
+                }
             } else {
-                document.getElementById('conv-text').textContent =
-                    'Currency conversion will be applied: ' + srcCurrency + ' \u2192 ' + dstCurrency;
+                convEl.style.display = 'none';
             }
         }
         // ─── Card Expiry: auto-format + future-date validation ─
@@ -901,6 +970,10 @@
                         const data = await res.json();
                         if (data.accountNumber) {
                             fields.sourceAccount.value = data.accountNumber.toUpperCase();
+                            // Cache the currency if returned from lookup
+                            if (data.currency) {
+                                cacheAccountCurrency(data.accountNumber, data.currency);
+                            }
                             fields.sourceAccount.dispatchEvent(new Event('input'));
                             resolvedAcc.textContent = data.accountNumber.toUpperCase() +
                                 (data.currency ? ' (' + data.currency + ')' : '');
@@ -939,6 +1012,10 @@
                         const data = await res.json();
                         if (data.accountNumber) {
                             fields.destinationAccount.value = data.accountNumber.toUpperCase();
+                            // Cache the currency if returned from lookup
+                            if (data.currency) {
+                                cacheAccountCurrency(data.accountNumber, data.currency);
+                            }
                             fields.destinationAccount.dispatchEvent(new Event('input'));
                             resolvedAcc.textContent = data.accountNumber.toUpperCase() +
                                 (data.currency ? ' (' + data.currency + ')' : '');
@@ -962,12 +1039,14 @@
                     setLookupStatus(statusEl, 'info', 'Destination account will be resolved automatically');
                     return;
                 }
-                debounce(() => lookupAndFill(
-                    ACCOUNTS_API_URL + '/by-mobile/' + encodeURIComponent(val),
-                    fields.destinationAccount,
-                    statusEl,
-                    'No account linked to this mobile number'
-                ), 700, 'receiverMobile');
+                debounce(() => {
+                    lookupAndFill(
+                        ACCOUNTS_API_URL + '/by-mobile/' + encodeURIComponent(val),
+                        fields.destinationAccount,
+                        statusEl,
+                        'No account linked to this mobile number'
+                    );
+                }, 700, 'receiverMobile');
             });
         }
 
@@ -983,9 +1062,21 @@
         }
 
         // ─── Event listeners ────────────────────────────────
-        fields.sourceAccount.addEventListener("input", () => { normalizeAccountInput(fields.sourceAccount); updateSummary(); updateConversionPreview(); });
-        fields.destinationAccount.addEventListener("input", () => { normalizeAccountInput(fields.destinationAccount); updateSummary(); updateConversionPreview(); });
-        fields.amount.addEventListener("input", () => { fields.amount.value = fields.amount.value.replace(/[^\d.]/g, ""); updateSummary(); updateConversionPreview(); });
+        fields.sourceAccount.addEventListener("input", () => { 
+            normalizeAccountInput(fields.sourceAccount); 
+            updateSummary(); 
+            updateConversionPreview(); 
+        });
+        fields.destinationAccount.addEventListener("input", () => { 
+            normalizeAccountInput(fields.destinationAccount); 
+            updateSummary(); 
+            updateConversionPreview(); 
+        });
+        fields.amount.addEventListener("input", () => { 
+            fields.amount.value = fields.amount.value.replace(/[^\d.]/g, ""); 
+            updateSummary(); 
+            updateConversionPreview(); 
+        });
         fields.reference.addEventListener("input", () => { updateReferenceCount(); updateSummary(); });
         fields.currency.addEventListener("change", () => { updateSummary(); updateConversionPreview(); });
 

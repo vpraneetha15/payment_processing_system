@@ -368,9 +368,18 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
 
 /* Conversion preview */
 .conversion-preview-card {
-    padding: 0.9rem 1.25rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid rgba(245,158,11,0.4);
     border-left: 3px solid var(--amber);
-    background: rgba(245,158,11,0.06);
+    background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(245,158,11,0.03) 100%);
+    border-radius: var(--radius-sm);
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(245,158,11,0.08);
+}
+.conversion-preview-card p {
+    margin: 0.35rem 0 0 0;
 }
 
 /* ─── Success Screen ───────────────────────────────────── */

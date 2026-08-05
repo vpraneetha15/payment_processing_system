@@ -287,7 +287,11 @@ private void settleFunds(Payment payment, Account source) {
 
 /**
  * Converts an amount from one currency to another using fixed exchange rates.
- * Conversion is done through a USD base: amount * (fromRate / toRate).
+ * Rates are defined as: 1 USD = X units of currency.
+ * Example: 100 INR to GBP:
+ *   - 100 INR / 83.5 (INR rate) = 1.198 USD
+ *   - 1.198 USD * 0.79 (GBP rate) = 0.9464 GBP
+ * Conversion formula: (amount / fromRate) * toRate
  */
 public double convertAmount(double amount, String fromCurrency, String toCurrency) {
 	if (fromCurrency == null || toCurrency == null) return amount;
@@ -295,7 +299,7 @@ public double convertAmount(double amount, String fromCurrency, String toCurrenc
 	Double fromRate = USD_RATES.get(fromCurrency.toUpperCase());
 	Double toRate   = USD_RATES.get(toCurrency.toUpperCase());
 	if (fromRate == null || toRate == null) return amount;
-	return BigDecimal.valueOf(amount * fromRate / toRate)
+	return BigDecimal.valueOf(amount / fromRate * toRate)
 			.setScale(2, RoundingMode.HALF_UP).doubleValue();
 }
 
