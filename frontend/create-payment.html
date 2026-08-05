@@ -44,11 +44,22 @@
         <!-- ── Success Screen ─────────────────────────────── -->
         <section id="success-screen" class="success-screen" style="display:none" aria-live="polite">
             <div class="success-card">
-                <div class="success-icon-ring">
-                    <span class="material-icons-outlined success-check">check_circle</span>
+                <!-- Shown only while processing -->
+                <div id="processing-header" style="display:none">
+                    <div class="success-icon-ring" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3)">
+                        <span class="material-icons-outlined" style="color:var(--amber);font-size:2.2rem">hourglass_top</span>
+                    </div>
+                    <h2 class="success-heading">Processing Payment…</h2>
+                    <p class="success-sub">Please wait while your payment is being processed</p>
                 </div>
-                <h2 class="success-heading">Payment Created Successfully</h2>
-                <p class="success-sub">Your payment has been initiated and is being processed</p>
+                <!-- Shown only when completed -->
+                <div id="completed-header" style="display:none">
+                    <div class="success-icon-ring">
+                        <span class="material-icons-outlined success-check">check_circle</span>
+                    </div>
+                    <h2 class="success-heading">Payment Created Successfully</h2>
+                    <p class="success-sub">Your payment has been initiated and is being processed</p>
+                </div>
 
                 <div class="success-details-grid">
                     <div class="sdet">
@@ -101,7 +112,7 @@
                     </div>
                 </div>
 
-                <div class="success-btns">
+                <div class="success-btns" id="success-btns" style="display:none">
                     <button class="btn btn-ghost" onclick="resetToForm()">
                         <span class="material-icons-outlined">add</span> Create Another
                     </button>
@@ -514,16 +525,33 @@
         }
 
         // ─── Success screen ──────────────────────────────────
-        function showSuccessScreen(paymentId, mode, amount, currency, status) {
+        function showProcessingScreen(paymentId, mode, amount, currency) {
             document.getElementById("payment-id").textContent = paymentId || "—";
             document.getElementById("success-mode").textContent = MODE_LABELS[mode] || mode || "—";
             document.getElementById("success-amount").textContent = amount
                 ? parseFloat(amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + (currency || "")
                 : "—";
-            updateLifecycleStepper(status || "CREATED");
+            document.getElementById("processing-header").style.display = "block";
+            document.getElementById("completed-header").style.display = "none";
+            // Hide action buttons until completed
+            document.getElementById("success-btns").style.display = "none";
+            updateLifecycleStepper("CREATED");
             document.getElementById("payment-form-area").style.display = "none";
             document.getElementById("success-screen").style.display = "block";
             window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+        function revealCompletedScreen() {
+            document.getElementById("processing-header").style.display = "none";
+            document.getElementById("completed-header").style.display = "block";
+            document.getElementById("success-btns").style.display = "flex";
+        }
+        function revealFailedScreen() {
+            document.getElementById("processing-header").style.display = "none";
+            document.getElementById("completed-header").style.display = "block";
+            document.getElementById("completed-header").querySelector("h2").textContent = "Payment Failed";
+            document.getElementById("completed-header").querySelector(".success-check") && 
+                (document.getElementById("completed-header").querySelector(".material-icons-outlined").textContent = "cancel");
+            document.getElementById("success-btns").style.display = "flex";
         }
         function resetToForm() {
             stopPolling();
@@ -537,6 +565,19 @@
         const LIFECYCLE = ["CREATED", "VALIDATED", "SENT", "COMPLETED"];
         const TERMINAL_STATUSES = ["SUCCESS", "COMPLETED", "FAILED"];
 
+        const STEP_LABELS = {
+            CREATED:   "Created",
+            VALIDATED: "Validated",
+            SENT:      "Sent",
+            COMPLETED: "Completed"
+        };
+        const STEP_ACTIVE_LABELS = {
+            CREATED:   "Creating…",
+            VALIDATED: "Validating…",
+            SENT:      "Sending…",
+            COMPLETED: "Completing…"
+        };
+
         function updateLifecycleStepper(status) {
             const upper = (status || "").toUpperCase();
             const isFailed = upper === "FAILED";
@@ -545,11 +586,22 @@
             LIFECYCLE.forEach((step, idx) => {
                 const el = document.getElementById("step-" + step);
                 const lineEl = document.getElementById("line-" + (idx + 1));
+                const labelEl = el ? el.querySelector(".lc-label") : null;
                 if (!el) return;
                 el.className = "lc-step";
-                if (isFailed && idx === Math.max(0, currentIdx)) el.classList.add("failed");
-                else if (idx < currentIdx || (normalized === "COMPLETED" && idx <= currentIdx)) el.classList.add("done");
-                else if (idx === currentIdx) el.classList.add("active");
+                if (isFailed && idx === Math.max(0, currentIdx)) {
+                    el.classList.add("failed");
+                    if (labelEl) labelEl.textContent = STEP_LABELS[step];
+                } else if (idx < currentIdx || (normalized === "COMPLETED" && idx <= currentIdx)) {
+                    el.classList.add("done");
+                    if (labelEl) labelEl.textContent = STEP_LABELS[step];
+                } else if (idx === currentIdx) {
+                    el.classList.add("active");
+                    // Show active label only if not yet terminal
+                    if (labelEl) labelEl.textContent = TERMINAL_STATUSES.includes(upper) ? STEP_LABELS[step] : (STEP_ACTIVE_LABELS[step] || STEP_LABELS[step]);
+                } else {
+                    if (labelEl) labelEl.textContent = STEP_LABELS[step];
+                }
                 if (lineEl) lineEl.className = "lc-connector" + (idx < currentIdx ? " done" : "");
             });
             document.getElementById("polling-indicator").style.display = TERMINAL_STATUSES.includes(upper) ? "none" : "flex";
@@ -568,11 +620,105 @@
                     const data = await res.json();
                     const status = (data.status || "").toUpperCase();
                     updateLifecycleStepper(status);
-                    if (TERMINAL_STATUSES.includes(status)) stopPolling();
+                    if (TERMINAL_STATUSES.includes(status)) {
+                        stopPolling();
+                        if (status === "FAILED") {
+                            revealFailedScreen();
+                        } else {
+                            revealCompletedScreen();
+                        }
+                    }
                 } catch { /* ignore */ }
-            }, 3000);
+            }, 1500);
         }
         function stopPolling() { if (pollingTimer) { clearInterval(pollingTimer); pollingTimer = null; } }
+
+        // ─── Lifecycle animation helpers ─────────────────────
+        function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+        // Mark all steps up to (and including) status as done, no step active
+        function setStepsDoneUpTo(status) {
+            const upper = status.toUpperCase();
+            const upToIdx = LIFECYCLE.indexOf(upper);
+            LIFECYCLE.forEach((step, idx) => {
+                const el = document.getElementById("step-" + step);
+                const lineEl = document.getElementById("line-" + (idx + 1));
+                const labelEl = el ? el.querySelector(".lc-label") : null;
+                if (!el) return;
+                el.className = "lc-step";
+                if (idx <= upToIdx) {
+                    el.classList.add("done");
+                    if (labelEl) labelEl.textContent = STEP_LABELS[step];
+                } else {
+                    if (labelEl) labelEl.textContent = STEP_LABELS[step];
+                }
+                if (lineEl) lineEl.className = "lc-connector" + (idx < upToIdx ? " done" : "");
+            });
+            document.getElementById("polling-indicator").style.display = "flex";
+            const badge = document.getElementById("payment-status");
+            if (badge) { badge.textContent = upper; badge.className = "sdet-value status-pill status-" + upper.toLowerCase(); }
+        }
+
+        // Show a step as active (ing) with all previous steps done
+        function showStepTransitioning(status) {
+            const upper = status.toUpperCase();
+            const currentIdx = LIFECYCLE.indexOf(upper);
+            LIFECYCLE.forEach((step, idx) => {
+                const el = document.getElementById("step-" + step);
+                const lineEl = document.getElementById("line-" + (idx + 1));
+                const labelEl = el ? el.querySelector(".lc-label") : null;
+                if (!el) return;
+                el.className = "lc-step";
+                if (idx < currentIdx) {
+                    el.classList.add("done");
+                    if (labelEl) labelEl.textContent = STEP_LABELS[step];
+                } else if (idx === currentIdx) {
+                    el.classList.add("active");
+                    if (labelEl) labelEl.textContent = STEP_ACTIVE_LABELS[step] || STEP_LABELS[step];
+                } else {
+                    if (labelEl) labelEl.textContent = STEP_LABELS[step];
+                }
+                if (lineEl) lineEl.className = "lc-connector" + (idx < currentIdx ? " done" : "");
+            });
+            document.getElementById("polling-indicator").style.display = "flex";
+            const badge = document.getElementById("payment-status");
+            if (badge) { badge.textContent = upper; badge.className = "sdet-value status-pill status-" + upper.toLowerCase(); }
+        }
+
+        // Animate the full lifecycle with 2-second pauses between each step
+        async function animateLifecycleSequence() {
+            // CREATED is already shown as active from showProcessingScreen
+            // Wait 1 second showing CREATED
+            await sleep(1000);
+
+            // Mark CREATED done, brief pause
+            setStepsDoneUpTo("CREATED");
+            await sleep(200);
+
+            // Show "Validating…"
+            showStepTransitioning("VALIDATED");
+            await sleep(1000);
+
+            // Mark VALIDATED done
+            setStepsDoneUpTo("VALIDATED");
+            await sleep(1000);
+
+            // Show "Sending…"
+            showStepTransitioning("SENT");
+            await sleep(1000);
+
+            // Mark SENT done
+            setStepsDoneUpTo("SENT");
+            await sleep(1000);
+
+            // Show "Completing…"
+            showStepTransitioning("COMPLETED");
+            await sleep(1000);
+
+            // Mark all done
+            updateLifecycleStepper("COMPLETED");
+            revealCompletedScreen();
+        }
 
         // ─── Form validation ────────────────────────────────
         function validateForm() {
@@ -1108,8 +1254,8 @@
             try {
                 const result = await submitPayment(payload);
                 const paymentId = result.paymentId || result.id;
-                showSuccessScreen(paymentId, selectedPaymentMode, payload.amount, payload.currency, result.status || "CREATED");
-                startPolling(paymentId);
+                showProcessingScreen(paymentId, selectedPaymentMode, payload.amount, payload.currency);
+                animateLifecycleSequence();
                 form.reset();
                 modeCards.forEach((c) => c.classList.remove("is-selected"));
                 modeExtraGroups.forEach((g) => g.classList.remove("active"));

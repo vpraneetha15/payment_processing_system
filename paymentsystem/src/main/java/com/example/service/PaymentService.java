@@ -9,8 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
-
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.example.dto.CurrencyAmountDTO;
@@ -113,12 +114,15 @@ public int save(Payment payment) {
 	int rowsAffected = repository.save(payment);
 	if (rowsAffected > 0) {
 		saveHistoryEntry(payment);
-		try {
-			simulateProcessing(payment);
-		} catch (Exception ex) {
-			// Processing failure must not roll back the created payment
-			markFailed(payment, "PROCESSING_ERROR", "Unexpected error: " + ex.getMessage());
-		}
+		// Run processing asynchronously so API returns CREATED immediately
+		final Payment paymentCopy = payment;
+		CompletableFuture.runAsync(() -> {
+			try {
+				simulateProcessing(paymentCopy);
+			} catch (Exception ex) {
+				markFailed(paymentCopy, "PROCESSING_ERROR", "Unexpected error: " + ex.getMessage());
+			}
+		});
 	}
 
 	return rowsAffected;
@@ -188,12 +192,14 @@ private void simulateProcessing(Payment payment) {
 		markFailed(payment, validationError, "Payment failed validation checks");
 		return;
 	}
+	sleep(2000);
 	recordTransition(payment, "VALIDATED", "SYSTEM", "Payment passed validation checks");
 
 	if (random.nextInt(100) < NETWORK_FAILURE_PCT) {
 		markFailed(payment, "NETWORK_ERROR", "Communication failure with payment network");
 		return;
 	}
+	sleep(2000);
 	recordTransition(payment, "SENT", "SYSTEM", "Payment transmitted to destination network");
 
 	Account source = accountRepository.findById(payment.getSourceAccount());
@@ -208,6 +214,7 @@ private void simulateProcessing(Payment payment) {
 		return;
 	}
 
+	sleep(2000);
 	settleFunds(payment, source);
 
 	payment.setStatus("COMPLETED");
@@ -216,6 +223,14 @@ private void simulateProcessing(Payment payment) {
 	recordTransition(payment, "COMPLETED", "SYSTEM", "Payment completed successfully");
 	paymentNotificationService.sendPaymentCompletedNotifications(payment);
 
+}
+
+private void sleep(long millis) {
+	try {
+		Thread.sleep(millis);
+	} catch (InterruptedException e) {
+		Thread.currentThread().interrupt();
+	}
 }
 
 
