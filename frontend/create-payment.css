@@ -605,6 +605,76 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
 .btn-ghost { background: var(--surface); color: var(--text-2); border: 1.5px solid var(--border); }
 .btn-ghost:hover { border-color: var(--blue); color: var(--blue-dk); }
 
+/* ─── Dark Mode Readability Boost (No Layout Changes) ─── */
+:root[data-theme="dark"] .header-env {
+    color: rgba(232, 240, 252, 0.72);
+}
+
+:root[data-theme="dark"] .card-sub,
+:root[data-theme="dark"] .field-hint,
+:root[data-theme="dark"] .field-count,
+:root[data-theme="dark"] .summary-empty,
+:root[data-theme="dark"] .summary-footer,
+:root[data-theme="dark"] .srow-label,
+:root[data-theme="dark"] .srow-ref,
+:root[data-theme="dark"] .tips-list li,
+:root[data-theme="dark"] .polling-indicator {
+    color: #abc1da;
+}
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea {
+    background: #10213a;
+    border-color: #415b80;
+    color: #eef5ff;
+}
+
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+    color: #93abc6;
+    opacity: 1;
+}
+
+:root[data-theme="dark"] .mode-card {
+    background: #16263d;
+    border-color: #3a5476;
+}
+
+:root[data-theme="dark"] .mode-card:hover {
+    background: #1b2f4d;
+    border-color: #66a4f7;
+}
+
+:root[data-theme="dark"] .mode-card.is-selected {
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.22);
+}
+
+:root[data-theme="dark"] .mode-card:nth-child(1).is-selected {
+    border-color: #60a5fa;
+    background: #1b3659;
+}
+
+:root[data-theme="dark"] .mode-card:nth-child(2).is-selected {
+    border-color: #34d399;
+    background: #193a33;
+}
+
+:root[data-theme="dark"] .mode-card:nth-child(3).is-selected {
+    border-color: #a78bfa;
+    background: #2a2450;
+}
+
+:root[data-theme="dark"] .mode-card:nth-child(4).is-selected {
+    border-color: #fb923c;
+    background: #3f2a1f;
+}
+
+:root[data-theme="dark"] .alert-error {
+    color: #fecaca;
+    border-color: #7f1d1d;
+}
+
 /* ─── Responsive ───────────────────────────────────────── */
 @media (max-width: 1024px) {
     .content-grid { grid-template-columns: 1fr 300px; }
