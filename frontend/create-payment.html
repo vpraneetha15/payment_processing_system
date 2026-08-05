@@ -25,7 +25,17 @@
                 Secure Payment System
             </span>
         </div>
-    </header
+        <div class="header-actions">
+            <button class="theme-toggle" id="themeToggleBtn" type="button" aria-label="Switch to dark theme" title="Switch theme" aria-pressed="false">
+                <span class="toggle-track" aria-hidden="true">
+                    <span>🔅</span>
+                    <span>🌙</span>
+                </span>
+                <span id="themeToggleThumb" class="toggle-thumb" aria-hidden="true">🔅</span>
+                <span class="sr-only">Theme switch</span>
+            </button>
+        </div>
+    </header>
 
     <!-- ── Hero ──────────────────────────────────────── -->
     <div class="page-hero">
@@ -419,6 +429,50 @@
 </div>
 
     <script>
+        const THEME_STORAGE_KEY = "pps-theme";
+
+        (function setupTheme() {
+            const root = document.documentElement;
+            const themeToggleBtn = document.getElementById("themeToggleBtn");
+            const themeToggleThumb = document.getElementById("themeToggleThumb");
+
+            function setTheme(mode) {
+                const isDark = mode === "dark";
+                root.setAttribute("data-theme", isDark ? "dark" : "light");
+                themeToggleBtn.classList.toggle("is-dark", isDark);
+                themeToggleBtn.setAttribute("aria-pressed", isDark ? "true" : "false");
+                themeToggleBtn.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme");
+                if (themeToggleThumb) {
+                    themeToggleThumb.textContent = isDark ? "🌙" : "🔅";
+                }
+            }
+
+            let savedTheme = "";
+            try {
+                savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || "";
+            } catch (_error) {
+                savedTheme = "";
+            }
+            const systemDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            setTheme(savedTheme === "dark" || savedTheme === "light" ? savedTheme : (systemDark ? "dark" : "light"));
+
+            themeToggleBtn.addEventListener("click", () => {
+                const nextTheme = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+                setTheme(nextTheme);
+                try {
+                    localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+                } catch (_error) {
+                }
+            });
+
+            window.addEventListener("storage", (event) => {
+                if (event.key !== THEME_STORAGE_KEY) {
+                    return;
+                }
+                setTheme(event.newValue === "dark" ? "dark" : "light");
+            });
+        })();
+
         // ─── API Endpoints ────────────────────────────────────────────
         const API_BASE_URL = window.PAYMENT_API_BASE_URL || "http://localhost:8080";
         const PAYMENT_API_URL = API_BASE_URL.replace(/\/$/, "") + "/payments";
