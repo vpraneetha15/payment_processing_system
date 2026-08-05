@@ -22,6 +22,14 @@
             </div>
         </div>
         <nav class="top-links" aria-label="Primary">
+            <button class="theme-toggle" id="themeToggleBtn" type="button" aria-label="Switch to dark theme" title="Switch theme" aria-pressed="false">
+                <span class="toggle-track" aria-hidden="true">
+                    <span>🔅</span>
+                    <span>🌙</span>
+                </span>
+                <span id="themeToggleThumb" class="toggle-thumb" aria-hidden="true">🔅</span>
+                <span class="sr-only">Theme switch</span>
+            </button>
             <a href="dashboard.html">Dashboard</a>
             <a href="create-payment.html">Create Payment</a>
             <a href="payment-history.html">Payment History</a>
@@ -78,7 +86,7 @@
                     </label>
 
                     <label class="grid-span-2">
-                        Notes (Optional)
+                        Description (Optional)
                         <textarea id="notes" rows="3" maxlength="240"></textarea>
                     </label>
                 </div>
@@ -205,7 +213,7 @@
                         <p><strong>Name:</strong> <input id="modalName" class="modal-input"></p>
                         <p><strong>Email:</strong> <input id="modalEmail" class="modal-input"></p>
                         <p><strong>Mobile:</strong> <input id="modalMobile" class="modal-input"></p>
-                        <p class="modal-span-2"><strong>Notes:</strong> <textarea id="modalNotes" class="modal-input" rows="2"></textarea></p>
+                        <p class="modal-span-2"><strong>Description:</strong> <textarea id="modalNotes" class="modal-input" rows="2"></textarea></p>
                     </div>
                 </section>
 
@@ -311,6 +319,49 @@
 
     <script>
         const apiBaseUrl = "http://localhost:8080";
+        const THEME_STORAGE_KEY = "pps-theme";
+
+        (function setupTheme() {
+            const root = document.documentElement;
+            const btn = document.getElementById("themeToggleBtn");
+            const thumb = document.getElementById("themeToggleThumb");
+
+            function setTheme(mode) {
+                const isDark = mode === "dark";
+                root.setAttribute("data-theme", isDark ? "dark" : "light");
+                btn.classList.toggle("is-dark", isDark);
+                btn.setAttribute("aria-pressed", isDark ? "true" : "false");
+                btn.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme");
+                if (thumb) {
+                    thumb.textContent = isDark ? "🌙" : "🔅";
+                }
+            }
+
+            let saved = "";
+            try {
+                saved = localStorage.getItem(THEME_STORAGE_KEY) || "";
+            } catch (_error) {
+                saved = "";
+            }
+            const systemDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            setTheme(saved === "dark" || saved === "light" ? saved : (systemDark ? "dark" : "light"));
+
+            btn.addEventListener("click", () => {
+                const nextTheme = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+                setTheme(nextTheme);
+                try {
+                    localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+                } catch (_error) {
+                }
+            });
+
+            window.addEventListener("storage", (event) => {
+                if (event.key !== THEME_STORAGE_KEY) {
+                    return;
+                }
+                setTheme(event.newValue === "dark" ? "dark" : "light");
+            });
+        })();
 
         const form = document.getElementById("createUserForm");
         const createBtn = document.getElementById("createBtn");

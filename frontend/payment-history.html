@@ -1652,7 +1652,7 @@
         const exportConfirmYes = document.getElementById("exportConfirmYes");
         const exportConfirmNo = document.getElementById("exportConfirmNo");
         const themeToggleThumb = document.getElementById("themeToggleThumb");
-        const THEME_STORAGE_KEY = "payment-history-theme";
+        const THEME_STORAGE_KEY = "pps-theme";
 
         let allPayments = [];
         let filteredPayments = [];
@@ -2621,6 +2621,12 @@
             } catch (error) {
                 console.warn("Could not save theme preference:", error.message);
             }
+        });
+        window.addEventListener("storage", (event) => {
+            if (event.key !== THEME_STORAGE_KEY) {
+                return;
+            }
+            setTheme(event.newValue === "dark" ? "dark" : "light");
         });
         detailModalClose.addEventListener("click", closeDetailModal);
         detailModal.addEventListener("click", (event) => {

@@ -1760,7 +1760,7 @@
         (function setupThemeMode() {
             var root = document.documentElement;
             var body = document.body;
-            var storageKey = "dashboard-theme-mode";
+            var storageKey = "pps-theme";
             var toggleBtn = document.getElementById("theme-toggle");
             var toggleThumb = document.getElementById("theme-toggle-thumb");
 
@@ -1786,6 +1786,14 @@
                 var next = isDark ? "light" : "dark";
                 localStorage.setItem(storageKey, next);
                 setTheme(next);
+            });
+
+            window.addEventListener("storage", function (event) {
+                if (event.key !== storageKey) {
+                    return;
+                }
+                var nextTheme = event.newValue === "dark" ? "dark" : "light";
+                setTheme(nextTheme);
             });
         })();
 
