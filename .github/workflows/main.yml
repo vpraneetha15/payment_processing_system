@@ -47,8 +47,8 @@ jobs:
 
       - name: Build Docker Image
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/Payment_processing:latest -f "$GITHUB_WORKSPACE/Dockerfile" "$GITHUB_WORKSPACE"
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/payment_processing:latest -f "$GITHUB_WORKSPACE/Dockerfile" "$GITHUB_WORKSPACE"
 
       - name: Push Docker Image
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/Payment_Processing:latest
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/payment_processing:latest
