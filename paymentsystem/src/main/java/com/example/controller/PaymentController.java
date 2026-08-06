@@ -35,9 +35,19 @@ public class PaymentController {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", "VALIDATION_ERROR", "message", ex.getMessage()));
         } catch (DataIntegrityViolationException ex) {
+            Throwable rootCause = ex.getMostSpecificCause();
+            String rootMsg = rootCause != null ? rootCause.getMessage() : ex.getMessage();
+            boolean isAccountFkViolation = rootMsg != null
+                    && (rootMsg.contains("payments_ibfk_1") || rootMsg.contains("payments_ibfk_2")
+                        || rootMsg.contains("FOREIGN KEY"));
+            if (isAccountFkViolation) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "INVALID_ACCOUNT",
+                                 "message", "Invalid account details. Ensure source and destination accounts exist."));
+            }
             return ResponseEntity.badRequest()
-                .body(Map.of("error", "INVALID_ACCOUNT",
-                             "message", "Invalid account details. Ensure source and destination accounts exist."));
+                .body(Map.of("error", "DATA_INTEGRITY_ERROR",
+                             "message", rootMsg != null ? rootMsg : "Payment could not be saved due to a data integrity error."));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "PAYMENT_ERROR",

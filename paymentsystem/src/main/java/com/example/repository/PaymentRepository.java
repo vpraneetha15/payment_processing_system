@@ -36,6 +36,14 @@ public class PaymentRepository {
         } catch (Exception ex) {
             // Column likely already exists – ignore.
         }
+        try {
+            // The `id` primary key was originally created as varchar(20), which is too
+            // short for a UUID (36 chars) - every insert failed with "Data too long for
+            // column 'id'" (surfaced misleadingly as an account-validation error). Widen it.
+            jdbcTemplate.execute("alter table payments modify column id varchar(36) not null");
+        } catch (Exception ex) {
+            // Lacks privilege or already wide enough – ignore.
+        }
     }
 
     public int save(Payment payment) {

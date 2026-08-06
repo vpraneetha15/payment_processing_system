@@ -2,6 +2,8 @@ package com.example.repository;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.annotation.PostConstruct;
+
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.BadSqlGrammarException;
@@ -16,6 +18,23 @@ public class PaymentHistoryRepository {
 
     public PaymentHistoryRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+    }
+
+    @PostConstruct
+    public void ensureColumnWidths() {
+        // id/payment_id hold UUID.randomUUID().toString() values (36 chars) - widen
+        // in case either column was originally created narrower (self-healing, ignored
+        // if already wide enough or lacking privilege).
+        try {
+            jdbcTemplate.execute("alter table payment_history modify column id varchar(36) not null");
+        } catch (Exception ex) {
+            // Ignore.
+        }
+        try {
+            jdbcTemplate.execute("alter table payment_history modify column payment_id varchar(36) not null");
+        } catch (Exception ex) {
+            // Ignore.
+        }
     }
 
     public int save(PaymentHistory paymentHistory) {
