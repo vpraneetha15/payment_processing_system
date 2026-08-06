@@ -47,7 +47,7 @@ jobs:
 
       - name: Build Docker Image
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/springboot-jdbc-demo:latest -f Dockerfile .
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/springboot-jdbc-demo:latest -f "$GITHUB_WORKSPACE/Dockerfile" "$GITHUB_WORKSPACE"
 
       - name: Push Docker Image
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
